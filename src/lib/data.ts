@@ -17,10 +17,10 @@ export const servers: Server[] = [
 ];
 
 export const operations: Operation[] = [
-  { id: 'reboot', name: 'Reboot Server', description: 'Perform a soft or hard reboot.', icon: RotateCw },
-  { id: 'run-script', name: 'Run Script', description: 'Execute a shell script on the server.', icon: FileCode },
-  { id: 'install-package', name: 'Install Package', description: 'Install a new software package.', icon: Package },
-  { id: 'check-status', name: 'Check Status', description: 'Run a health check on the server.', icon: Activity },
+  { id: 'reboot', name: '重启服务器', description: '执行软重启或硬重启。', icon: RotateCw },
+  { id: 'run-script', name: '运行脚本', description: '在服务器上执行 Shell 脚本。', icon: FileCode },
+  { id: 'install-package', name: '安装软件包', description: '安装一个新的软件包。', icon: Package },
+  { id: 'check-status', name: '检查状态', description: '在服务器上运行健康检查。', icon: Activity },
 ];
 
 export const operationMap = operations.reduce((acc, op) => {

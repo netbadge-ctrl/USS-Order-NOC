@@ -70,7 +70,7 @@ const formSchema = z
   .object({
     serverIds: z
       .array(z.string())
-      .min(1, { message: "Please select at least one server." }),
+      .min(1, { message: "请至少选择一台服务器。" }),
     operationType: z.custom<OperationId>((val) =>
       operations.some((op) => op.id === val)
     ),
@@ -87,7 +87,7 @@ const formSchema = z
       }
       return true;
     },
-    { message: "Script content cannot be empty.", path: ["scriptContent"] }
+    { message: "脚本内容不能为空。", path: ["scriptContent"] }
   )
   .refine(
     (data) => {
@@ -96,7 +96,7 @@ const formSchema = z
       }
       return true;
     },
-    { message: "Package name is required.", path: ["packageName"] }
+    { message: "软件包名称是必需的。", path: ["packageName"] }
   )
   .refine(
     (data) => {
@@ -105,7 +105,7 @@ const formSchema = z
       }
       return true;
     },
-    { message: "A date is required for scheduled execution.", path: ["scheduledAt"] }
+    { message: "计划执行需要一个日期。", path: ["scheduledAt"] }
   );
 
 type FormValues = z.infer<typeof formSchema>;
@@ -146,11 +146,11 @@ export default function OperationForm() {
   function handleFinalSubmit() {
     if (!formSubmissionData) return;
     
-    console.log("Submitting operation:", formSubmissionData);
+    console.log("正在提交操作:", formSubmissionData);
 
     toast({
-      title: "Operation Submitted",
-      description: `${operationMap[formSubmissionData.operationType].name} for ${formSubmissionData.serverIds.length} server(s) has been scheduled.`,
+      title: "操作已提交",
+      description: `${operationMap[formSubmissionData.operationType].name} 操作已为 ${formSubmissionData.serverIds.length} 台服务器安排。`,
       variant: "default",
     });
 
@@ -182,20 +182,20 @@ export default function OperationForm() {
           >
             <AccordionItem value="step-1">
               <AccordionTrigger className="text-lg font-medium hover:no-underline px-4 bg-card rounded-t-lg border data-[state=open]:rounded-b-none">
-                Step 1: Select Servers
+                第 1 步：选择服务器
               </AccordionTrigger>
               <AccordionContent className="bg-card p-4 rounded-b-lg border border-t-0">
                 <Card className="border-0 shadow-none">
                   <CardHeader className="p-2">
                     <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
                       <Input
-                        placeholder="Filter by hostname or IP..."
+                        placeholder="按主机名或 IP 筛选..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="max-w-sm"
                       />
                       <p className="text-sm text-muted-foreground font-medium">
-                        {selectedServerIds.length} of {servers.length} server(s) selected
+                        已选择 {selectedServerIds.length} / {servers.length} 台服务器
                       </p>
                     </div>
                   </CardHeader>
@@ -224,10 +224,10 @@ export default function OperationForm() {
                                       }}
                                     />
                                   </TableHead>
-                                  <TableHead>Hostname</TableHead>
-                                  <TableHead>IP Address</TableHead>
-                                  <TableHead>Status</TableHead>
-                                  <TableHead>Region</TableHead>
+                                  <TableHead>主机名</TableHead>
+                                  <TableHead>IP 地址</TableHead>
+                                  <TableHead>状态</TableHead>
+                                  <TableHead>区域</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -252,7 +252,7 @@ export default function OperationForm() {
                                       <TableCell>{server.ipAddress}</TableCell>
                                       <TableCell>
                                         <span className={cn("px-2 py-1 text-xs rounded-full", server.status === 'Online' ? 'bg-green-100 text-green-800' : server.status === 'Offline' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800')}>
-                                          {server.status}
+                                          {server.status === 'Online' ? '在线' : server.status === 'Offline' ? '离线' : '维护中'}
                                         </span>
                                       </TableCell>
                                       <TableCell>{server.region}</TableCell>
@@ -261,7 +261,7 @@ export default function OperationForm() {
                                 ) : (
                                   <TableRow>
                                     <TableCell colSpan={5} className="h-24 text-center">
-                                      No servers found.
+                                      未找到服务器。
                                     </TableCell>
                                   </TableRow>
                                 )}
@@ -279,7 +279,7 @@ export default function OperationForm() {
             
             <AccordionItem value="step-2">
               <AccordionTrigger className="text-lg font-medium hover:no-underline px-4 bg-card rounded-lg border data-[state=open]:rounded-b-none">
-                Step 2: Configure Operation
+                第 2 步：配置操作
               </AccordionTrigger>
               <AccordionContent className="bg-card p-4 rounded-b-lg border border-t-0">
                 <div className="space-y-4">
@@ -288,7 +288,7 @@ export default function OperationForm() {
                     name="operationType"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Operation Type</FormLabel>
+                        <FormLabel>操作类型</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -302,15 +302,15 @@ export default function OperationForm() {
                               >
                                 {field.value
                                   ? operations.find((op) => op.id === field.value)?.name
-                                  : "Select operation"}
+                                  : "选择操作"}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-full p-0">
                             <Command>
-                              <CommandInput placeholder="Search operations..." />
-                              <CommandEmpty>No operation found.</CommandEmpty>
+                              <CommandInput placeholder="搜索操作..." />
+                              <CommandEmpty>未找到操作。</CommandEmpty>
                               <CommandGroup>
                                 <CommandList>
                                   {operations.map((op) => (
@@ -355,7 +355,7 @@ export default function OperationForm() {
                       name="rebootType"
                       render={({ field }) => (
                         <FormItem className="space-y-3">
-                          <FormLabel>Reboot Method</FormLabel>
+                          <FormLabel>重启方法</FormLabel>
                           <FormControl>
                             <RadioGroup
                               onValueChange={field.onChange}
@@ -366,13 +366,13 @@ export default function OperationForm() {
                                 <FormControl>
                                   <RadioGroupItem value="soft" />
                                 </FormControl>
-                                <FormLabel className="font-normal">Soft Reboot</FormLabel>
+                                <FormLabel className="font-normal">软重启</FormLabel>
                               </FormItem>
                               <FormItem className="flex items-center space-x-3 space-y-0">
                                 <FormControl>
                                   <RadioGroupItem value="hard" />
                                 </FormControl>
-                                <FormLabel className="font-normal">Hard Reboot</FormLabel>
+                                <FormLabel className="font-normal">硬重启</FormLabel>
                               </FormItem>
                             </RadioGroup>
                           </FormControl>
@@ -388,10 +388,10 @@ export default function OperationForm() {
                       name="scriptContent"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Shell Script</FormLabel>
+                          <FormLabel>Shell 脚本</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder={`#!/bin/bash\necho "Hello from server"...`}
+                              placeholder={`#!/bin/bash\necho "来自服务器的问候"...`}
                               className="min-h-[150px] font-mono"
                               {...field}
                             />
@@ -408,9 +408,9 @@ export default function OperationForm() {
                       name="packageName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Package Name</FormLabel>
+                          <FormLabel>软件包名称</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., nginx, redis-server" {...field} />
+                            <Input placeholder="例如：nginx、redis-server" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -423,7 +423,7 @@ export default function OperationForm() {
 
             <AccordionItem value="step-3">
               <AccordionTrigger className="text-lg font-medium hover:no-underline px-4 bg-card rounded-lg border data-[state=open]:rounded-b-none">
-                Step 3: Schedule Execution (Optional)
+                第 3 步：安排执行（可选）
               </AccordionTrigger>
               <AccordionContent className="bg-card p-4 rounded-b-lg border border-t-0">
                 <FormField
@@ -432,9 +432,9 @@ export default function OperationForm() {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel>Schedule for later</FormLabel>
+                        <FormLabel>稍后执行</FormLabel>
                         <FormDescription>
-                          Run this operation at a specified future time.
+                          在指定的未来时间运行此操作。
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -453,7 +453,7 @@ export default function OperationForm() {
                     name="scheduledAt"
                     render={({ field }) => (
                       <FormItem className="flex flex-col mt-4">
-                        <FormLabel>Execution Date</FormLabel>
+                        <FormLabel>执行日期</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -467,7 +467,7 @@ export default function OperationForm() {
                                 {field.value ? (
                                   format(field.value, "PPP")
                                 ) : (
-                                  <span>Pick a date</span>
+                                  <span>选择一个日期</span>
                                 )}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
@@ -497,7 +497,7 @@ export default function OperationForm() {
               type="submit"
               className="bg-accent hover:bg-accent/90 text-accent-foreground px-8 py-6 text-base"
             >
-              Review & Submit Operation
+              审查并提交操作
             </Button>
           </div>
         </form>
@@ -507,27 +507,27 @@ export default function OperationForm() {
         <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                <AlertDialogTitle>Confirm Operation</AlertDialogTitle>
+                <AlertDialogTitle>确认操作</AlertDialogTitle>
                 <AlertDialogDescription>
-                    You are about to perform the following operation. This action cannot be undone.
+                    您即将执行以下操作。此操作无法撤销。
                 </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="text-sm space-y-2">
-                    <p><strong>Operation:</strong> {operationMap[formSubmissionData.operationType].name}</p>
-                    <p><strong>Servers ({formSubmissionData.serverIds.length}):</strong></p>
+                    <p><strong>操作：</strong> {operationMap[formSubmissionData.operationType].name}</p>
+                    <p><strong>服务器 ({formSubmissionData.serverIds.length}):</strong></p>
                     <ul className="list-disc pl-5 max-h-24 overflow-y-auto bg-muted p-2 rounded-md">
                         {formSubmissionData.serverIds.map(id => (
                             <li key={id}>{servers.find(s => s.id === id)?.hostname}</li>
                         ))}
                     </ul>
                     {formSubmissionData.isScheduled && (
-                        <p><strong>Scheduled for:</strong> {format(formSubmissionData.scheduledAt!, "PPP 'at' h:mm b")}</p>
+                        <p><strong>计划于：</strong> {format(formSubmissionData.scheduledAt!, "PPP 'at' h:mm b")}</p>
                     )}
                 </div>
                 <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setFormSubmissionData(null)}>Cancel</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setFormSubmissionData(null)}>取消</AlertDialogCancel>
                 <AlertDialogAction onClick={handleFinalSubmit} className="bg-primary hover:bg-primary/90">
-                    Confirm & Run
+                    确认并运行
                 </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
