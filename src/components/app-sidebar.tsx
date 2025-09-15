@@ -1,6 +1,7 @@
 'use client';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+import { LayoutDashboard, FileText, Package, PieChart } from 'lucide-react';
 
 import {
   Sidebar,
@@ -14,16 +15,14 @@ import {
 import { Button } from './ui/button';
 import { Package2 } from 'lucide-react';
 
-interface AppSidebarProps {
-  navItems: {
-    title: string;
-    href: string;
-    icon: LucideIcon;
-    isActive?: boolean;
-  }[];
-}
+const sidebarNav = [
+  { title: '仪表盘', href: '/', icon: LayoutDashboard },
+  { title: '工单', href: '#', icon: FileText, isActive: true },
+  { title: '资产', href: '#', icon: Package },
+  { title: '报告', href: '#', icon: PieChart },
+];
 
-export default function AppSidebar({ navItems }: AppSidebarProps) {
+export default function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="hidden border-r bg-card md:block">
       <SidebarHeader className="flex items-center justify-between p-4">
@@ -37,7 +36,7 @@ export default function AppSidebar({ navItems }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map((item) => (
+          {sidebarNav.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
@@ -45,8 +44,10 @@ export default function AppSidebar({ navItems }: AppSidebarProps) {
                 tooltip={{ children: item.title }}
               >
                 <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.title}</span>
+                  <div className="flex items-center gap-2">
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </div>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
