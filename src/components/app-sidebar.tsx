@@ -30,7 +30,7 @@ export default function AppSidebar() {
           <Package2 className="h-6 w-6" />
           <span className="group-data-[collapsible=icon]:hidden">IDC 工单系统</span>
         </Link>
-        <SidebarTrigger asChild>
+        <SidebarTrigger asChild={false}>
           <Button variant="ghost" size="icon" className="md:hidden" />
         </SidebarTrigger>
       </SidebarHeader>
