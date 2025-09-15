@@ -24,19 +24,19 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, X } from 'lucide-react';
 
 const operations: {
-  id: OperationId;
+  id: string;
   name: string;
 }[] = [
-  { id: 'reboot', name: '重装系统' },
-  { id: 'run-script', name: '硬件更换' },
-  { id: 'install-package', name: '网络配置' },
-  { id: 'check-status', name: '固件更新' },
+  { id: 'relocation', name: '搬迁' },
+  { id: 'install-system', name: '安装系统' },
+  { id: 'hardware-change', name: '硬件变更' },
+  { id: 'additional-ops', name: '附加操作' },
 ];
 
 type OperationGroup = {
   id: number;
   servers: Server[];
-  operationId: OperationId;
+  operationId: string;
   notes: string;
 };
 
@@ -58,7 +58,7 @@ export default function Home() {
       {
         id: nextGroupId,
         servers: [],
-        operationId: 'run-script',
+        operationId: 'relocation',
         notes: '',
       },
     ]);
@@ -100,7 +100,7 @@ export default function Home() {
     );
   };
 
-  const setGroupOperation = (groupId: number, operationId: OperationId) => {
+  const setGroupOperation = (groupId: number, operationId: string) => {
     setOperationGroups(
       operationGroups.map((group) =>
         group.id === groupId ? { ...group, operationId } : group
