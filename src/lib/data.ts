@@ -1,4 +1,4 @@
-import { Activity, FileCode, Package, RotateCw } from 'lucide-react';
+import { Activity, FileCode, Package, RotateCw, HardDrive, Network, GitPullRequest } from 'lucide-react';
 import type { Server, Operation, OperationId } from './types';
 
 export const servers: Server[] = [
@@ -17,10 +17,10 @@ export const servers: Server[] = [
 ];
 
 export const operations: Operation[] = [
-  { id: 'reboot', name: '重启服务器', description: '执行软重启或硬重启。', icon: RotateCw },
-  { id: 'run-script', name: '运行脚本', description: '在服务器上执行 Shell 脚本。', icon: FileCode },
-  { id: 'install-package', name: '安装软件包', description: '安装一个新的软件包。', icon: Package },
-  { id: 'check-status', name: '检查状态', description: '在服务器上运行健康检查。', icon: Activity },
+  { id: 'reboot', name: '重装系统', description: '执行软重启或硬重启。', icon: RotateCw },
+  { id: 'run-script', name: '硬件更换', description: '在服务器上执行 Shell 脚本。', icon: HardDrive },
+  { id: 'install-package', name: '网络配置', description: '安装一个新的软件包。', icon: Network },
+  { id: 'check-status', name: '固件更新', description: '在服务器上运行健康检查。', icon: GitPullRequest },
 ];
 
 export const operationMap = operations.reduce((acc, op) => {

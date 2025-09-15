@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -32,7 +33,11 @@ const getStatusVariant = (status: Server['status']) => {
   }
 };
 
-export default function ServerTable() {
+interface ServerTableProps {
+  onSelectionChange?: (selectedServers: Server[]) => void;
+}
+
+export default function ServerTable({ onSelectionChange }: ServerTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [allServers, setAllServers] = useState<ServerWithSelection[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
@@ -41,6 +46,12 @@ export default function ServerTable() {
   useEffect(() => {
     setAllServers(servers.map((s) => ({ ...s, isSelected: false })));
   }, []);
+
+  useEffect(() => {
+    if (onSelectionChange) {
+      onSelectionChange(allServers.filter(s => s.isSelected));
+    }
+  }, [allServers, onSelectionChange]);
 
   const filteredServers = useMemo(() => {
     return allServers.filter(
@@ -62,7 +73,10 @@ export default function ServerTable() {
 
   const handleSelectAll = (checked: boolean) => {
     const newServers = allServers.map(server => {
-      if (filteredServers.some(fs => fs.id === server.id)) {
+      const isFiltered = filteredServers.some(fs => fs.id === server.id);
+      const inCurrentPage = paginatedServers.some(ps => ps.id === server.id);
+      
+      if (inCurrentPage) {
         return { ...server, isSelected: checked };
       }
       return server;
@@ -82,7 +96,7 @@ export default function ServerTable() {
   }, [paginatedServers]);
 
   return (
-    <div className="bg-card p-4 sm:p-6 rounded-lg shadow-sm">
+    <div className="bg-card p-4 sm:p-6 rounded-lg">
       <div className="mb-4">
         <Input
           placeholder="按名称、主机名或 IP 搜索..."
