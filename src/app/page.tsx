@@ -448,42 +448,38 @@ export default function Home() {
         {renderConfig(group.servers[0].config, `当前配置 (${group.servers[0].hostname})`)}
         
         <div className="flex flex-col md:flex-row md:items-center md:gap-4 space-y-4 md:space-y-0">
-            <div className="flex items-center gap-4">
-                <Label className="shrink-0">配置方式</Label>
-                <RadioGroup 
-                    value={group.hardwareChange?.configType}
-                    onValueChange={(value: 'model' | 'custom') => updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, configType: value }})}
-                    className="flex items-center gap-4"
-                >
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="model" id={`model-${group.id}`} />
-                        <Label htmlFor={`model-${group.id}`} className="font-normal">按目标机型</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="custom" id={`custom-${group.id}`} />
-                        <Label htmlFor={`custom-${group.id}`} className="font-normal">自定义配置</Label>
-                    </div>
-                </RadioGroup>
-            </div>
-
-            {group.hardwareChange?.configType === 'model' && (
-                 <div className="flex items-center gap-2 flex-1">
-                    <Label htmlFor={`target-model-select-${group.id}`} className="shrink-0">目标机型</Label>
-                    <Select
-                        value={group.hardwareChange?.targetModelId}
-                        onValueChange={(value) => updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, targetModelId: value, suggestion: undefined } })}
-                    >
-                        <SelectTrigger id={`target-model-select-${group.id}`} className="flex-1">
-                            <SelectValue placeholder="选择目标机型" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {models.map(model => (
-                                <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+            <Label className="shrink-0">配置方式</Label>
+            <RadioGroup 
+                value={group.hardwareChange?.configType}
+                onValueChange={(value: 'model' | 'custom') => updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, configType: value }})}
+                className="flex items-center gap-4"
+            >
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="model" id={`model-${group.id}`} />
+                    <Label htmlFor={`model-${group.id}`} className="font-normal flex items-center gap-2">
+                      <span>按目标机型</span>
+                      {group.hardwareChange?.configType === 'model' && (
+                        <Select
+                            value={group.hardwareChange?.targetModelId}
+                            onValueChange={(value) => updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, targetModelId: value, suggestion: undefined } })}
+                        >
+                            <SelectTrigger id={`target-model-select-${group.id}`} className="flex-1 w-[280px]">
+                                <SelectValue placeholder="选择目标机型" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {models.map(model => (
+                                    <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                      )}
+                    </Label>
                 </div>
-            )}
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="custom" id={`custom-${group.id}`} />
+                    <Label htmlFor={`custom-${group.id}`} className="font-normal">自定义配置</Label>
+                </div>
+            </RadioGroup>
         </div>
 
 
