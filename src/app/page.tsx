@@ -401,13 +401,15 @@ export default function Home() {
                             <p className="text-muted-foreground">CPU</p>
                             <p className="font-medium">{config.cpu}</p>
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">内存</p>
-                            <p className="font-medium">{config.memory}</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">硬盘/存储</p>
-                            <p className="font-medium">{config.storage}</p>
+                        <div className="grid grid-cols-2 gap-x-8">
+                            <div className="space-y-1">
+                                <p className="text-muted-foreground">内存</p>
+                                <p className="font-medium">{config.memory}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-muted-foreground">硬盘/存储</p>
+                                <p className="font-medium">{config.storage}</p>
+                            </div>
                         </div>
                         <div className="space-y-1">
                             <p className="text-muted-foreground">VPC网络</p>
@@ -532,8 +534,6 @@ export default function Home() {
 
     return (
       <div className="space-y-6 pt-4">
-        {renderConfig(group.servers[0].config, `当前配置 (${group.servers[0].hostname})`)}
-        
         <div className="flex flex-col md:flex-row md:items-center md:gap-4 space-y-4 md:space-y-0">
             <Label className="shrink-0">配置方式</Label>
             <RadioGroup 
@@ -860,5 +860,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
