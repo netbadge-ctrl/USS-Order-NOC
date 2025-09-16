@@ -512,6 +512,71 @@ export default function Home() {
       </div>
     );
   };
+  
+  const renderAdditionalOpsForm = () => {
+    const [stressTest, setStressTest] = useState(false);
+    return (
+      <div className="space-y-6 pt-4">
+        <div className="space-y-4 border-b pb-4">
+            <h4 className="font-medium">附加操作</h4>
+            <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                    <Checkbox id="stress-test" checked={stressTest} onCheckedChange={(checked) => setStressTest(Boolean(checked))} />
+                    <Label htmlFor="stress-test" className="font-normal">压测:</Label>
+                    <span className="text-red-500 text-xs">此操作会有系统盘和数据盘数据全部丢失的风险</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Checkbox id="smart-nic-init" />
+                    <Label htmlFor="smart-nic-init" className="font-normal">智能网卡初始化:</Label>
+                    <span className="text-red-500 text-xs">此操作会有智能网卡数据全部丢失的风险</span>
+                </div>
+                 <div className="flex items-center gap-2">
+                    <Checkbox id="ib-nccl" />
+                    <Label htmlFor="ib-nccl" className="font-normal">IB_NCCL:</Label>
+                    <span className="text-red-500 text-xs">非EPC, XRLLM机器勿选</span>
+                </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4 pt-2">
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="port-change" />
+                    <Label htmlFor="port-change" className="font-normal">网络端口变更</Label>
+                </div>
+                 <div className="flex items-center space-x-2">
+                    <Checkbox id="online-standby" />
+                    <Label htmlFor="online-standby" className="font-normal">置为线上备机</Label>
+                </div>
+            </div>
+        </div>
+
+        {stressTest && (
+            <div className="space-y-4">
+                <h4 className="font-medium">压测类型</h4>
+                 <div className="flex items-center gap-2">
+                    <Label className="font-normal">选择压测类型</Label>
+                    <div className="flex items-center gap-4 ml-4">
+                        <div className="flex items-center space-x-2">
+                             <Checkbox id="test-memory" />
+                             <Label htmlFor="test-memory" className="font-normal">内存</Label>
+                        </div>
+                         <div className="flex items-center space-x-2">
+                             <Checkbox id="test-gpu" />
+                             <Label htmlFor="test-gpu" className="font-normal">GPU</Label>
+                        </div>
+                         <div className="flex items-center space-x-2">
+                             <Checkbox id="test-cpu" />
+                             <Label htmlFor="test-cpu" className="font-normal">CPU</Label>
+                        </div>
+                         <div className="flex items-center space-x-2">
+                             <Checkbox id="test-hdd" />
+                             <Label htmlFor="test-hdd" className="font-normal">硬盘</Label>
+                        </div>
+                    </div>
+                 </div>
+            </div>
+        )}
+      </div>
+    );
+  };
 
 
   return (
@@ -653,7 +718,8 @@ export default function Home() {
                                 {group.operationId === 'install-system' && renderInstallSystemForm()}
                                 {group.operationId === 'relocation' && renderRelocationForm()}
                                 {group.operationId === 'hardware-change' && renderHardwareChangeForm(group)}
-                                {group.operationId !== 'install-system' && group.operationId !== 'relocation' && group.operationId !== 'hardware-change' && (
+                                {group.operationId === 'additional-ops' && renderAdditionalOpsForm()}
+                                {group.operationId !== 'install-system' && group.operationId !== 'relocation' && group.operationId !== 'hardware-change' && group.operationId !== 'additional-ops' && (
                                     <p className="text-sm text-muted-foreground">
                                         {operations.find(o => o.id === group.operationId)?.name} 的配置详情将显示在这里。
                                     </p>
@@ -684,5 +750,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     
