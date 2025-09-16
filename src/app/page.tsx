@@ -303,6 +303,71 @@ export default function Home() {
     </div>
   );
 
+  const renderHardwareChangeForm = () => (
+    <div className="space-y-6 pt-4">
+      <div className="space-y-4">
+        <div className="space-y-2">
+            <Label>配置方式</Label>
+            <RadioGroup defaultValue="target-model" className="flex items-center gap-4">
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="target-model" id="hw-target-model" />
+                    <Label htmlFor="hw-target-model" className="font-normal">按目标机型</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="custom" id="hw-custom" />
+                    <Label htmlFor="hw-custom" className="font-normal">自定义配置</Label>
+                </div>
+            </RadioGroup>
+        </div>
+         <div className="space-y-2">
+            <Label htmlFor="hw-target-model-select">目标机型</Label>
+             <Select defaultValue="gpu-server">
+                <SelectTrigger id="hw-target-model-select">
+                    <SelectValue placeholder="选择目标机型" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="gpu-server">高性能GPU服务器配置 (GPU)</SelectItem>
+                    <SelectItem value="storage-server">大容量存储服务器配置</SelectItem>
+                    <SelectItem value="compute-server">高计算性能服务器配置</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+      </div>
+      <div className="p-4 bg-muted/50 rounded-md space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">目标CPU</p>
+                <p className="font-medium">Intel_8358P*2 (64核128线程)</p>
+            </div>
+            <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">目标内存</p>
+                <p className="font-medium">64G_3200 * 16</p>
+            </div>
+            <div className="space-y-1 col-span-2">
+                <p className="text-sm text-muted-foreground">目标硬盘/存储</p>
+                <p className="font-medium">SATA2.5_480G * 2 + NVME2.5_7.68T * 2</p>
+            </div>
+            <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">VPC网络</p>
+                <p className="font-medium">25GE_2 * 1</p>
+            </div>
+             <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">计算网络</p>
+                <p className="font-medium">NVLINK_80G * 8</p>
+            </div>
+            <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">存储网络</p>
+                <p className="font-medium">-</p>
+            </div>
+             <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">目标GPU</p>
+                <p className="font-medium">GM302*8</p>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-8">
       <Card>
@@ -441,7 +506,8 @@ export default function Home() {
                                 <div className="p-4 border rounded-md">
                                 {group.operationId === 'install-system' && renderInstallSystemForm()}
                                 {group.operationId === 'relocation' && renderRelocationForm()}
-                                {group.operationId !== 'install-system' && group.operationId !== 'relocation' && (
+                                {group.operationId === 'hardware-change' && renderHardwareChangeForm()}
+                                {group.operationId !== 'install-system' && group.operationId !== 'relocation' && group.operationId !== 'hardware-change' && (
                                     <p className="text-sm text-muted-foreground">
                                         {operations.find(o => o.id === group.operationId)?.name} 的配置详情将显示在这里。
                                     </p>
@@ -472,3 +538,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
