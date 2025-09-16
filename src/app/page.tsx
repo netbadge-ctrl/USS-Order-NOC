@@ -31,6 +31,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { targetModels } from '@/lib/data';
 import { getHardwareSuggestion } from '@/ai/flows/hardware-suggestion-flow';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 const operations: {
   id: OperationId;
@@ -50,7 +52,7 @@ const operations: {
 type OperationGroup = {
   id: number;
   servers: Server[];
-  operationId: OperationId;
+  operationIds: OperationId[];
   subOperationId?: string;
   notes: string;
   hardwareChange?: {
@@ -74,7 +76,7 @@ export default function Home() {
       {
         id: newGroupId,
         servers: [],
-        operationId: 'install-system',
+        operationIds: ['install-system'],
         notes: '',
         hardwareChange: {
           configType: 'model',
@@ -142,8 +144,18 @@ export default function Home() {
     );
   };
 
-  const setGroupOperation = (groupId: number, operationId: OperationId) => {
-    updateGroup(groupId, { operationId, subOperationId: undefined });
+  const toggleGroupOperation = (groupId: number, operationId: OperationId) => {
+    const group = operationGroups.find(g => g.id === groupId);
+    if (!group) return;
+
+    const newOperationIds = group.operationIds.includes(operationId)
+        ? group.operationIds.filter(id => id !== operationId)
+        : [...group.operationIds, operationId];
+
+    // If we're adding 'relocation', remove other ops, and vice-versa.
+    // This logic can be adjusted based on business rules.
+    // For now, let's allow multiple selections.
+    updateGroup(groupId, { operationIds: newOperationIds, subOperationId: undefined });
   };
   
   const setGroupSubOperation = (groupId: number, subOpId: string) => {
@@ -776,43 +788,65 @@ export default function Home() {
                         <div>
                             <h4 className="font-medium mb-2 text-sm">2. 选择操作类型:</h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {operations.map((op) => (
-                                <div key={op.id} className="flex flex-col gap-2">
-                                    <Button
-                                        variant={group.operationId === op.id ? 'default' : 'outline'}
-                                        onClick={() => setGroupOperation(group.id, op.id)}
-                                        className="w-full justify-center"
-                                    >
-                                        {op.name}
-                                    </Button>
-                                        {op.subOps && group.operationId === op.id && op.subOps.map(subOp => (
-                                        <Button
-                                        key={subOp.id}
-                                        variant={group.subOperationId === subOp.id ? 'secondary' : 'outline'}
-                                        onClick={() => setGroupSubOperation(group.id, subOp.id)}
-                                        className="w-full justify-center"
-                                        >
-                                        {subOp.name}
-                                        </Button>
-                                    ))}
-                                </div>
-                            ))}
+                                {operations.map((op) => {
+                                    const isSelected = group.operationIds.includes(op.id);
+                                    const mainOpSelected = group.operationIds.length > 0 && group.operationIds.includes(op.id);
+                                    return (
+                                        <div key={op.id} className="flex flex-col gap-2">
+                                            <Button
+                                                variant={isSelected ? 'default' : 'outline'}
+                                                onClick={() => toggleGroupOperation(group.id, op.id)}
+                                                className="w-full justify-center"
+                                            >
+                                                {op.name}
+                                            </Button>
+                                            {op.subOps && mainOpSelected && (
+                                                <div className="flex flex-col gap-2 pl-4 mt-2 border-l-2 border-primary/50">
+                                                    {op.subOps.map(subOp => (
+                                                    <Button
+                                                        key={subOp.id}
+                                                        variant={group.subOperationId === subOp.id ? 'secondary' : 'outline'}
+                                                        onClick={() => setGroupSubOperation(group.id, subOp.id)}
+                                                        className="w-full justify-start text-xs h-8"
+                                                    >
+                                                        {subOp.name}
+                                                    </Button>
+                                                ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
 
                         <div>
                             <h4 className="font-medium mb-2 text-sm">3. 配置详情:</h4>
-                                <div className="p-4 border rounded-md">
-                                {group.operationId === 'install-system' && renderInstallSystemForm()}
-                                {group.operationId === 'relocation' && renderRelocationForm()}
-                                {group.operationId === 'hardware-change' && renderHardwareChangeForm(group)}
-                                {group.operationId === 'additional-ops' && renderAdditionalOpsForm()}
-                                {group.operationId !== 'install-system' && group.operationId !== 'relocation' && group.operationId !== 'hardware-change' && group.operationId !== 'additional-ops' && (
-                                    <p className="text-sm text-muted-foreground">
-                                        {operations.find(o => o.id === group.operationId)?.name} 的配置详情将显示在这里。
-                                    </p>
-                                )}
-                            </div>
+                            {group.operationIds.length > 0 ? (
+                                <Tabs defaultValue={group.operationIds[0]} className="w-full">
+                                <TabsList>
+                                    {group.operationIds.map(opId => (
+                                        <TabsTrigger key={opId} value={opId}>
+                                            {operations.find(o => o.id === opId)?.name}
+                                        </TabsTrigger>
+                                    ))}
+                                </TabsList>
+                                {group.operationIds.map(opId => (
+                                    <TabsContent key={opId} value={opId}>
+                                         <div className="p-4 border rounded-md">
+                                            {opId === 'install-system' && renderInstallSystemForm()}
+                                            {opId === 'relocation' && renderRelocationForm()}
+                                            {opId === 'hardware-change' && renderHardwareChangeForm(group)}
+                                            {opId === 'additional-ops' && renderAdditionalOpsForm()}
+                                        </div>
+                                    </TabsContent>
+                                ))}
+                                </Tabs>
+                            ) : (
+                                <div className="p-4 border rounded-md text-sm text-muted-foreground">
+                                    请至少选择一个操作类型。
+                                </div>
+                            )}
                         </div>
 
                         <div>
