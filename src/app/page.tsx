@@ -56,7 +56,7 @@ type OperationGroup = {
   hardwareChange?: {
     configType: 'model' | 'custom';
     targetModelId?: string;
-    customConfig?: any;
+    customConfig: Partial<ServerHardwareConfig>;
     suggestion?: HardwareChangeSuggestion;
     isGenerating: boolean;
   }
@@ -78,6 +78,7 @@ export default function Home() {
         notes: '',
         hardwareChange: {
           configType: 'model',
+          customConfig: {},
           isGenerating: false,
         }
       },
@@ -150,30 +151,61 @@ export default function Home() {
   }
 
   const handleGenerateSuggestion = async (group: OperationGroup) => {
-    if (group.servers.length === 0 || !group.hardwareChange?.targetModelId) return;
-
+    if (group.servers.length === 0) return;
+  
     updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: true, suggestion: undefined } });
-
+  
     const server = group.servers[0];
-    const targetModel = targetModels[server.resourceType].find(m => m.id === group.hardwareChange.targetModelId);
-
-    if (!targetModel) {
+    let targetConfig: ServerHardwareConfig | null = null;
+  
+    if (group.hardwareChange.configType === 'model') {
+      if (!group.hardwareChange.targetModelId) {
         updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: false } });
         return;
-    }
+      }
+      const targetModel = targetModels[server.resourceType].find(m => m.id === group.hardwareChange.targetModelId);
+      if (targetModel) {
+        targetConfig = targetModel.config;
+      }
+    } else { // custom config
+      const customConfig = group.hardwareChange.customConfig;
+      // Basic validation: ensure essential fields for the server type are present
+      const hasBaseFields = customConfig.cpu && customConfig.memory && customConfig.storage;
+      const hasGpuFields = server.resourceType === 'GPU' ? hasBaseFields && customConfig.gpu && customConfig.vpcNetwork && customConfig.computeNetwork && customConfig.storageNetwork : false;
+      const hasCpuFields = server.resourceType === 'CPU' ? hasBaseFields && customConfig.nic : false;
 
-    try {
-        const suggestion = await getHardwareSuggestion({
-            currentConfig: server.config,
-            targetConfig: targetModel.config,
-            serverType: server.resourceType,
-        });
-        updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, suggestion, isGenerating: false } });
-    } catch(e) {
-        console.error(e);
-        updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: false } });
+      if ((server.resourceType === 'GPU' && hasGpuFields) || (server.resourceType === 'CPU' && hasCpuFields)) {
+         targetConfig = {
+          cpu: customConfig.cpu || '',
+          memory: customConfig.memory || '',
+          storage: customConfig.storage || '',
+          gpu: customConfig.gpu || '',
+          vpcNetwork: customConfig.vpcNetwork || '',
+          computeNetwork: customConfig.computeNetwork || '',
+          storageNetwork: customConfig.storageNetwork || '',
+          nic: customConfig.nic || '',
+        };
+      }
     }
-  }
+  
+    if (!targetConfig) {
+      updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: false } });
+      // TODO: Show a toast notification about incomplete config
+      return;
+    }
+  
+    try {
+      const suggestion = await getHardwareSuggestion({
+        currentConfig: server.config,
+        targetConfig: targetConfig,
+        serverType: server.resourceType,
+      });
+      updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, suggestion, isGenerating: false } });
+    } catch (e) {
+      console.error(e);
+      updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: false } });
+    }
+  };
 
 
   const renderInstallSystemForm = () => (
@@ -364,11 +396,16 @@ export default function Home() {
     const models = targetModels[serverType];
     const selectedModel = models.find(m => m.id === group.hardwareChange?.targetModelId);
 
+    const handleCustomConfigChange = (field: keyof ServerHardwareConfig, value: string) => {
+      const newCustomConfig = { ...group.hardwareChange.customConfig, [field]: value };
+      updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, customConfig: newCustomConfig } });
+    };
+
     const renderConfig = (config: ServerHardwareConfig, title: string) => (
         <div className="p-4 bg-muted/50 rounded-md space-y-4">
             <h4 className="font-medium">{title}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                {serverType === 'GPU' && config.gpu && (
+                {serverType === 'GPU' && (
                     <div className="space-y-1">
                         <p className="text-muted-foreground">GPU</p>
                         <p className="font-medium">{config.gpu}</p>
@@ -445,6 +482,53 @@ export default function Home() {
       )
     }
 
+    const renderCustomConfigForm = () => (
+        <div className="p-4 border rounded-md space-y-4">
+            <h4 className="font-medium">自定义目标配置</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {serverType === 'GPU' && (
+                    <div className="space-y-2">
+                        <Label htmlFor={`custom-gpu-${group.id}`}>GPU</Label>
+                        <Input id={`custom-gpu-${group.id}`} value={group.hardwareChange?.customConfig.gpu || ''} onChange={(e) => handleCustomConfigChange('gpu', e.target.value)} />
+                    </div>
+                )}
+                <div className="space-y-2">
+                    <Label htmlFor={`custom-cpu-${group.id}`}>CPU</Label>
+                    <Input id={`custom-cpu-${group.id}`} value={group.hardwareChange?.customConfig.cpu || ''} onChange={(e) => handleCustomConfigChange('cpu', e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor={`custom-memory-${group.id}`}>内存</Label>
+                    <Input id={`custom-memory-${group.id}`} value={group.hardwareChange?.customConfig.memory || ''} onChange={(e) => handleCustomConfigChange('memory', e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor={`custom-storage-${group.id}`}>硬盘/存储</Label>
+                    <Input id={`custom-storage-${group.id}`} value={group.hardwareChange?.customConfig.storage || ''} onChange={(e) => handleCustomConfigChange('storage', e.target.value)} />
+                </div>
+                {serverType === 'GPU' ? (
+                    <>
+                        <div className="space-y-2">
+                            <Label htmlFor={`custom-vpc-${group.id}`}>VPC网络</Label>
+                            <Input id={`custom-vpc-${group.id}`} value={group.hardwareChange?.customConfig.vpcNetwork || ''} onChange={(e) => handleCustomConfigChange('vpcNetwork', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor={`custom-compute-${group.id}`}>计算网络</Label>
+                            <Input id={`custom-compute-${group.id}`} value={group.hardwareChange?.customConfig.computeNetwork || ''} onChange={(e) => handleCustomConfigChange('computeNetwork', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor={`custom-storage-net-${group.id}`}>存储网络</Label>
+                            <Input id={`custom-storage-net-${group.id}`} value={group.hardwareChange?.customConfig.storageNetwork || ''} onChange={(e) => handleCustomConfigChange('storageNetwork', e.target.value)} />
+                        </div>
+                    </>
+                ) : (
+                    <div className="space-y-2">
+                        <Label htmlFor={`custom-nic-${group.id}`}>网卡</Label>
+                        <Input id={`custom-nic-${group.id}`} value={group.hardwareChange?.customConfig.nic || ''} onChange={(e) => handleCustomConfigChange('nic', e.target.value)} />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
     return (
       <div className="space-y-6 pt-4">
         {renderConfig(group.servers[0].config, `当前配置 (${group.servers[0].hostname})`)}
@@ -492,15 +576,16 @@ export default function Home() {
             </div>
            )
         ) : (
-             <div className="p-4 border rounded-md">
-                <p className="text-sm text-muted-foreground">自定义配置功能正在开发中。</p>
-             </div>
+            renderCustomConfigForm()
         )}
 
         <div className="flex justify-end">
             <Button 
                 onClick={() => handleGenerateSuggestion(group)}
-                disabled={!group.hardwareChange?.targetModelId || group.hardwareChange?.isGenerating}
+                disabled={
+                    (group.hardwareChange?.configType === 'model' && !group.hardwareChange?.targetModelId) ||
+                    group.hardwareChange?.isGenerating
+                }
             >
                 {group.hardwareChange?.isGenerating ? (
                     <LoaderCircle className="animate-spin" />
@@ -755,8 +840,3 @@ export default function Home() {
 }
 
     
-
-    
-
-    
-
