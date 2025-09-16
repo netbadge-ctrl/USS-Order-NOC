@@ -368,6 +368,12 @@ export default function Home() {
         <div className="p-4 bg-muted/50 rounded-md space-y-4">
             <h4 className="font-medium">{title}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                {serverType === 'GPU' && config.gpu && (
+                    <div className="space-y-1">
+                        <p className="text-muted-foreground">GPU</p>
+                        <p className="font-medium">{config.gpu}</p>
+                    </div>
+                )}
                 <div className="space-y-1">
                     <p className="text-muted-foreground">CPU</p>
                     <p className="font-medium">{config.cpu}</p>
@@ -382,10 +388,6 @@ export default function Home() {
                 </div>
                 {serverType === 'GPU' ? (
                     <>
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">GPU</p>
-                            <p className="font-medium">{config.gpu}</p>
-                        </div>
                          <div className="space-y-1">
                             <p className="text-muted-foreground">VPC网络</p>
                             <p className="font-medium">{config.vpcNetwork}</p>
