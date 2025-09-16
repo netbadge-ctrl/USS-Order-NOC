@@ -347,7 +347,7 @@ export default function Home() {
 
   const renderHardwareChangeForm = (group: OperationGroup) => {
     if (group.servers.length === 0) {
-        return <p className="text-sm text-muted-foreground pt-4">请先将服务器添加到此任务批次中以配置硬件变更。</p>
+        return (<p className="text-sm text-muted-foreground pt-4">请先将服务器添加到此任务批次中以配置硬件变更。</p>);
     }
 
     const serverTypes = new Set(group.servers.map(s => s.resourceType));
@@ -361,7 +361,7 @@ export default function Home() {
                     此任务批次中包含多种服务器类型 (CPU 和 GPU)。请将不同类型的服务器分在不同的任务批次中进行硬件变更。
                 </AlertDescription>
             </Alert>
-        )
+        );
     }
 
     const serverType = serverTypes.values().next().value as 'CPU' | 'GPU';
