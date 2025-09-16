@@ -27,7 +27,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Terminal } from 'lucide-react';
 
 const operations: {
   id: OperationId;
@@ -64,6 +65,7 @@ export default function Home() {
     if (selectedServers.length === 0) {
         setOperationGroups([]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedServers, operationGroups.length]);
 
 
@@ -303,70 +305,87 @@ export default function Home() {
     </div>
   );
 
-  const renderHardwareChangeForm = () => (
-    <div className="space-y-6 pt-4">
-      <div className="space-y-4">
-        <div className="space-y-2">
-            <Label>配置方式</Label>
-            <RadioGroup defaultValue="target-model" className="flex items-center gap-4">
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="target-model" id="hw-target-model" />
-                    <Label htmlFor="hw-target-model" className="font-normal">按目标机型</Label>
+  const renderHardwareChangeForm = (group: OperationGroup) => {
+    if (group.servers.length === 0) {
+        return <p className="text-sm text-muted-foreground pt-4">请先将服务器添加到此任务批次中以查看硬件变更详情。</p>
+    }
+
+    const serverTypes = new Set(group.servers.map(s => s.resourceType));
+
+    if (serverTypes.size > 1) {
+        return (
+            <Alert variant="destructive" className="mt-4">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>类型不匹配</AlertTitle>
+                <AlertDescription>
+                    此任务批次中包含多种服务器类型 (CPU 和 GPU)。请将不同类型的服务器分在不同的任务批次中进行硬件变更。
+                </AlertDescription>
+            </Alert>
+        )
+    }
+
+    const serverType = serverTypes.values().next().value;
+    
+    return (
+      <div className="space-y-6 pt-4">
+        <div className="p-4 bg-muted/50 rounded-md space-y-4">
+            <h4 className="font-medium">目标配置 ({serverType} 服务器)</h4>
+            {serverType === 'GPU' ? (
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">目标CPU</p>
+                        <p className="font-medium">Intel_8358P*2 (64核128线程)</p>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">目标内存</p>
+                        <p className="font-medium">64G_3200 * 16</p>
+                    </div>
+                    <div className="space-y-1 col-span-2">
+                        <p className="text-sm text-muted-foreground">目标硬盘/存储</p>
+                        <p className="font-medium">SATA2.5_480G * 2 + NVME2.5_7.68T * 2</p>
+                    </div>
+                     <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">目标GPU</p>
+                        <p className="font-medium">GM302*8</p>
+                    </div>
+                     <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">VPC网络</p>
+                        <p className="font-medium">25GE_2 * 1</p>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">计算网络</p>
+                        <p className="font-medium">NVLINK_80G * 8</p>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">存储网络</p>
+                        <p className="font-medium">-</p>
+                    </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="custom" id="hw-custom" />
-                    <Label htmlFor="hw-custom" className="font-normal">自定义配置</Label>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">目标CPU</p>
+                        <p className="font-medium">4316*2 (40核80线程)</p>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">目标内存</p>
+                        <p className="font-medium">256G</p>
+                    </div>
+                    <div className="space-y-1 col-span-2">
+                        <p className="text-sm text-muted-foreground">目标硬盘/存储</p>
+                        <p className="font-medium">480G SATA SSD * 2 + 8T SATA HDD * 12</p>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">目标网卡</p>
+                        <p className="font-medium">25G * 2</p>
+                    </div>
                 </div>
-            </RadioGroup>
-        </div>
-         <div className="space-y-2">
-            <Label htmlFor="hw-target-model-select">目标机型</Label>
-             <Select defaultValue="gpu-server">
-                <SelectTrigger id="hw-target-model-select">
-                    <SelectValue placeholder="选择目标机型" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="gpu-server">高性能GPU服务器配置 (GPU)</SelectItem>
-                    <SelectItem value="storage-server">大容量存储服务器配置</SelectItem>
-                    <SelectItem value="compute-server">高计算性能服务器配置</SelectItem>
-                </SelectContent>
-            </Select>
+            )}
         </div>
       </div>
-      <div className="p-4 bg-muted/50 rounded-md space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-            <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">目标CPU</p>
-                <p className="font-medium">Intel_8358P*2 (64核128线程)</p>
-            </div>
-            <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">目标内存</p>
-                <p className="font-medium">64G_3200 * 16</p>
-            </div>
-            <div className="space-y-1 col-span-2">
-                <p className="text-sm text-muted-foreground">目标硬盘/存储</p>
-                <p className="font-medium">SATA2.5_480G * 2 + NVME2.5_7.68T * 2</p>
-            </div>
-            <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">VPC网络</p>
-                <p className="font-medium">25GE_2 * 1</p>
-            </div>
-             <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">计算网络</p>
-                <p className="font-medium">NVLINK_80G * 8</p>
-            </div>
-            <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">存储网络</p>
-                <p className="font-medium">-</p>
-            </div>
-             <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">目标GPU</p>
-                <p className="font-medium">GM302*8</p>
-            </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
+
 
   return (
     <div className="space-y-8">
@@ -475,7 +494,7 @@ export default function Home() {
                         </div>
 
                         <div>
-                            <h4 className="font-medium mb-2 text-sm">2. 选择操作类型 (可多选):</h4>
+                            <h4 className="font-medium mb-2 text-sm">2. 选择操作类型:</h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {operations.map((op) => (
                                 <div key={op.id} className="flex flex-col gap-2">
@@ -506,7 +525,7 @@ export default function Home() {
                                 <div className="p-4 border rounded-md">
                                 {group.operationId === 'install-system' && renderInstallSystemForm()}
                                 {group.operationId === 'relocation' && renderRelocationForm()}
-                                {group.operationId === 'hardware-change' && renderHardwareChangeForm()}
+                                {group.operationId === 'hardware-change' && renderHardwareChangeForm(group)}
                                 {group.operationId !== 'install-system' && group.operationId !== 'relocation' && group.operationId !== 'hardware-change' && (
                                     <p className="text-sm text-muted-foreground">
                                         {operations.find(o => o.id === group.operationId)?.name} 的配置详情将显示在这里。
