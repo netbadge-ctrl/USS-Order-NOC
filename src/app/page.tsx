@@ -382,7 +382,7 @@ export default function Home() {
                     <p className="text-muted-foreground">内存</p>
                     <p className="font-medium">{config.memory}</p>
                 </div>
-                <div className="space-y-1 col-span-2">
+                <div className="space-y-1">
                     <p className="text-muted-foreground">硬盘/存储</p>
                     <p className="font-medium">{config.storage}</p>
                 </div>
@@ -759,3 +759,4 @@ export default function Home() {
     
 
     
+
