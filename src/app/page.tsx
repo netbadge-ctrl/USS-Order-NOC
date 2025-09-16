@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import ServerTable from '@/components/server-table';
 import type { Server, OperationId, HardwareChangeSuggestion, ServerHardwareConfig } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, X, Wand2, LoaderCircle } from 'lucide-react';
+import { PlusCircle, X, Wand2, LoaderCircle, ChevronsUpDown } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
@@ -33,6 +34,9 @@ import { targetModels } from '@/lib/data';
 import { getHardwareSuggestion } from '@/ai/flows/hardware-suggestion-flow';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+
 
 const operations: {
   id: OperationId;
@@ -64,6 +68,69 @@ type OperationGroup = {
   }
 };
 
+function ServerSelector({
+  unassignedServers,
+  onAddServers,
+}: {
+  unassignedServers: Server[];
+  onAddServers: (servers: Server[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<Server[]>([]);
+
+  const handleAdd = () => {
+    onAddServers(selected);
+    setSelected([]);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-auto justify-start">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          添加服务器
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[400px] p-0">
+        <Command>
+          <CommandInput placeholder="搜索服务器..." />
+          <CommandList>
+            <CommandEmpty>没有未分配的服务器。</CommandEmpty>
+            <CommandGroup>
+              {unassignedServers.map((server) => (
+                <CommandItem
+                  key={server.id}
+                  value={`${server.hostname} ${server.ipAddress}`}
+                  onSelect={() => {
+                    setSelected((currentSelected) =>
+                      currentSelected.some((s) => s.id === server.id)
+                        ? currentSelected.filter((s) => s.id !== server.id)
+                        : [...currentSelected, server]
+                    );
+                  }}
+                >
+                  <Checkbox
+                    className="mr-2"
+                    checked={selected.some((s) => s.id === server.id)}
+                  />
+                  <span>{server.hostname} ({server.ipAddress})</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+        <div className="p-2 border-t">
+          <Button onClick={handleAdd} className="w-full" disabled={selected.length === 0}>
+            添加 {selected.length > 0 ? `${selected.length} 台` : ''}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+
 export default function Home() {
   const [selectedServers, setSelectedServers] = useState<Server[]>([]);
   const [operationGroups, setOperationGroups] = useState<OperationGroup[]>([]);
@@ -77,7 +144,7 @@ export default function Home() {
       {
         id: newGroupId,
         servers: [],
-        operationIds: ['install-system'],
+        operationIds: [],
         notes: '',
         hardwareChange: {
           configType: 'model',
@@ -96,20 +163,17 @@ export default function Home() {
   }, [selectedServers, operationGroups.length, addOperationGroup]);
 
 
-  const unassignedServers = selectedServers.filter(
+  const unassignedServers = useMemo(() => selectedServers.filter(
     (server) =>
       !operationGroups.some((group) =>
         group.servers.some((s) => s.id === server.id)
       )
-  );
+  ), [selectedServers, operationGroups]);
 
   const removeOperationGroup = (groupId: number) => {
     setOperationGroups(currentGroups => {
         const groupToRemove = currentGroups.find(g => g.id === groupId);
         if (!groupToRemove) return currentGroups;
-
-        // Servers in the group being removed are now unassigned.
-        // No need to explicitly move them, they just won't be in any group anymore.
         
         return currentGroups.filter((group) => group.id !== groupId);
     });
@@ -123,15 +187,19 @@ export default function Home() {
     );
   };
 
-  const addServerToGroup = (groupId: number, server: Server) => {
-     const groupsWithServerRemoved = operationGroups.map(g => ({
+  const addServersToGroup = (groupId: number, serversToAdd: Server[]) => {
+     const serverIdsToAdd = new Set(serversToAdd.map(s => s.id));
+     const groupsWithServersRemoved = operationGroups.map(g => ({
         ...g,
-        servers: g.servers.filter(s => s.id !== server.id)
+        servers: g.servers.filter(s => !serverIdsToAdd.has(s.id))
     }));
 
-    const updatedGroups = groupsWithServerRemoved.map((group) => {
+    const updatedGroups = groupsWithServersRemoved.map((group) => {
       if (group.id === groupId) {
-        return { ...group, servers: [...group.servers, server] };
+        // Prevent duplicates
+        const existingServerIds = new Set(group.servers.map(s => s.id));
+        const newServers = serversToAdd.filter(s => !existingServerIds.has(s.id));
+        return { ...group, servers: [...group.servers, ...newServers] };
       }
       return group;
     });
@@ -161,9 +229,6 @@ export default function Home() {
         ? group.operationIds.filter(id => id !== operationId)
         : [...group.operationIds, operationId];
 
-    // If we're adding 'relocation', remove other ops, and vice-versa.
-    // This logic can be adjusted based on business rules.
-    // For now, let's allow multiple selections.
     updateGroup(groupId, { operationIds: newOperationIds, subOperationId: undefined });
   };
   
@@ -204,7 +269,6 @@ export default function Home() {
   
     if (!targetConfig) {
       updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: false } });
-      // TODO: Show a toast notification about incomplete config
       return;
     }
   
@@ -721,7 +785,7 @@ export default function Home() {
                     <h3 className="text-lg font-semibold">2. 配置任务批次</h3>
                     
                     <div className="space-y-4">
-                        <h3 className="font-medium">未分配的服务器</h3>
+                        <h3 className="font-medium">未分配的服务器 ({unassignedServers.length})</h3>
                         <div className="p-4 bg-muted/50 rounded-md min-h-[60px]">
                             {unassignedServers.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
@@ -747,8 +811,8 @@ export default function Home() {
                         </CardHeader>
                         <CardContent className="space-y-6">
                         <div>
-                            <h4 className="font-medium mb-2 text-sm">1. 从待分配的服务器中选择:</h4>
-                            <div className="p-4 bg-blue-50 border border-blue-200 rounded-md min-h-[60px] space-y-4">
+                            <h4 className="font-medium mb-2 text-sm">1. 将服务器添加到此批次:</h4>
+                            <div className="p-4 bg-blue-50 border border-blue-200 rounded-md min-h-[88px] space-y-4">
                                 <div className="flex flex-wrap gap-2">
                                 {group.servers.map(server => (
                                     <Badge key={server.id} variant="outline" className="flex items-center gap-2 p-2 bg-white">
@@ -758,18 +822,12 @@ export default function Home() {
                                     </button>
                                     </Badge>
                                 ))}
-                                {group.servers.length === 0 && <p className="text-sm text-muted-foreground">从下面点击未分配的服务器添加到此批次。</p>}
+                                {group.servers.length === 0 && <p className="text-sm text-muted-foreground">从下面点击“添加服务器”以分配未分配的服务器。</p>}
                                 </div>
-                                    {unassignedServers.length > 0 && <hr/>}
-                                <div className="flex flex-wrap gap-2">
-                                    {unassignedServers.map(server => (
-                                    <button key={server.id} onClick={() => addServerToGroup(group.id, server)}>
-                                        <Badge variant="secondary" className="p-2 cursor-pointer hover:bg-primary hover:text-primary-foreground">
-                                        {server.hostname}
-                                        </Badge>
-                                    </button>
-                                    ))}
-                                </div>
+                                <ServerSelector 
+                                    unassignedServers={unassignedServers}
+                                    onAddServers={(servers) => addServersToGroup(group.id, servers)}
+                                />
                             </div>
                         </div>
 
