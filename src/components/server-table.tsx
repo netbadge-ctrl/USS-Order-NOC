@@ -118,6 +118,7 @@ export default function ServerTable({ onSelectionChange }: ServerTableProps) {
               <TableHead>ID</TableHead>
               <TableHead>名称</TableHead>
               <TableHead>主机名</TableHead>
+              <TableHead>类型</TableHead>
               <TableHead>状态</TableHead>
               <TableHead>数据中心</TableHead>
               <TableHead>IP 地址</TableHead>
@@ -140,6 +141,13 @@ export default function ServerTable({ onSelectionChange }: ServerTableProps) {
                   <TableCell>{server.name}</TableCell>
                   <TableCell>{server.hostname}</TableCell>
                   <TableCell>
+                    {server.resourceType && (
+                      <Badge variant={server.resourceType === 'GPU' ? 'default' : 'secondary'} className="font-normal">
+                        {server.resourceType}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Badge variant="outline" className={cn("border-0 font-normal", getStatusVariant(server.status))}>
                       {server.status}
                     </Badge>
@@ -151,7 +159,7 @@ export default function ServerTable({ onSelectionChange }: ServerTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   未找到服务器。
                 </TableCell>
               </TableRow>
