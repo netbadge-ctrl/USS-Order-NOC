@@ -10,7 +10,7 @@ export type Server = {
   rack: string;
 };
 
-export type OperationId = 'reboot' | 'run-script' | 'install-package' | 'check-status';
+export type OperationId = 'relocation' | 'install-system' | 'hardware-change' | 'additional-ops';
 
 export type Operation = {
   id: OperationId;

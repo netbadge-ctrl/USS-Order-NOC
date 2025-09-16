@@ -22,12 +22,27 @@ import {
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, X } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const operations: {
-  id: string;
+  id: OperationId;
   name: string;
+  subOps?: { id: string; name: string }[];
 }[] = [
-  { id: 'relocation', name: '搬迁' },
+  { 
+    id: 'relocation', 
+    name: '搬迁 (变更机房&机架)',
+    subOps: [{ id: 're-rack', name: '原机架位上架' }]
+  },
   { id: 'install-system', name: '安装系统' },
   { id: 'hardware-change', name: '硬件变更' },
   { id: 'additional-ops', name: '附加操作' },
@@ -36,7 +51,8 @@ const operations: {
 type OperationGroup = {
   id: number;
   servers: Server[];
-  operationId: string;
+  operationId: OperationId;
+  subOperationId?: string;
   notes: string;
 };
 
@@ -58,7 +74,7 @@ export default function Home() {
       {
         id: nextGroupId,
         servers: [],
-        operationId: 'relocation',
+        operationId: 'install-system',
         notes: '',
       },
     ]);
@@ -70,20 +86,21 @@ export default function Home() {
   };
 
   const addServerToGroup = (groupId: number, server: Server) => {
-    setOperationGroups(
-      operationGroups.map((group) => {
-        if (group.id === groupId) {
-          // Remove from other groups first to ensure exclusivity
-          const updatedGroups = operationGroups.map(g => ({
-            ...g,
-            servers: g.servers.filter(s => s.id !== server.id)
-          }));
-          const currentGroup = updatedGroups.find(g => g.id === groupId)!;
-          return { ...currentGroup, servers: [...currentGroup.servers, server] };
-        }
-        return group;
-      })
-    );
+     // First, remove the server from any group it might already be in
+     const groupsWithServerRemoved = operationGroups.map(g => ({
+        ...g,
+        servers: g.servers.filter(s => s.id !== server.id)
+    }));
+
+    // Then, add the server to the target group
+    const updatedGroups = groupsWithServerRemoved.map((group) => {
+      if (group.id === groupId) {
+        return { ...group, servers: [...group.servers, server] };
+      }
+      return group;
+    });
+
+    setOperationGroups(updatedGroups);
   };
   
   const removeServerFromGroup = (groupId: number, serverId: string) => {
@@ -100,13 +117,96 @@ export default function Home() {
     );
   };
 
-  const setGroupOperation = (groupId: number, operationId: string) => {
+  const setGroupOperation = (groupId: number, operationId: OperationId) => {
     setOperationGroups(
       operationGroups.map((group) =>
-        group.id === groupId ? { ...group, operationId } : group
+        group.id === groupId ? { ...group, operationId, subOperationId: undefined } : group
       )
     );
   };
+  
+  const setGroupSubOperation = (groupId: number, subOpId: string) => {
+     setOperationGroups(
+      operationGroups.map((group) =>
+        group.id === groupId ? { ...group, subOperationId: subOpId } : group
+      )
+    );
+  }
+
+  const renderInstallSystemForm = () => (
+    <div className="space-y-6 pt-4">
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="os">操作系统</Label>
+           <Select defaultValue="centos-7.6">
+            <SelectTrigger id="os">
+              <SelectValue placeholder="选择操作系统" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="centos-7.6">CentOS 7.6-KVER5.4</SelectItem>
+              <SelectItem value="ubuntu-22.04">Ubuntu 22.04 LTS</SelectItem>
+              <SelectItem value="windows-server-2022">Windows Server 2022</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+         <div className="space-y-2">
+          <Label htmlFor="raid">系统RAID</Label>
+           <Select defaultValue="raid1">
+            <SelectTrigger id="raid">
+              <SelectValue placeholder="选择RAID级别" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="raid0">RAID0</SelectItem>
+              <SelectItem value="raid1">RAID1</SelectItem>
+              <SelectItem value="raid5">RAID5</SelectItem>
+              <SelectItem value="raid10">RAID10</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+       <div className="space-y-2">
+        <Label htmlFor="bond">BOND参数</Label>
+         <Select defaultValue="mode4">
+          <SelectTrigger id="bond">
+            <SelectValue placeholder="选择BOND模式" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mode1">mode1 (active-backup)</SelectItem>
+            <SelectItem value="mode4">mode4 (3+4)</SelectItem>
+            <SelectItem value="mode6">mode6 (balance-alb)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-4">
+        <div className="space-y-2">
+            <Label>配置方式</Label>
+            <RadioGroup defaultValue="target-model" className="flex items-center gap-4">
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="target-model" id="target-model" />
+                    <Label htmlFor="target-model" className="font-normal">按目标机型</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="custom" id="custom" />
+                    <Label htmlFor="custom" className="font-normal">自定义配置</Label>
+                </div>
+            </RadioGroup>
+        </div>
+         <div className="space-y-2">
+            <Label htmlFor="target-model-select">目标机型</Label>
+             <Select defaultValue="gpu-server">
+                <SelectTrigger id="target-model-select">
+                    <SelectValue placeholder="选择目标机型" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="gpu-server">高性能GPU服务器配置 (GPU)</SelectItem>
+                    <SelectItem value="storage-server">大容量存储服务器配置</SelectItem>
+                    <SelectItem value="compute-server">高计算性能服务器配置</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+      </div>
+    </div>
+  );
 
 
   return (
@@ -122,116 +222,165 @@ export default function Home() {
       </Card>
 
       {selectedServers.length > 0 && (
+        <>
         <Card>
-          <CardHeader>
-            <CardTitle>第二步：定义工单</CardTitle>
-            <CardDescription>
-              创建操作组，将服务器分配到组中，并为每个组配置任务。
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            
-            <div className="space-y-4">
-              <h3 className="font-medium">未分配的服务器</h3>
-              <div className="p-4 bg-muted/50 rounded-md min-h-[80px]">
-                {unassignedServers.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {unassignedServers.map(server => (
-                       <Badge key={server.id} variant="secondary" className="p-2">
-                         {server.hostname}
-                       </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">所有选中的服务器都已分配。</p>
-                )}
-              </div>
-            </div>
+            <CardHeader>
+                <CardTitle>第二步：配置工单详情</CardTitle>
+                <CardDescription>为已选服务器配置任务批次和具体操作。</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
+                    <AccordionItem value="item-1">
+                        <AccordionTrigger className="text-lg font-semibold">1. 工单全局设置</AccordionTrigger>
+                        <AccordionContent>
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+                                <div className="space-y-2">
+                                    <Label>紧急程度</Label>
+                                    <RadioGroup defaultValue="normal" className="flex items-center pt-2">
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="normal" id="normal" />
+                                            <Label htmlFor="normal" className="font-normal">普通</Label>
+                                        </div>
+                                        <div className="flex items-center space-x-2 ml-4">
+                                            <RadioGroupItem value="urgent" id="urgent" />
+                                            <Label htmlFor="urgent" className="font-normal">紧急</Label>
+                                        </div>
+                                    </RadioGroup>
+                                </div>
+                                <div className="space-y-2 col-span-1">
+                                    <Label htmlFor="customer">客户</Label>
+                                    <Input id="customer" placeholder="例如: 内部测试部门" />
+                                </div>
+                                 <div className="space-y-2 col-span-1">
+                                    <Label htmlFor="uid">UID</Label>
+                                    <Input id="uid" placeholder="例如: 12345678" />
+                                </div>
+                                 <div className="space-y-2 col-span-1 flex items-end pb-2">
+                                    <Label htmlFor="led" className="text-sm">Led</Label>
+                                </div>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-2">
+                        <AccordionTrigger className="text-lg font-semibold">2. 配置任务批次</AccordionTrigger>
+                         <AccordionContent>
 
-            {operationGroups.map((group, groupIndex) => (
-              <Card key={group.id} className="bg-background">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg">操作组 #{groupIndex + 1}</CardTitle>
-                  <Button variant="ghost" size="icon" onClick={() => removeOperationGroup(group.id)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <Accordion type="multiple" defaultValue={['servers', 'operation-type', 'config-details', 'additional-notes']} className="w-full">
-                    <AccordionItem value="servers">
-                      <AccordionTrigger>组内服务器 ({group.servers.length})</AccordionTrigger>
-                      <AccordionContent className="p-2">
-                         <div className="p-4 bg-muted/50 rounded-md min-h-[80px] space-y-4">
-                            <div className="flex flex-wrap gap-2">
-                              {group.servers.map(server => (
-                                <Badge key={server.id} variant="outline" className="flex items-center gap-2 p-2">
-                                  <span>{server.hostname}</span>
-                                  <button onClick={() => removeServerFromGroup(group.id, server.id)} className="rounded-full hover:bg-muted-foreground/20">
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </Badge>
-                              ))}
+                            <div className="space-y-4 pt-4">
+                                <h3 className="font-medium">未分配的服务器</h3>
+                                <div className="p-4 bg-muted/50 rounded-md min-h-[60px]">
+                                    {unassignedServers.length > 0 ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {unassignedServers.map(server => (
+                                        <Badge key={server.id} variant="secondary" className="p-2">
+                                            {server.hostname}
+                                        </Badge>
+                                        ))}
+                                    </div>
+                                    ) : (
+                                    <p className="text-sm text-muted-foreground">所有选中的服务器都已分配。</p>
+                                    )}
+                                </div>
                             </div>
-                            {unassignedServers.length > 0 && <p className="text-sm text-muted-foreground">从下面拖拽或点击未分配的服务器添加到此组。</p>}
-                             <div className="flex flex-wrap gap-2">
-                                {unassignedServers.map(server => (
-                                  <button key={server.id} onClick={() => addServerToGroup(group.id, server)}>
-                                    <Badge variant="secondary" className="p-2 cursor-pointer hover:bg-primary hover:text-primary-foreground">
-                                      {server.hostname}
-                                    </Badge>
-                                  </button>
-                                ))}
-                            </div>
-                         </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="operation-type">
-                      <AccordionTrigger>操作类型</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-1">
-                          {operations.map((op) => (
-                            <Button
-                              key={op.id}
-                              variant={group.operationId === op.id ? 'default' : 'outline'}
-                              onClick={() => setGroupOperation(group.id, op.id)}
-                            >
-                              {op.name}
+
+                            {operationGroups.map((group, groupIndex) => (
+                            <Card key={group.id} className="bg-background mt-6">
+                                <CardHeader className="flex flex-row items-center justify-between py-4">
+                                    <CardTitle className="text-lg">创建任务批次 #{groupIndex + 1}</CardTitle>
+                                    <Button variant="ghost" size="icon" onClick={() => removeOperationGroup(group.id)}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                <div>
+                                    <h4 className="font-medium mb-2 text-sm">1. 从待分配的服务器中选择:</h4>
+                                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-md min-h-[60px] space-y-4">
+                                        <div className="flex flex-wrap gap-2">
+                                        {group.servers.map(server => (
+                                            <Badge key={server.id} variant="outline" className="flex items-center gap-2 p-2 bg-white">
+                                            <span className="font-normal">{server.hostname}<br/>{server.ipAddress}</span>
+                                            <button onClick={() => removeServerFromGroup(group.id, server.id)} className="rounded-full hover:bg-muted-foreground/20">
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                            </Badge>
+                                        ))}
+                                        {group.servers.length === 0 && <p className="text-sm text-muted-foreground">从下面点击未分配的服务器添加到此批次。</p>}
+                                        </div>
+                                         {unassignedServers.length > 0 && group.servers.length > 0 && <hr/>}
+                                        <div className="flex flex-wrap gap-2">
+                                            {unassignedServers.map(server => (
+                                            <button key={server.id} onClick={() => addServerToGroup(group.id, server)}>
+                                                <Badge variant="secondary" className="p-2 cursor-pointer hover:bg-primary hover:text-primary-foreground">
+                                                {server.hostname}
+                                                </Badge>
+                                            </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 className="font-medium mb-2 text-sm">2. 选择操作类型 (可多选):</h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {operations.map((op) => (
+                                        <div key={op.id} className="flex flex-col gap-2">
+                                            <Button
+                                                variant={group.operationId === op.id ? 'default' : 'outline'}
+                                                onClick={() => setGroupOperation(group.id, op.id)}
+                                                className="w-full justify-center"
+                                            >
+                                                {op.name}
+                                            </Button>
+                                             {op.subOps && group.operationId === op.id && op.subOps.map(subOp => (
+                                                <Button
+                                                key={subOp.id}
+                                                variant={group.subOperationId === subOp.id ? 'secondary' : 'outline'}
+                                                onClick={() => setGroupSubOperation(group.id, subOp.id)}
+                                                className="w-full justify-center"
+                                                >
+                                                {subOp.name}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 className="font-medium mb-2 text-sm">3. 配置详情:</h4>
+                                     <div className="p-4 border rounded-md">
+                                        {group.operationId === 'install-system' ? (
+                                            renderInstallSystemForm()
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground">
+                                                {operations.find(o => o.id === group.operationId)?.name} 的配置详情将显示在这里。
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div>
+                                     <h4 className="font-medium mb-2 text-sm">附加说明</h4>
+                                    <Textarea placeholder="在此输入此操作组的任何特殊说明或评论..." />
+                                </div>
+                                </CardContent>
+                            </Card>
+                            ))}
+                            <Button variant="outline" onClick={addOperationGroup} className="w-full mt-6">
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                创建任务批次
                             </Button>
-                          ))}
-                        </div>
-                      </AccordionContent>
+                        </AccordionContent>
                     </AccordionItem>
-                    <AccordionItem value="config-details">
-                      <AccordionTrigger>配置详情</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="p-4 text-sm text-muted-foreground">
-                          {operations.find(o => o.id === group.operationId)?.name} 的详情表单将在这里。
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="additional-notes">
-                      <AccordionTrigger>附加说明</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="grid w-full gap-2 p-1">
-                          <Textarea placeholder="在此输入此操作组的任何特殊说明或评论..." />
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </CardContent>
-              </Card>
-            ))}
-             <Button variant="outline" onClick={addOperationGroup} className="w-full">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              添加操作组
-            </Button>
-          </CardContent>
-          <CardFooter className="flex justify-end gap-2 mt-6">
+                </Accordion>
+            </CardContent>
+        </Card>
+        <div className="flex justify-end gap-2 mt-6">
             <Button variant="outline">保存草稿</Button>
             <Button>提交工单</Button>
-          </CardFooter>
-        </Card>
+        </div>
+      </>
       )}
     </div>
   );
 }
+
