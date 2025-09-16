@@ -68,6 +68,7 @@ export default function Home() {
   const [selectedServers, setSelectedServers] = useState<Server[]>([]);
   const [operationGroups, setOperationGroups] = useState<OperationGroup[]>([]);
   const [nextGroupId, setNextGroupId] = useState(1);
+  const [stressTest, setStressTest] = useState(false);
   
   const addOperationGroup = useCallback(() => {
     const newGroupId = nextGroupId;
@@ -103,8 +104,16 @@ export default function Home() {
   );
 
   const removeOperationGroup = (groupId: number) => {
-    setOperationGroups(operationGroups.filter((group) => group.id !== groupId));
-  };
+    setOperationGroups(currentGroups => {
+        const groupToRemove = currentGroups.find(g => g.id === groupId);
+        if (!groupToRemove) return currentGroups;
+
+        // Servers in the group being removed are now unassigned.
+        // No need to explicitly move them, they just won't be in any group anymore.
+        
+        return currentGroups.filter((group) => group.id !== groupId);
+    });
+};
 
   const updateGroup = (groupId: number, updates: Partial<OperationGroup>) => {
     setOperationGroups(
@@ -181,23 +190,16 @@ export default function Home() {
       }
     } else { // custom config
       const customConfig = group.hardwareChange.customConfig;
-      // Basic validation: ensure essential fields for the server type are present
-      const hasBaseFields = customConfig.cpu && customConfig.memory && customConfig.storage;
-      const hasGpuFields = server.resourceType === 'GPU' ? hasBaseFields && customConfig.gpu && customConfig.vpcNetwork && customConfig.computeNetwork && customConfig.storageNetwork : false;
-      const hasCpuFields = server.resourceType === 'CPU' ? hasBaseFields && customConfig.nic : false;
-
-      if ((server.resourceType === 'GPU' && hasGpuFields) || (server.resourceType === 'CPU' && hasCpuFields)) {
-         targetConfig = {
-          cpu: customConfig.cpu || '',
-          memory: customConfig.memory || '',
-          storage: customConfig.storage || '',
-          gpu: customConfig.gpu || '',
-          vpcNetwork: customConfig.vpcNetwork || '',
-          computeNetwork: customConfig.computeNetwork || '',
-          storageNetwork: customConfig.storageNetwork || '',
-          nic: customConfig.nic || '',
+      targetConfig = {
+          cpu: customConfig.cpu || server.config.cpu,
+          memory: customConfig.memory || server.config.memory,
+          storage: customConfig.storage || server.config.storage,
+          gpu: customConfig.gpu || server.config.gpu,
+          vpcNetwork: customConfig.vpcNetwork || server.config.vpcNetwork,
+          computeNetwork: customConfig.computeNetwork || server.config.computeNetwork,
+          storageNetwork: customConfig.storageNetwork || server.config.storageNetwork,
+          nic: customConfig.nic || server.config.nic,
         };
-      }
     }
   
     if (!targetConfig) {
@@ -390,26 +392,24 @@ export default function Home() {
             <h4 className="font-medium">{title}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
                 {serverType === 'GPU' && (
-                    <div className="space-y-1">
-                        <p className="text-muted-foreground">GPU</p>
-                        <p className="font-medium">{config.gpu}</p>
-                    </div>
-                )}
-                <div className="space-y-1">
-                    <p className="text-muted-foreground">CPU</p>
-                    <p className="font-medium">{config.cpu}</p>
-                </div>
-                <div className="space-y-1">
-                    <p className="text-muted-foreground">内存</p>
-                    <p className="font-medium">{config.memory}</p>
-                </div>
-                <div className="space-y-1">
-                    <p className="text-muted-foreground">硬盘/存储</p>
-                    <p className="font-medium">{config.storage}</p>
-                </div>
-                {serverType === 'GPU' ? (
                     <>
-                         <div className="space-y-1">
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">GPU</p>
+                            <p className="font-medium">{config.gpu}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">CPU</p>
+                            <p className="font-medium">{config.cpu}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">内存</p>
+                            <p className="font-medium">{config.memory}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">硬盘/存储</p>
+                            <p className="font-medium">{config.storage}</p>
+                        </div>
+                        <div className="space-y-1">
                             <p className="text-muted-foreground">VPC网络</p>
                             <p className="font-medium">{config.vpcNetwork}</p>
                         </div>
@@ -422,11 +422,28 @@ export default function Home() {
                             <p className="font-medium">{config.storageNetwork}</p>
                         </div>
                     </>
-                ): (
-                     <div className="space-y-1">
-                        <p className="text-muted-foreground">网卡</p>
-                        <p className="font-medium">{config.nic}</p>
-                    </div>
+                )}
+                 {serverType === 'CPU' && (
+                    <>
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">CPU</p>
+                            <p className="font-medium">{config.cpu}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-8">
+                            <div className="space-y-1">
+                                <p className="text-muted-foreground">内存</p>
+                                <p className="font-medium">{config.memory}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-muted-foreground">硬盘/存储</p>
+                                <p className="font-medium">{config.storage}</p>
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">网卡</p>
+                            <p className="font-medium">{config.nic}</p>
+                        </div>
+                    </>
                 )}
             </div>
         </div>
@@ -586,7 +603,6 @@ export default function Home() {
   };
   
   const renderAdditionalOpsForm = () => {
-    const [stressTest, setStressTest] = useState(false);
     return (
       <div className="space-y-6 pt-4">
         <div className="space-y-4 border-b pb-4">
@@ -844,7 +860,5 @@ export default function Home() {
     </div>
   );
 }
-
-    
 
     
