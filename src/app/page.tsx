@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -67,28 +67,10 @@ export default function Home() {
   const [operationGroups, setOperationGroups] = useState<OperationGroup[]>([]);
   const [nextGroupId, setNextGroupId] = useState(1);
   
-  useEffect(() => {
-    if (selectedServers.length > 0 && operationGroups.length === 0) {
-      addOperationGroup();
-    }
-    if (selectedServers.length === 0) {
-        setOperationGroups([]);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedServers, operationGroups.length]);
-
-
-  const unassignedServers = selectedServers.filter(
-    (server) =>
-      !operationGroups.some((group) =>
-        group.servers.some((s) => s.id === server.id)
-      )
-  );
-
-  const addOperationGroup = () => {
+  const addOperationGroup = useCallback(() => {
     const newGroupId = nextGroupId;
-    setOperationGroups([
-      ...operationGroups,
+    setOperationGroups(prevGroups => [
+      ...prevGroups,
       {
         id: newGroupId,
         servers: [],
@@ -101,7 +83,24 @@ export default function Home() {
       },
     ]);
     setNextGroupId(newGroupId + 1);
-  };
+  }, [nextGroupId]);
+
+  useEffect(() => {
+    if (selectedServers.length > 0 && operationGroups.length === 0) {
+      addOperationGroup();
+    }
+    if (selectedServers.length === 0) {
+        setOperationGroups([]);
+    }
+  }, [selectedServers, operationGroups.length, addOperationGroup]);
+
+
+  const unassignedServers = selectedServers.filter(
+    (server) =>
+      !operationGroups.some((group) =>
+        group.servers.some((s) => s.id === server.id)
+      )
+  );
 
   const removeOperationGroup = (groupId: number) => {
     setOperationGroups(operationGroups.filter((group) => group.id !== groupId));
@@ -182,10 +181,10 @@ export default function Home() {
 
   const renderInstallSystemForm = () => (
     <div className="space-y-6 pt-4">
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="os">操作系统</Label>
-           <Select defaultValue="centos-7.6">
+          <Select defaultValue="centos-7.6">
             <SelectTrigger id="os">
               <SelectValue placeholder="选择操作系统" />
             </SelectTrigger>
@@ -196,9 +195,9 @@ export default function Home() {
             </SelectContent>
           </Select>
         </div>
-         <div className="space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="raid">系统RAID</Label>
-           <Select defaultValue="raid1">
+          <Select defaultValue="raid1">
             <SelectTrigger id="raid">
               <SelectValue placeholder="选择RAID级别" />
             </SelectTrigger>
@@ -211,9 +210,9 @@ export default function Home() {
           </Select>
         </div>
       </div>
-       <div className="space-y-2">
+      <div className="space-y-2">
         <Label htmlFor="bond">BOND参数</Label>
-         <Select defaultValue="mode4">
+        <Select defaultValue="mode4">
           <SelectTrigger id="bond">
             <SelectValue placeholder="选择BOND模式" />
           </SelectTrigger>
@@ -226,30 +225,30 @@ export default function Home() {
       </div>
       <div className="space-y-4">
         <div className="space-y-2">
-            <Label>配置方式</Label>
-            <RadioGroup defaultValue="target-model" className="flex items-center gap-4">
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="target-model" id="target-model" />
-                    <Label htmlFor="target-model" className="font-normal">按目标机型</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="custom" id="custom" />
-                    <Label htmlFor="custom" className="font-normal">自定义配置</Label>
-                </div>
-            </RadioGroup>
+          <Label>配置方式</Label>
+          <RadioGroup defaultValue="target-model" className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="target-model" id="target-model" />
+              <Label htmlFor="target-model" className="font-normal">按目标机型</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="custom" id="custom" />
+              <Label htmlFor="custom" className="font-normal">自定义配置</Label>
+            </div>
+          </RadioGroup>
         </div>
-         <div className="space-y-2">
-            <Label htmlFor="target-model-select">目标机型</Label>
-             <Select defaultValue="gpu-server">
-                <SelectTrigger id="target-model-select">
-                    <SelectValue placeholder="选择目标机型" />
-                </Trigger>
-                <SelectContent>
-                    <SelectItem value="gpu-server">高性能GPU服务器配置 (GPU)</SelectItem>
-                    <SelectItem value="storage-server">大容量存储服务器配置</SelectItem>
-                    <SelectItem value="compute-server">高计算性能服务器配置</SelectItem>
-                </SelectContent>
-            </Select>
+        <div className="space-y-2">
+          <Label htmlFor="target-model-select">目标机型</Label>
+          <Select defaultValue="gpu-server">
+            <SelectTrigger id="target-model-select">
+              <SelectValue placeholder="选择目标机型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="gpu-server">高性能GPU服务器配置 (GPU)</SelectItem>
+              <SelectItem value="storage-server">大容量存储服务器配置</SelectItem>
+              <SelectItem value="compute-server">高计算性能服务器配置</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
@@ -685,3 +684,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
