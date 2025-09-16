@@ -15,17 +15,11 @@ export default function AppHeader() {
           <Package2 className="h-6 w-6" />
           <span className="hidden md:inline-block">IDC 工单系统</span>
         </Link>
-        <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground text-sm">
-          仪表盘
-        </Link>
         <Link
           href="#"
           className="text-foreground transition-colors hover:text-foreground font-semibold border-b-2 border-primary text-sm"
         >
           工单
-        </Link>
-        <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground text-sm">
-          资产
         </Link>
         <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground text-sm">
           报告
@@ -69,14 +63,8 @@ export default function AppHeader() {
               <Package2 className="h-6 w-6" />
               <span>IDC 工单系统</span>
             </Link>
-            <Link href="#" className="text-muted-foreground hover:text-foreground">
-              仪表盘
-            </Link>
             <Link href="#" className="hover:text-foreground">
               工单
-            </Link>
-            <Link href="#" className="text-muted-foreground hover:text-foreground">
-              资产
             </Link>
             <Link href="#" className="text-muted-foreground hover:text-foreground">
               报告
