@@ -13,9 +13,9 @@ import {
 } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import ServerTable from '@/components/server-table';
-import type { Server, OperationId } from '@/lib/types';
+import type { Server, OperationId, HardwareChangeSuggestion, ServerHardwareConfig } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, X } from 'lucide-react';
+import { PlusCircle, X, Wand2, LoaderCircle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
+import { targetModels } from '@/lib/data';
+import { getHardwareSuggestion } from '@/ai/flows/hardware-suggestion-flow';
 
 const operations: {
   id: OperationId;
@@ -51,6 +53,13 @@ type OperationGroup = {
   operationId: OperationId;
   subOperationId?: string;
   notes: string;
+  hardwareChange?: {
+    configType: 'model' | 'custom';
+    targetModelId?: string;
+    customConfig?: any;
+    suggestion?: HardwareChangeSuggestion;
+    isGenerating: boolean;
+  }
 };
 
 export default function Home() {
@@ -85,6 +94,10 @@ export default function Home() {
         servers: [],
         operationId: 'install-system',
         notes: '',
+        hardwareChange: {
+          configType: 'model',
+          isGenerating: false,
+        }
       },
     ]);
     setNextGroupId(newGroupId + 1);
@@ -92,6 +105,14 @@ export default function Home() {
 
   const removeOperationGroup = (groupId: number) => {
     setOperationGroups(operationGroups.filter((group) => group.id !== groupId));
+  };
+
+  const updateGroup = (groupId: number, updates: Partial<OperationGroup>) => {
+    setOperationGroups(
+      operationGroups.map((group) =>
+        group.id === groupId ? { ...group, ...updates } : group
+      )
+    );
   };
 
   const addServerToGroup = (groupId: number, server: Server) => {
@@ -125,20 +146,39 @@ export default function Home() {
   };
 
   const setGroupOperation = (groupId: number, operationId: OperationId) => {
-    setOperationGroups(
-      operationGroups.map((group) =>
-        group.id === groupId ? { ...group, operationId, subOperationId: undefined } : group
-      )
-    );
+    updateGroup(groupId, { operationId, subOperationId: undefined });
   };
   
   const setGroupSubOperation = (groupId: number, subOpId: string) => {
-     setOperationGroups(
-      operationGroups.map((group) =>
-        group.id === groupId ? { ...group, subOperationId: subOpId } : group
-      )
-    );
+     updateGroup(groupId, { subOperationId: subOpId });
   }
+
+  const handleGenerateSuggestion = async (group: OperationGroup) => {
+    if (group.servers.length === 0 || !group.hardwareChange?.targetModelId) return;
+
+    updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: true, suggestion: undefined } });
+
+    const server = group.servers[0];
+    const targetModel = targetModels[server.resourceType].find(m => m.id === group.hardwareChange.targetModelId);
+
+    if (!targetModel) {
+        updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: false } });
+        return;
+    }
+
+    try {
+        const suggestion = await getHardwareSuggestion({
+            currentConfig: server.config,
+            targetConfig: targetModel.config,
+            serverType: server.resourceType,
+        });
+        updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, suggestion, isGenerating: false } });
+    } catch(e) {
+        console.error(e);
+        updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: false } });
+    }
+  }
+
 
   const renderInstallSystemForm = () => (
     <div className="space-y-6 pt-4">
@@ -203,7 +243,7 @@ export default function Home() {
              <Select defaultValue="gpu-server">
                 <SelectTrigger id="target-model-select">
                     <SelectValue placeholder="选择目标机型" />
-                </SelectTrigger>
+                </Trigger>
                 <SelectContent>
                     <SelectItem value="gpu-server">高性能GPU服务器配置 (GPU)</SelectItem>
                     <SelectItem value="storage-server">大容量存储服务器配置</SelectItem>
@@ -307,11 +347,11 @@ export default function Home() {
 
   const renderHardwareChangeForm = (group: OperationGroup) => {
     if (group.servers.length === 0) {
-        return <p className="text-sm text-muted-foreground pt-4">请先将服务器添加到此任务批次中以查看硬件变更详情。</p>
+        return <p className="text-sm text-muted-foreground pt-4">请先将服务器添加到此任务批次中以配置硬件变更。</p>
     }
 
     const serverTypes = new Set(group.servers.map(s => s.resourceType));
-
+    
     if (serverTypes.size > 1) {
         return (
             <Alert variant="destructive" className="mt-4">
@@ -324,64 +364,152 @@ export default function Home() {
         )
     }
 
-    const serverType = serverTypes.values().next().value;
+    const serverType = serverTypes.values().next().value as 'CPU' | 'GPU';
+    const models = targetModels[serverType];
+    const selectedModel = models.find(m => m.id === group.hardwareChange?.targetModelId);
+
+    const renderConfig = (config: ServerHardwareConfig, title: string) => (
+        <div className="p-4 bg-muted/50 rounded-md space-y-4">
+            <h4 className="font-medium">{title}</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                <div className="space-y-1">
+                    <p className="text-muted-foreground">CPU</p>
+                    <p className="font-medium">{config.cpu}</p>
+                </div>
+                <div className="space-y-1">
+                    <p className="text-muted-foreground">内存</p>
+                    <p className="font-medium">{config.memory}</p>
+                </div>
+                <div className="space-y-1 col-span-2">
+                    <p className="text-muted-foreground">硬盘/存储</p>
+                    <p className="font-medium">{config.storage}</p>
+                </div>
+                {serverType === 'GPU' ? (
+                    <>
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">GPU</p>
+                            <p className="font-medium">{config.gpu}</p>
+                        </div>
+                         <div className="space-y-1">
+                            <p className="text-muted-foreground">VPC网络</p>
+                            <p className="font-medium">{config.vpcNetwork}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">计算网络</p>
+                            <p className="font-medium">{config.computeNetwork}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground">存储网络</p>
+                            <p className="font-medium">{config.storageNetwork}</p>
+                        </div>
+                    </>
+                ): (
+                     <div className="space-y-1">
+                        <p className="text-muted-foreground">网卡</p>
+                        <p className="font-medium">{config.nic}</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
     
+    const renderSuggestion = (suggestion: HardwareChangeSuggestion) => {
+      const renderItem = (label: string, item?: { action: string; details: string }) => {
+          if (!item || item.action === 'none') return null;
+          let actionText;
+          let badgeVariant: "default" | "secondary" | "destructive" = "secondary";
+          switch(item.action) {
+              case 'add': actionText = '新增'; badgeVariant="default"; break;
+              case 'replace': actionText = '更换'; badgeVariant="secondary"; break;
+              case 'remove': actionText = '移除'; badgeVariant="destructive"; break;
+          }
+
+          return (
+              <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-muted-foreground">{label}</span>
+                  <div className="flex items-center gap-2">
+                      <Badge variant={badgeVariant}>{actionText}</Badge>
+                      <span className="font-medium">{item.details}</span>
+                  </div>
+              </div>
+          )
+      }
+      return (
+          <div className="p-4 bg-primary/5 border-primary/20 border rounded-lg space-y-2 mt-4">
+              <h4 className="font-medium text-primary">改配方案建议</h4>
+              {renderItem('CPU', suggestion.cpu)}
+              {renderItem('内存', suggestion.memory)}
+              {renderItem('存储', suggestion.storage)}
+              {renderItem('GPU', suggestion.gpu)}
+              {renderItem('网卡', suggestion.nic)}
+              {renderItem('网络', suggestion.network)}
+          </div>
+      )
+    }
+
     return (
       <div className="space-y-6 pt-4">
-        <div className="p-4 bg-muted/50 rounded-md space-y-4">
-            <h4 className="font-medium">目标配置 ({serverType} 服务器)</h4>
-            {serverType === 'GPU' ? (
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                    <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">目标CPU</p>
-                        <p className="font-medium">Intel_8358P*2 (64核128线程)</p>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">目标内存</p>
-                        <p className="font-medium">64G_3200 * 16</p>
-                    </div>
-                    <div className="space-y-1 col-span-2">
-                        <p className="text-sm text-muted-foreground">目标硬盘/存储</p>
-                        <p className="font-medium">SATA2.5_480G * 2 + NVME2.5_7.68T * 2</p>
-                    </div>
-                     <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">目标GPU</p>
-                        <p className="font-medium">GM302*8</p>
-                    </div>
-                     <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">VPC网络</p>
-                        <p className="font-medium">25GE_2 * 1</p>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">计算网络</p>
-                        <p className="font-medium">NVLINK_80G * 8</p>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">存储网络</p>
-                        <p className="font-medium">-</p>
-                    </div>
+        {renderConfig(group.servers[0].config, `当前配置 (${group.servers[0].hostname})`)}
+        
+        <div className="space-y-2">
+            <Label>配置方式</Label>
+            <RadioGroup 
+                value={group.hardwareChange?.configType}
+                onValueChange={(value: 'model' | 'custom') => updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, configType: value }})}
+                className="flex items-center gap-4"
+            >
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="model" id={`model-${group.id}`} />
+                    <Label htmlFor={`model-${group.id}`} className="font-normal">按目标机型</Label>
                 </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                    <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">目标CPU</p>
-                        <p className="font-medium">4316*2 (40核80线程)</p>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">目标内存</p>
-                        <p className="font-medium">256G</p>
-                    </div>
-                    <div className="space-y-1 col-span-2">
-                        <p className="text-sm text-muted-foreground">目标硬盘/存储</p>
-                        <p className="font-medium">480G SATA SSD * 2 + 8T SATA HDD * 12</p>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">目标网卡</p>
-                        <p className="font-medium">25G * 2</p>
-                    </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="custom" id={`custom-${group.id}`} />
+                    <Label htmlFor={`custom-${group.id}`} className="font-normal">自定义配置</Label>
                 </div>
-            )}
+            </RadioGroup>
         </div>
+
+        {group.hardwareChange?.configType === 'model' ? (
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor={`target-model-select-${group.id}`}>目标机型</Label>
+                    <Select
+                        value={group.hardwareChange?.targetModelId}
+                        onValueChange={(value) => updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, targetModelId: value, suggestion: undefined } })}
+                    >
+                        <SelectTrigger id={`target-model-select-${group.id}`}>
+                            <SelectValue placeholder="选择目标机型" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {models.map(model => (
+                                <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                {selectedModel && renderConfig(selectedModel.config, '目标配置')}
+            </div>
+        ) : (
+             <div className="p-4 border rounded-md">
+                <p className="text-sm text-muted-foreground">自定义配置功能正在开发中。</p>
+             </div>
+        )}
+
+        <div className="flex justify-end">
+            <Button 
+                onClick={() => handleGenerateSuggestion(group)}
+                disabled={!group.hardwareChange?.targetModelId || group.hardwareChange?.isGenerating}
+            >
+                {group.hardwareChange?.isGenerating ? (
+                    <LoaderCircle className="animate-spin" />
+                ) : (
+                    <Wand2 />
+                )}
+                生成改配方案
+            </Button>
+        </div>
+        {group.hardwareChange?.isGenerating && <p className="text-sm text-muted-foreground text-center">AI 正在分析配置中，请稍候...</p>}
+        {group.hardwareChange?.suggestion && renderSuggestion(group.hardwareChange.suggestion)}
       </div>
     );
   };
@@ -557,5 +685,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
