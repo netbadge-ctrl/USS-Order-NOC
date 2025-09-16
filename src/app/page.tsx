@@ -32,6 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const operations: {
   id: OperationId;
@@ -208,6 +210,95 @@ export default function Home() {
     </div>
   );
 
+  const renderRelocationForm = () => (
+    <div className="space-y-6 pt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
+        <div className="flex items-center space-x-4">
+          <Label>是否混布</Label>
+          <RadioGroup defaultValue="no" className="flex">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id="mixed-no" />
+              <Label htmlFor="mixed-no" className="font-normal">否</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="yes" id="mixed-yes" />
+              <Label htmlFor="mixed-yes" className="font-normal">是</Label>
+            </div>
+          </RadioGroup>
+        </div>
+        <div className="col-start-4 flex items-center justify-end space-x-2">
+          <Checkbox id="rdma" />
+          <Label htmlFor="rdma" className="font-normal">RDMA网络开启</Label>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="space-y-2 lg:col-span-2">
+          <Label htmlFor="datacenter">机房</Label>
+          <Select defaultValue="qyyc01">
+            <SelectTrigger id="datacenter">
+              <SelectValue placeholder="选择机房" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="qyyc01">QYYC01-庆阳云创机房</SelectItem>
+              <SelectItem value="bj01">BJ01-北京A数据中心</SelectItem>
+              <SelectItem value="sh01">SH01-上海B数据中心</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2 lg:col-span-2">
+          <Label htmlFor="multi-tor">多机柜多TOR</Label>
+          <Select defaultValue="all">
+            <SelectTrigger id="multi-tor">
+              <SelectValue placeholder="选择" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ALL</SelectItem>
+              <SelectItem value="option1">选项1</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2 lg:col-span-2">
+          <Label htmlFor="network-props">网络属性</Label>
+          <Select defaultValue="all">
+            <SelectTrigger id="network-props">
+              <SelectValue placeholder="选择" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ALL</SelectItem>
+               <SelectItem value="option1">选项1</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2 lg:col-span-2">
+          <Label htmlFor="rack-props">机柜业务属性</Label>
+          <Select defaultValue="all">
+            <SelectTrigger id="rack-props">
+              <SelectValue placeholder="选择" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ALL</SelectItem>
+              <SelectItem value="option1">选项1</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">描述</Label>
+        <Textarea id="description" placeholder="输入描述..." />
+      </div>
+      <Alert variant="default" className="bg-blue-50 border-blue-200">
+        <AlertDescription>
+          <h5 className="font-bold mb-2">IDC机房搬迁物流提示:</h5>
+          <ol className="list-decimal list-inside text-sm space-y-1">
+            <li>常规搬迁日: 工作日一、三、五, 12:00前工单至RA安排最近搬迁日, 12:00后工单至RA安排下一搬迁日</li>
+            <li>紧急搬迁(工单选紧急): 12:00前工单至RA安排当日; 12:00后工单至RA安排下一工作日</li>
+            <li>搬迁时效: 同城当日达, 异地搬迁3-7日达</li>
+            <li>附加说明: 搬迁依赖物流车辆、机房手续、天气、路况等因素</li>
+          </ol>
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
 
   return (
     <div className="space-y-8">
@@ -348,9 +439,9 @@ export default function Home() {
                                 <div>
                                     <h4 className="font-medium mb-2 text-sm">3. 配置详情:</h4>
                                      <div className="p-4 border rounded-md">
-                                        {group.operationId === 'install-system' ? (
-                                            renderInstallSystemForm()
-                                        ) : (
+                                        {group.operationId === 'install-system' && renderInstallSystemForm()}
+                                        {group.operationId === 'relocation' && renderRelocationForm()}
+                                        {group.operationId !== 'install-system' && group.operationId !== 'relocation' && (
                                             <p className="text-sm text-muted-foreground">
                                                 {operations.find(o => o.id === group.operationId)?.name} 的配置详情将显示在这里。
                                             </p>
