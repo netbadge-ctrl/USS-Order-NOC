@@ -264,34 +264,6 @@ export default function Home() {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label>配置方式</Label>
-          <RadioGroup defaultValue="target-model" className="flex items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="target-model" id="target-model" />
-              <Label htmlFor="target-model" className="font-normal">按目标机型</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="custom" id="custom" />
-              <Label htmlFor="custom" className="font-normal">自定义配置</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="target-model-select">目标机型</Label>
-          <Select defaultValue="gpu-server">
-            <SelectTrigger id="target-model-select">
-              <SelectValue placeholder="选择目标机型" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="gpu-server">高性能GPU服务器配置 (GPU)</SelectItem>
-              <SelectItem value="storage-server">大容量存储服务器配置</SelectItem>
-              <SelectItem value="compute-server">高计算性能服务器配置</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
     </div>
   );
 
@@ -872,5 +844,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     
