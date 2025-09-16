@@ -1,7 +1,7 @@
-import { Activity, FileCode, Package, RotateCw, HardDrive, Network, GitPullRequest } from 'lucide-react';
-import type { Server, Operation, OperationId } from './types';
 
-export const servers: Server[] = [
+import type { Server } from './types';
+
+const baseServers: Server[] = [
   { 
     id: 'srv-7019', 
     name: '2102310QPD105F976.8F', 
@@ -115,17 +115,35 @@ export const servers: Server[] = [
   { id: 'srv-7030', name: '2102310QPD101512B.2F', hostname: 'qyyc01-test-ec2240001226.qyyc01.ksyun.com', ipAddress: '10.240.1.111', status: '运行中', dataCenter: 'QYYC01', rack: 'QYYC012F01-J-4-5', resourceType: 'CPU', config: { cpu: '4316*2', memory: '256G', storage: '480G SATA SSD * 2 + 8T SATA HDD * 12', nic: '25G * 2' } },
 ];
 
-export const operations: Operation[] = [
-  { id: 'reboot', name: '重装系统', description: '执行软重启或硬重启。', icon: RotateCw },
-  { id: 'run-script', name: '硬件更换', description: '在服务器上执行 Shell 脚本。', icon: HardDrive },
-  { id: 'install-package', name: '网络配置', description: '安装一个新的软件包。', icon: Network },
-  { id: 'check-status', name: '固件更新', description: '在服务器上运行健康检查。', icon: GitPullRequest },
-];
+const generatedServers: Server[] = [];
+const totalServers = 200;
+const statuses: Server['status'][] = ['运行中', '已停止', '维护中'];
+const resourceTypes: Server['resourceType'][] = ['CPU', 'GPU'];
+const dataCenters = ['QYYC01', 'BJ01', 'SH01'];
 
-export const operationMap = operations.reduce((acc, op) => {
-    acc[op.id] = op;
-    return acc;
-}, {} as Record<OperationId, Operation>);
+if (baseServers.length < totalServers) {
+    for (let i = baseServers.length; i < totalServers; i++) {
+        const baseIndex = i % baseServers.length;
+        const baseServer = baseServers[baseIndex];
+        const newId = `srv-${7031 + i}`;
+        const newIpLastOctet = 112 + i;
+        const newIpAddress = `10.240.${Math.floor(newIpLastOctet / 255)}.${newIpLastOctet % 255}`;
+        
+        generatedServers.push({
+            ...baseServer,
+            id: newId,
+            name: `GEN-${(Math.random() + 1).toString(36).substring(2).toUpperCase()}`,
+            hostname: `generated-server-${i}.ksyun.com`,
+            ipAddress: newIpAddress,
+            status: statuses[i % statuses.length],
+            resourceType: resourceTypes[i % resourceTypes.length],
+            dataCenter: dataCenters[i % dataCenters.length],
+            rack: `${dataCenters[i % dataCenters.length]}2F01-J-${Math.floor(i/5)}-${i%5}`
+        });
+    }
+}
+
+export const servers: Server[] = [...baseServers, ...generatedServers];
 
 
 export const targetModels = {

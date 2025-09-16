@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -41,7 +42,7 @@ export default function ServerTable({ onSelectionChange }: ServerTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [allServers, setAllServers] = useState<ServerWithSelection[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(7);
+  const [pageSize, setPageSize] = useState(20);
 
   useEffect(() => {
     setAllServers(servers.map((s) => ({ ...s, isSelected: false })));
