@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -62,6 +62,18 @@ export default function Home() {
   const [selectedServers, setSelectedServers] = useState<Server[]>([]);
   const [operationGroups, setOperationGroups] = useState<OperationGroup[]>([]);
   const [nextGroupId, setNextGroupId] = useState(1);
+  
+  useEffect(() => {
+    // If servers are selected and there are no operation groups, create a default one.
+    if (selectedServers.length > 0 && operationGroups.length === 0) {
+      addOperationGroup();
+    }
+    // If no servers are selected, clear the operation groups.
+    if (selectedServers.length === 0) {
+        setOperationGroups([]);
+    }
+  }, [selectedServers]);
+
 
   const unassignedServers = selectedServers.filter(
     (server) =>
@@ -71,16 +83,17 @@ export default function Home() {
   );
 
   const addOperationGroup = () => {
+    const newGroupId = nextGroupId;
     setOperationGroups([
       ...operationGroups,
       {
-        id: nextGroupId,
+        id: newGroupId,
         servers: [],
         operationId: 'install-system',
         notes: '',
       },
     ]);
-    setNextGroupId(nextGroupId + 1);
+    setNextGroupId(newGroupId + 1);
   };
 
   const removeOperationGroup = (groupId: number) => {
@@ -474,4 +487,3 @@ export default function Home() {
     </div>
   );
 }
-
