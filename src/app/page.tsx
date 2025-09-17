@@ -659,7 +659,7 @@ export default function Home() {
                         </CardContent>
                     </Card>
                     {/* HDD */}
-                    <Card className="lg:col-span-2">
+                    <Card>
                         <CardHeader className="pb-2">
                            <CardTitle className="text-base flex items-center justify-between">
                                 <span>硬盘 (HDD)</span>
@@ -698,7 +698,7 @@ export default function Home() {
                         </CardContent>
                     </Card>
                     {/* SSD */}
-                    <Card className="lg:col-span-2">
+                    <Card>
                         <CardHeader className="pb-2">
                            <CardTitle className="text-base flex items-center justify-between">
                                 <span>固态硬盘 (SSD)</span>
@@ -738,7 +738,7 @@ export default function Home() {
                     </Card>
                      {/* NIC */}
                     { serverType === 'CPU' && (
-                        <Card className="lg:col-span-2">
+                        <Card>
                             <CardHeader className="pb-2">
                             <CardTitle className="text-base flex items-center justify-between">
                                     <span>网卡</span>
@@ -773,7 +773,7 @@ export default function Home() {
                     )}
                     {/* VPC Network */}
                     { serverType === 'GPU' && (
-                        <Card className="lg:col-span-2">
+                        <Card>
                             <CardHeader className="pb-2">
                                <CardTitle className="text-base flex items-center justify-between">
                                     <span>VPC网络</span>
@@ -808,7 +808,7 @@ export default function Home() {
                     )}
                      {/* Compute Network */}
                     { serverType === 'GPU' && (
-                        <Card className="lg:col-span-2">
+                        <Card>
                             <CardHeader className="pb-2">
                                <CardTitle className="text-base flex items-center justify-between">
                                     <span>计算网络</span>
@@ -843,7 +843,7 @@ export default function Home() {
                     )}
                      {/* Storage Network */}
                     { serverType === 'GPU' && (
-                        <Card className="lg:col-span-2">
+                        <Card>
                             <CardHeader className="pb-2">
                                <CardTitle className="text-base flex items-center justify-between">
                                     <span>存储网络</span>
@@ -872,8 +872,7 @@ export default function Home() {
                                         </Button>
                                     </div>
                                 ))}
-                                 <Button variant="link" onClick={() => addCustomConfigItem('storageNetwork')}><PlusCircle className="mr-2 h-4 w-4" />添加一条</Button>
-                            </CardContent>
+                                 <Button variant="link" onClick={() => addCustomConfigItem('storageNetwork')}><PlusCircle className="mr-2 h-4 w-4" />添加一条</Button>                            </CardContent>
                         </Card>
                     )}
                 </div>
