@@ -451,70 +451,6 @@ export default function Home() {
       updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, customConfig: newCustomConfig } });
     };
 
-    const renderConfig = (config: ServerHardwareConfig, title: string) => (
-        <div className="p-4 bg-muted/50 rounded-md space-y-4">
-            <h4 className="font-medium">{title}</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                {serverType === 'GPU' && (
-                    <>
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">GPU</p>
-                            <p className="font-medium">{config.gpu}</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">CPU</p>
-                            <p className="font-medium">{config.cpu}</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-x-8">
-                            <div className="space-y-1">
-                                <p className="text-muted-foreground">内存</p>
-                                <p className="font-medium">{config.memory}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-muted-foreground">硬盘/存储</p>
-                                <p className="font-medium">{config.storage}</p>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">VPC网络</p>
-                            <p className="font-medium">{config.vpcNetwork}</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">计算网络</p>
-                            <p className="font-medium">{config.computeNetwork}</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">存储网络</p>
-                            <p className="font-medium">{config.storageNetwork}</p>
-                        </div>
-                    </>
-                )}
-                 {serverType === 'CPU' && (
-                    <>
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">CPU</p>
-                            <p className="font-medium">{config.cpu}</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-x-8">
-                            <div className="space-y-1">
-                                <p className="text-muted-foreground">内存</p>
-                                <p className="font-medium">{config.memory}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-muted-foreground">硬盘/存储</p>
-                                <p className="font-medium">{config.storage}</p>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-muted-foreground">网卡</p>
-                            <p className="font-medium">{config.nic}</p>
-                        </div>
-                    </>
-                )}
-            </div>
-        </div>
-    );
-    
     const renderSuggestion = (suggestion: HardwareChangeSuggestion) => {
       const renderItem = (label: string, item?: { action: string; details: string }) => {
           if (!item || item.action === 'none') return null;
@@ -637,7 +573,67 @@ export default function Home() {
         {group.hardwareChange?.configType === 'model' ? (
            selectedModel && (
             <div className="space-y-4">
-                {renderConfig(selectedModel.config, '目标配置')}
+                <div className="p-4 bg-muted/50 rounded-md space-y-4">
+                  <h4 className="font-medium">目标配置</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                    {serverType === 'GPU' && (
+                      <>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">GPU</p>
+                          <p className="font-medium">{selectedModel.config.gpu}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">CPU</p>
+                          <p className="font-medium">{selectedModel.config.cpu}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-8">
+                          <div className="space-y-1">
+                            <p className="text-muted-foreground">内存</p>
+                            <p className="font-medium">{selectedModel.config.memory}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-muted-foreground">硬盘/存储</p>
+                            <p className="font-medium">{selectedModel.config.storage}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">VPC网络</p>
+                          <p className="font-medium">{selectedModel.config.vpcNetwork}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">计算网络</p>
+                          <p className="font-medium">{selectedModel.config.computeNetwork}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">存储网络</p>
+                          <p className="font-medium">{selectedModel.config.storageNetwork}</p>
+                        </div>
+                      </>
+                    )}
+                    {serverType === 'CPU' && (
+                      <>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">CPU</p>
+                          <p className="font-medium">{selectedModel.config.cpu}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-8">
+                          <div className="space-y-1">
+                            <p className="text-muted-foreground">内存</p>
+                            <p className="font-medium">{selectedModel.config.memory}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-muted-foreground">硬盘/存储</p>
+                            <p className="font-medium">{selectedModel.config.storage}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground">网卡</p>
+                          <p className="font-medium">{selectedModel.config.nic}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
             </div>
            )
         ) : (
@@ -774,9 +770,6 @@ export default function Home() {
                             <div className="space-y-2 col-span-1">
                             <Label htmlFor="uid">UID</Label>
                             <Input id="uid" placeholder="例如: 12345678" />
-                        </div>
-                            <div className="space-y-2 col-span-1 flex items-end pb-2">
-                            <Label htmlFor="led" className="text-sm">Led</Label>
                         </div>
                     </div>
                 </div>
