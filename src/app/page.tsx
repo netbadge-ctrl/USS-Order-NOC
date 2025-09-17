@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -60,6 +59,9 @@ type CustomConfig = {
     hdd: { items: { model: string; quantity: number }[], mode: 'spec' | 'model' | 'empty' };
     ssd: { items: { spec: string; quantity: number }[], mode: 'spec' | 'model' | 'empty' };
     nic: { items: { spec: string; quantity: number }[] };
+    vpcNetwork: { items: { spec: string; quantity: number }[] };
+    computeNetwork: { items: { spec: string; quantity: number }[] };
+    storageNetwork: { items: { spec: string; quantity: number }[] };
     raid: { type: string; mode: 'type' | 'spec' | 'model' | 'empty' };
 };
 
@@ -166,6 +168,9 @@ export default function Home() {
               hdd: { items: [{ model: '', quantity: 1 }], mode: 'spec' },
               ssd: { items: [{ spec: 'NVME_4T', quantity: 1 }], mode: 'spec' },
               nic: { items: [{ spec: '10G双光口', quantity: 1 }] },
+              vpcNetwork: { items: [{ spec: '25GE_2*1', quantity: 1 }] },
+              computeNetwork: { items: [{ spec: 'NVLINK_80G*8', quantity: 1 }] },
+              storageNetwork: { items: [{ spec: '25GE_2*1', quantity: 1 }] },
               raid: { type: 'RAID 1', mode: 'type' },
           },
           isGenerating: false,
@@ -274,8 +279,6 @@ export default function Home() {
       }
     } else { // custom config
        const customConfig = group.hardwareChange.customConfig;
-       // A bit of a simplification to map the new custom config structure to the old flat one for the AI.
-       // In a real app, you might want the AI to understand the structured config.
        targetConfig = {
           cpu: `${customConfig.cpu.quantity}x ${customConfig.cpu.model}`,
           memory: customConfig.memory.mode === 'capacity' ? customConfig.memory.capacity : `${customConfig.memory.capacity} ${customConfig.memory.frequency}`,
@@ -285,10 +288,9 @@ export default function Home() {
           ].join(' + '),
           gpu: customConfig.gpu.empty ? 'None' : `${customConfig.gpu.quantity}x ${customConfig.gpu.model}`,
           nic: customConfig.nic.items.map(i => `${i.quantity}x ${i.spec}`).join(' + '),
-          // Simplified, you would expand this mapping
-          vpcNetwork: 'N/A',
-          computeNetwork: 'N/A',
-          storageNetwork: 'N/A',
+          vpcNetwork: customConfig.vpcNetwork.items.map(i => `${i.quantity}x ${i.spec}`).join(' + '),
+          computeNetwork: customConfig.computeNetwork.items.map(i => `${i.quantity}x ${i.spec}`).join(' + '),
+          storageNetwork: customConfig.storageNetwork.items.map(i => `${i.quantity}x ${i.spec}`).join(' + '),
         };
     }
   
@@ -482,19 +484,19 @@ export default function Home() {
         updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, customConfig: newCustomConfig } });
     };
 
-    const handleCustomConfigItemChange = <T extends 'hdd' | 'ssd' | 'nic'>(section: T, index: number, field: keyof CustomConfig[T]['items'][number], value: any) => {
+    const handleCustomConfigItemChange = <T extends 'hdd' | 'ssd' | 'nic' | 'vpcNetwork' | 'computeNetwork' | 'storageNetwork'>(section: T, index: number, field: keyof CustomConfig[T]['items'][number], value: any) => {
         const newItems = [...group.hardwareChange.customConfig[section].items];
         // @ts-ignore
         newItems[index][field] = value;
         handleCustomConfigChange(section, 'items', newItems as any);
     }
 
-    const addCustomConfigItem = <T extends 'hdd' | 'ssd' | 'nic'>(section: T) => {
+    const addCustomConfigItem = <T extends 'hdd' | 'ssd' | 'nic' | 'vpcNetwork' | 'computeNetwork' | 'storageNetwork'>(section: T) => {
         const newItems = [...group.hardwareChange.customConfig[section].items, { spec: '', model: '', quantity: 1 }];
         handleCustomConfigChange(section, 'items', newItems as any);
     }
     
-    const removeCustomConfigItem = <T extends 'hdd' | 'ssd' | 'nic'>(section: T, index: number) => {
+    const removeCustomConfigItem = <T extends 'hdd' | 'ssd' | 'nic' | 'vpcNetwork' | 'computeNetwork' | 'storageNetwork'>(section: T, index: number) => {
         const newItems = group.hardwareChange.customConfig[section].items.filter((_, i) => i !== index);
         handleCustomConfigChange(section, 'items', newItems as any);
     }
@@ -657,38 +659,145 @@ export default function Home() {
                         </CardContent>
                     </Card>
                      {/* NIC */}
-                    <Card className="lg:col-span-2">
-                        <CardHeader className="pb-2">
-                           <CardTitle className="text-base flex items-center justify-between">
-                                <span>网卡</span>
-                                 <RadioGroup value="spec" className="flex items-center text-sm font-normal">
-                                    <RadioGroupItem value="spec" id={`nic-spec-${group.id}`} />
-                                    <Label htmlFor={`nic-spec-${group.id}`} className="font-normal">规格</Label>
-                                </RadioGroup>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {config.nic.items.map((item, index) => (
-                                <div key={index} className="grid grid-cols-5 gap-4 items-end">
-                                    <div className="space-y-2 col-span-2">
-                                        <Label htmlFor={`nic-spec-select-${group.id}-${index}`}>*规格</Label>
-                                        <Select value={item.spec} onValueChange={(v) => handleCustomConfigItemChange('nic', index, 'spec', v)}>
-                                            <SelectTrigger id={`nic-spec-select-${group.id}-${index}`}><SelectValue /></SelectTrigger>
-                                            <SelectContent><SelectItem value="10G双光口">10G双光口</SelectItem></SelectContent>
-                                        </Select>
+                    { serverType === 'CPU' && (
+                        <Card className="lg:col-span-2">
+                            <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center justify-between">
+                                    <span>网卡</span>
+                                    <RadioGroup value="spec" className="flex items-center text-sm font-normal">
+                                        <RadioGroupItem value="spec" id={`nic-spec-${group.id}`} />
+                                        <Label htmlFor={`nic-spec-${group.id}`} className="font-normal">规格</Label>
+                                    </RadioGroup>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {config.nic.items.map((item, index) => (
+                                    <div key={index} className="grid grid-cols-5 gap-4 items-end">
+                                        <div className="space-y-2 col-span-2">
+                                            <Label htmlFor={`nic-spec-select-${group.id}-${index}`}>*规格</Label>
+                                            <Select value={item.spec} onValueChange={(v) => handleCustomConfigItemChange('nic', index, 'spec', v)}>
+                                                <SelectTrigger id={`nic-spec-select-${group.id}-${index}`}><SelectValue /></SelectTrigger>
+                                                <SelectContent><SelectItem value="10G双光口">10G双光口</SelectItem></SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2 col-span-2">
+                                            <Label htmlFor={`nic-quantity-${group.id}-${index}`}>*数量</Label>
+                                            <Input id={`nic-quantity-${group.id}-${index}`} type="number" value={item.quantity} onChange={(e) => handleCustomConfigItemChange('nic', index, 'quantity', parseInt(e.target.value) || 1)} />
+                                        </div>
+                                        <Button variant="ghost" size="icon" onClick={() => removeCustomConfigItem('nic', index)} disabled={config.nic.items.length <= 1}>
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
                                     </div>
-                                    <div className="space-y-2 col-span-2">
-                                        <Label htmlFor={`nic-quantity-${group.id}-${index}`}>*数量</Label>
-                                        <Input id={`nic-quantity-${group.id}-${index}`} type="number" value={item.quantity} onChange={(e) => handleCustomConfigItemChange('nic', index, 'quantity', parseInt(e.target.value) || 1)} />
+                                ))}
+                                <Button variant="link" onClick={() => addCustomConfigItem('nic')}><PlusCircle className="mr-2 h-4 w-4" />添加一条</Button>
+                            </CardContent>
+                        </Card>
+                    )}
+                    {/* VPC Network */}
+                    { serverType === 'GPU' && (
+                        <Card className="lg:col-span-2">
+                            <CardHeader className="pb-2">
+                               <CardTitle className="text-base flex items-center justify-between">
+                                    <span>VPC网络</span>
+                                     <RadioGroup value="spec" className="flex items-center text-sm font-normal">
+                                        <RadioGroupItem value="spec" id={`vpc-spec-${group.id}`} />
+                                        <Label htmlFor={`vpc-spec-${group.id}`} className="font-normal">规格</Label>
+                                    </RadioGroup>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {config.vpcNetwork.items.map((item, index) => (
+                                    <div key={index} className="grid grid-cols-5 gap-4 items-end">
+                                        <div className="space-y-2 col-span-2">
+                                            <Label htmlFor={`vpc-spec-select-${group.id}-${index}`}>*规格</Label>
+                                            <Select value={item.spec} onValueChange={(v) => handleCustomConfigItemChange('vpcNetwork', index, 'spec', v)}>
+                                                <SelectTrigger id={`vpc-spec-select-${group.id}-${index}`}><SelectValue /></SelectTrigger>
+                                                <SelectContent><SelectItem value="25GE_2*1">25GE_2*1</SelectItem></SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2 col-span-2">
+                                            <Label htmlFor={`vpc-quantity-${group.id}-${index}`}>*数量</Label>
+                                            <Input id={`vpc-quantity-${group.id}-${index}`} type="number" value={item.quantity} onChange={(e) => handleCustomConfigItemChange('vpcNetwork', index, 'quantity', parseInt(e.target.value) || 1)} />
+                                        </div>
+                                        <Button variant="ghost" size="icon" onClick={() => removeCustomConfigItem('vpcNetwork', index)} disabled={config.vpcNetwork.items.length <= 1}>
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
                                     </div>
-                                    <Button variant="ghost" size="icon" onClick={() => removeCustomConfigItem('nic', index)} disabled={config.nic.items.length <= 1}>
-                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                    </Button>
-                                </div>
-                            ))}
-                             <Button variant="link" onClick={() => addCustomConfigItem('nic')}><PlusCircle className="mr-2 h-4 w-4" />添加一条</Button>
-                        </CardContent>
-                    </Card>
+                                ))}
+                                 <Button variant="link" onClick={() => addCustomConfigItem('vpcNetwork')}><PlusCircle className="mr-2 h-4 w-4" />添加一条</Button>
+                            </CardContent>
+                        </Card>
+                    )}
+                     {/* Compute Network */}
+                    { serverType === 'GPU' && (
+                        <Card className="lg:col-span-2">
+                            <CardHeader className="pb-2">
+                               <CardTitle className="text-base flex items-center justify-between">
+                                    <span>计算网络</span>
+                                     <RadioGroup value="spec" className="flex items-center text-sm font-normal">
+                                        <RadioGroupItem value="spec" id={`compute-spec-${group.id}`} />
+                                        <Label htmlFor={`compute-spec-${group.id}`} className="font-normal">规格</Label>
+                                    </RadioGroup>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {config.computeNetwork.items.map((item, index) => (
+                                    <div key={index} className="grid grid-cols-5 gap-4 items-end">
+                                        <div className="space-y-2 col-span-2">
+                                            <Label htmlFor={`compute-spec-select-${group.id}-${index}`}>*规格</Label>
+                                            <Select value={item.spec} onValueChange={(v) => handleCustomConfigItemChange('computeNetwork', index, 'spec', v)}>
+                                                <SelectTrigger id={`compute-spec-select-${group.id}-${index}`}><SelectValue /></SelectTrigger>
+                                                <SelectContent><SelectItem value="NVLINK_80G*8">NVLINK_80G*8</SelectItem></SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2 col-span-2">
+                                            <Label htmlFor={`compute-quantity-${group.id}-${index}`}>*数量</Label>
+                                            <Input id={`compute-quantity-${group.id}-${index}`} type="number" value={item.quantity} onChange={(e) => handleCustomConfigItemChange('computeNetwork', index, 'quantity', parseInt(e.target.value) || 1)} />
+                                        </div>
+                                        <Button variant="ghost" size="icon" onClick={() => removeCustomConfigItem('computeNetwork', index)} disabled={config.computeNetwork.items.length <= 1}>
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                 <Button variant="link" onClick={() => addCustomConfigItem('computeNetwork')}><PlusCircle className="mr-2 h-4 w-4" />添加一条</Button>
+                            </CardContent>
+                        </Card>
+                    )}
+                     {/* Storage Network */}
+                    { serverType === 'GPU' && (
+                        <Card className="lg:col-span-2">
+                            <CardHeader className="pb-2">
+                               <CardTitle className="text-base flex items-center justify-between">
+                                    <span>存储网络</span>
+                                     <RadioGroup value="spec" className="flex items-center text-sm font-normal">
+                                        <RadioGroupItem value="spec" id={`storage-spec-${group.id}`} />
+                                        <Label htmlFor={`storage-spec-${group.id}`} className="font-normal">规格</Label>
+                                    </RadioGroup>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {config.storageNetwork.items.map((item, index) => (
+                                    <div key={index} className="grid grid-cols-5 gap-4 items-end">
+                                        <div className="space-y-2 col-span-2">
+                                            <Label htmlFor={`storage-spec-select-${group.id}-${index}`}>*规格</Label>
+                                            <Select value={item.spec} onValueChange={(v) => handleCustomConfigItemChange('storageNetwork', index, 'spec', v)}>
+                                                <SelectTrigger id={`storage-spec-select-${group.id}-${index}`}><SelectValue /></SelectTrigger>
+                                                <SelectContent><SelectItem value="25GE_2*1">25GE_2*1</SelectItem></SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2 col-span-2">
+                                            <Label htmlFor={`storage-quantity-${group.id}-${index}`}>*数量</Label>
+                                            <Input id={`storage-quantity-${group.id}-${index}`} type="number" value={item.quantity} onChange={(e) => handleCustomConfigItemChange('storageNetwork', index, 'quantity', parseInt(e.target.value) || 1)} />
+                                        </div>
+                                        <Button variant="ghost" size="icon" onClick={() => removeCustomConfigItem('storageNetwork', index)} disabled={config.storageNetwork.items.length <= 1}>
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                 <Button variant="link" onClick={() => addCustomConfigItem('storageNetwork')}><PlusCircle className="mr-2 h-4 w-4" />添加一条</Button>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             </div>
         )
@@ -707,23 +816,23 @@ export default function Home() {
                     <RadioGroupItem value="model" id={`model-${group.id}`} />
                     <Label htmlFor={`model-${group.id}`} className="font-normal flex items-center gap-2">
                       <span>按目标机型</span>
-                      {group.hardwareChange?.configType === 'model' && (
-                        <Select
-                            value={group.hardwareChange?.targetModelId}
-                            onValueChange={(value) => updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, targetModelId: value, suggestion: undefined } })}
-                        >
-                            <SelectTrigger id={`target-model-select-${group.id}`} className="flex-1 w-[280px]">
-                                <SelectValue placeholder="选择目标机型" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {models.map(model => (
-                                    <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                      )}
                     </Label>
                 </div>
+                 {group.hardwareChange?.configType === 'model' && (
+                    <Select
+                        value={group.hardwareChange?.targetModelId}
+                        onValueChange={(value) => updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, targetModelId: value, suggestion: undefined } })}
+                    >
+                        <SelectTrigger id={`target-model-select-${group.id}`} className="w-[280px]">
+                            <SelectValue placeholder="选择目标机型" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {models.map(model => (
+                                <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                )}
                 <div className="flex items-center space-x-2">
                     <RadioGroupItem value="custom" id={`custom-${group.id}`} />
                     <Label htmlFor={`custom-${group.id}`} className="font-normal">自定义配置</Label>
@@ -1079,3 +1188,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
