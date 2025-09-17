@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -16,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import ServerTable from '@/components/server-table';
 import type { Server, OperationId, HardwareChangeSuggestion, ServerHardwareConfig } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, X, Wand2, LoaderCircle, ChevronsUpDown } from 'lucide-react';
+import { PlusCircle, X, Wand2, LoaderCircle, ChevronsUpDown, Info } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
@@ -662,8 +661,7 @@ export default function Home() {
     );
   };
   
-  const renderAdditionalOpsForm = () => {
-    return (
+  const renderAdditionalOpsForm = () => (
       <div className="space-y-6 pt-4">
         <div className="space-y-4 border-b pb-4">
             <h4 className="font-medium">附加操作</h4>
@@ -724,7 +722,6 @@ export default function Home() {
         )}
       </div>
     );
-  };
 
 
   return (
@@ -749,7 +746,7 @@ export default function Home() {
             <CardContent className="space-y-8">
                 <div className="border rounded-lg p-6">
                     <h3 className="text-lg font-semibold mb-4">1. 工单全局设置</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="space-y-2">
                             <Label>紧急程度</Label>
                             <RadioGroup defaultValue="normal" className="flex items-center pt-2">
@@ -797,7 +794,7 @@ export default function Home() {
                     {operationGroups.map((group, groupIndex) => (
                     <Card key={group.id} className="bg-background">
                         <CardHeader className="flex flex-row items-center justify-between py-4">
-                            <CardTitle className="text-lg">创建任务批次 #{groupIndex + 1}</CardTitle>
+                            <CardTitle className="text-lg">任务批次 #{groupIndex + 1}</CardTitle>
                             <Button variant="ghost" size="icon" onClick={() => removeOperationGroup(group.id)}>
                                 <X className="h-4 w-4" />
                             </Button>
@@ -826,6 +823,14 @@ export default function Home() {
 
                         <div>
                             <h4 className="font-medium mb-2 text-sm">2. 选择操作类型:</h4>
+                             {group.servers.length === 0 && (
+                                <Alert variant="default" className="border-amber-500/50 bg-amber-50/50 text-amber-900 mb-4">
+                                    <Info className="h-4 w-4 !text-amber-600" />
+                                    <AlertDescription>
+                                        请先将服务器添加到此任务批次中，然后才能选择操作类型。
+                                    </AlertDescription>
+                                </Alert>
+                            )}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {operations.map((op) => {
                                     const isSelected = group.operationIds.includes(op.id);
@@ -836,6 +841,7 @@ export default function Home() {
                                                 variant={isSelected ? 'default' : 'outline'}
                                                 onClick={() => toggleGroupOperation(group.id, op.id)}
                                                 className="w-full justify-center"
+                                                disabled={group.servers.length === 0}
                                             >
                                                 {op.name}
                                             </Button>
@@ -911,3 +917,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
