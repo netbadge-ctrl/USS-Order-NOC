@@ -283,9 +283,9 @@ export default function Home() {
           cpu: `${customConfig.cpu.quantity}x ${customConfig.cpu.model}`,
           memory: customConfig.memory.mode === 'capacity' ? customConfig.memory.capacity : `${customConfig.memory.capacity} ${customConfig.memory.frequency}`,
           storage: [
-              ...customConfig.hdd.items.map(i => `${i.quantity}x ${i.model} HDD`),
-              ...customConfig.ssd.items.map(i => `${i.quantity}x ${i.spec} SSD`),
-          ].join(' + '),
+              ...(customConfig.hdd.mode !== 'empty' ? customConfig.hdd.items.map(i => `${i.quantity}x ${i.model} HDD`) : []),
+              ...(customConfig.ssd.mode !== 'empty' ? customConfig.ssd.items.map(i => `${i.quantity}x ${i.spec} SSD`) : []),
+          ].join(' + ') || '无',
           gpu: customConfig.gpu.empty ? 'None' : `${customConfig.gpu.quantity}x ${customConfig.gpu.model}`,
           nic: customConfig.nic.items.map(i => `${i.quantity}x ${i.spec}`).join(' + '),
           vpcNetwork: customConfig.vpcNetwork.items.map(i => `${i.quantity}x ${i.spec}`).join(' + '),
@@ -656,6 +656,84 @@ export default function Home() {
                                     <SelectContent><SelectItem value="RAID 1">RAID 1</SelectItem></SelectContent>
                                 </Select>
                             </div>
+                        </CardContent>
+                    </Card>
+                    {/* HDD */}
+                    <Card className="lg:col-span-2">
+                        <CardHeader className="pb-2">
+                           <CardTitle className="text-base flex items-center justify-between">
+                                <span>硬盘 (HDD)</span>
+                                <RadioGroup value={config.hdd.mode} onValueChange={(v) => handleCustomConfigChange('hdd', 'mode', v as any)} className="flex items-center text-sm font-normal gap-4">
+                                     <div className="flex items-center gap-2">
+                                        <RadioGroupItem value="model" id={`hdd-model-${group.id}`} />
+                                        <Label htmlFor={`hdd-model-${group.id}`} className="font-normal">型号</Label>
+                                     </div>
+                                     <div className="flex items-center gap-2">
+                                        <RadioGroupItem value="empty" id={`hdd-empty-${group.id}`} />
+                                        <Label htmlFor={`hdd-empty-${group.id}`} className="font-normal">为空</Label>
+                                     </div>
+                                </RadioGroup>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {config.hdd.mode !== 'empty' && config.hdd.items.map((item, index) => (
+                                <div key={index} className="grid grid-cols-5 gap-4 items-end">
+                                    <div className="space-y-2 col-span-2">
+                                        <Label htmlFor={`hdd-model-select-${group.id}-${index}`}>*型号</Label>
+                                        <Select value={item.model} onValueChange={(v) => handleCustomConfigItemChange('hdd', index, 'model', v)}>
+                                            <SelectTrigger id={`hdd-model-select-${group.id}-${index}`}><SelectValue placeholder="选择型号" /></SelectTrigger>
+                                            <SelectContent><SelectItem value="4T">4T</SelectItem><SelectItem value="8T">8T</SelectItem></SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2 col-span-2">
+                                        <Label htmlFor={`hdd-quantity-${group.id}-${index}`}>*数量</Label>
+                                        <Input id={`hdd-quantity-${group.id}-${index}`} type="number" value={item.quantity} onChange={(e) => handleCustomConfigItemChange('hdd', index, 'quantity', parseInt(e.target.value) || 1)} />
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => removeCustomConfigItem('hdd', index)} disabled={config.hdd.items.length <= 1}>
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                </div>
+                            ))}
+                            {config.hdd.mode !== 'empty' && <Button variant="link" onClick={() => addCustomConfigItem('hdd')}><PlusCircle className="mr-2 h-4 w-4" />添加一条</Button>}
+                        </CardContent>
+                    </Card>
+                    {/* SSD */}
+                    <Card className="lg:col-span-2">
+                        <CardHeader className="pb-2">
+                           <CardTitle className="text-base flex items-center justify-between">
+                                <span>固态硬盘 (SSD)</span>
+                                 <RadioGroup value={config.ssd.mode} onValueChange={(v) => handleCustomConfigChange('ssd', 'mode', v as any)} className="flex items-center text-sm font-normal gap-4">
+                                     <div className="flex items-center gap-2">
+                                        <RadioGroupItem value="spec" id={`ssd-spec-${group.id}`} />
+                                        <Label htmlFor={`ssd-spec-${group.id}`} className="font-normal">规格</Label>
+                                     </div>
+                                     <div className="flex items-center gap-2">
+                                        <RadioGroupItem value="empty" id={`ssd-empty-${group.id}`} />
+                                        <Label htmlFor={`ssd-empty-${group.id}`} className="font-normal">为空</Label>
+                                     </div>
+                                </RadioGroup>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {config.ssd.mode !== 'empty' && config.ssd.items.map((item, index) => (
+                                <div key={index} className="grid grid-cols-5 gap-4 items-end">
+                                    <div className="space-y-2 col-span-2">
+                                        <Label htmlFor={`ssd-spec-select-${group.id}-${index}`}>*规格</Label>
+                                        <Select value={item.spec} onValueChange={(v) => handleCustomConfigItemChange('ssd', index, 'spec', v)}>
+                                            <SelectTrigger id={`ssd-spec-select-${group.id}-${index}`}><SelectValue placeholder="选择规格" /></SelectTrigger>
+                                            <SelectContent><SelectItem value="NVME_4T">NVME 4T</SelectItem><SelectItem value="NVME_8T">NVME 8T</SelectItem></SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2 col-span-2">
+                                        <Label htmlFor={`ssd-quantity-${group.id}-${index}`}>*数量</Label>
+                                        <Input id={`ssd-quantity-${group.id}-${index}`} type="number" value={item.quantity} onChange={(e) => handleCustomConfigItemChange('ssd', index, 'quantity', parseInt(e.target.value) || 1)} />
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => removeCustomConfigItem('ssd', index)} disabled={config.ssd.items.length <= 1}>
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                </div>
+                            ))}
+                            {config.ssd.mode !== 'empty' && <Button variant="link" onClick={() => addCustomConfigItem('ssd')}><PlusCircle className="mr-2 h-4 w-4" />添加一条</Button>}
                         </CardContent>
                     </Card>
                      {/* NIC */}
