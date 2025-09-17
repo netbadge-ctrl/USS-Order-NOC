@@ -71,7 +71,6 @@ type OperationGroup = {
   servers: Server[];
   operationIds: OperationId[];
   subOperationId?: string;
-  notes: string;
   hardwareChange: {
     configType: 'model' | 'custom';
     targetModelId?: string;
@@ -149,6 +148,7 @@ export default function Home() {
   const [operationGroups, setOperationGroups] = useState<OperationGroup[]>([]);
   const [nextGroupId, setNextGroupId] = useState(1);
   const [stressTest, setStressTest] = useState(false);
+  const [globalNotes, setGlobalNotes] = useState("");
   
   const addOperationGroup = useCallback(() => {
     const newGroupId = nextGroupId;
@@ -158,7 +158,6 @@ export default function Home() {
         id: newGroupId,
         servers: [],
         operationIds: [],
-        notes: '',
         hardwareChange: {
           configType: 'model',
           customConfig: {
@@ -260,8 +259,8 @@ export default function Home() {
      updateGroup(groupId, { subOperationId: subOpId });
   }
 
-  const handleGenerateSuggestion = async (group: OperationGroup) => {
-    if (group.servers.length === 0) return;
+  const handleGenerateSuggestion = async (group: OperationGroup): Promise<boolean> => {
+    if (group.servers.length === 0 || !group.operationIds.includes('hardware-change')) return false;
   
     updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: true, suggestion: undefined } });
   
@@ -271,7 +270,7 @@ export default function Home() {
     if (group.hardwareChange.configType === 'model') {
       if (!group.hardwareChange.targetModelId) {
         updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: false } });
-        return;
+        return false;
       }
       const targetModel = targetModels[server.resourceType].find(m => m.id === group.hardwareChange.targetModelId);
       if (targetModel) {
@@ -296,7 +295,7 @@ export default function Home() {
   
     if (!targetConfig) {
       updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: false } });
-      return;
+      return false;
     }
   
     try {
@@ -306,12 +305,22 @@ export default function Home() {
         serverType: server.resourceType,
       });
       updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, suggestion, isGenerating: false } });
+      return true;
     } catch (e) {
       console.error(e);
       updateGroup(group.id, { hardwareChange: { ...group.hardwareChange, isGenerating: false } });
+      return false;
     }
   };
+  
+  const handleGenerateAllSuggestions = async () => {
+    const hardwareChangeGroups = operationGroups.filter(g => g.operationIds.includes('hardware-change'));
+    await Promise.all(hardwareChangeGroups.map(group => handleGenerateSuggestion(group)));
+  };
 
+  const isGeneratingAnySuggestion = useMemo(() => {
+    return operationGroups.some(g => g.hardwareChange.isGenerating);
+  }, [operationGroups]);
 
   const renderInstallSystemForm = () => (
     <div className="space-y-6 pt-4">
@@ -965,7 +974,7 @@ export default function Home() {
                           <p className="font-medium">{selectedModel.config.cpu}</p>
                         </div>
                         <div className="grid grid-cols-2 gap-x-8">
-                          <div className="space-y-1">
+                           <div className="space-y-1">
                             <p className="text-muted-foreground">内存</p>
                             <p className="font-medium">{selectedModel.config.memory}</p>
                           </div>
@@ -986,24 +995,8 @@ export default function Home() {
         ) : (
             renderCustomConfigForm()
         )}
-
-        <div className="flex justify-end">
-            <Button 
-                onClick={() => handleGenerateSuggestion(group)}
-                disabled={
-                    (group.hardwareChange?.configType === 'model' && !group.hardwareChange?.targetModelId) ||
-                    group.hardwareChange?.isGenerating
-                }
-            >
-                {group.hardwareChange?.isGenerating ? (
-                    <LoaderCircle className="animate-spin" />
-                ) : (
-                    <Wand2 />
-                )}
-                生成改配方案
-            </Button>
-        </div>
-        {group.hardwareChange?.isGenerating && <p className="text-sm text-muted-foreground text-center">AI 正在分析配置中，请稍候...</p>}
+        
+        {group.hardwareChange?.isGenerating && <p className="text-sm text-muted-foreground text-center pt-4">AI 正在分析配置中，请稍候...</p>}
         {group.hardwareChange?.suggestion && renderSuggestion(group.hardwareChange.suggestion)}
       </div>
     );
@@ -1092,8 +1085,8 @@ export default function Home() {
                 <CardDescription>为已选服务器配置任务批次和具体操作。</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
-                <div className="border rounded-lg p-6">
-                    <h3 className="text-lg font-semibold mb-4">1. 工单全局设置</h3>
+                <div className="border rounded-lg p-6 space-y-6">
+                    <h3 className="text-lg font-semibold">1. 工单全局设置</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="space-y-2">
                             <Label>紧急程度</Label>
@@ -1116,6 +1109,16 @@ export default function Home() {
                             <Label htmlFor="uid">UID</Label>
                             <Input id="uid" placeholder="例如: 12345678" />
                         </div>
+                    </div>
+                    <div>
+                        <Label htmlFor="global-notes">附加说明</Label>
+                        <Textarea 
+                          id="global-notes"
+                          placeholder="在此输入工单的任何特殊说明或评论..." 
+                          value={globalNotes}
+                          onChange={(e) => setGlobalNotes(e.target.value)}
+                          className="mt-2"
+                        />
                     </div>
                 </div>
 
@@ -1241,11 +1244,6 @@ export default function Home() {
                                 </div>
                             )}
                         </div>
-
-                        <div>
-                                <h4 className="font-medium mb-2 text-sm">附加说明</h4>
-                            <Textarea placeholder="在此输入此操作组的任何特殊说明或评论..." />
-                        </div>
                         </CardContent>
                     </Card>
                     ))}
@@ -1253,6 +1251,21 @@ export default function Home() {
                         <PlusCircle className="mr-2 h-4 w-4" />
                         创建任务批次
                     </Button>
+                    
+                    <div className="flex justify-end pt-4">
+                        <Button 
+                            onClick={handleGenerateAllSuggestions}
+                            disabled={!operationGroups.some(g => g.operationIds.includes('hardware-change')) || isGeneratingAnySuggestion}
+                        >
+                            {isGeneratingAnySuggestion ? (
+                                <LoaderCircle className="animate-spin" />
+                            ) : (
+                                <Wand2 />
+                            )}
+                            生成改配方案
+                        </Button>
+                    </div>
+
                 </div>
             </CardContent>
         </Card>
