@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   Hourglass,
   CircleDot,
+  FileText,
 } from 'lucide-react';
 import {
   Collapsible,
@@ -70,7 +71,7 @@ function ApprovalTimeline({ steps }: { steps: ApprovalStep[] }) {
     <div className="flex items-center space-x-4 overflow-x-auto py-2">
       {steps.map((step, index) => (
         <div key={index} className="flex items-center">
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center text-center">
             <div className="flex-shrink-0">{getApprovalStepIcon(step.status)}</div>
             <p className="text-xs font-medium mt-1 whitespace-nowrap">{step.step}</p>
             <p className="text-xs text-muted-foreground whitespace-nowrap">{step.handler || 'N/A'}</p>
@@ -86,101 +87,98 @@ function ApprovalTimeline({ steps }: { steps: ApprovalStep[] }) {
 }
 
 function WorkOrderProgress() {
-  const [openRows, setOpenRows] = useState<Record<string, boolean>>({});
+  // We are now displaying a single work order. Let's take the first one as an example.
+  const report = workOrderReports[0];
 
-  const toggleRow = (id: string) => {
-    setOpenRows((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  if (!report) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>无工单数据</CardTitle>
+          <CardDescription>当前没有可显示的工单进度信息。</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>请先创建工单。</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>工单列表</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-6 w-6"/>
+          <span>工单详情: {report.id}</span>
+        </CardTitle>
         <CardDescription>
-          追踪所有工单的审批和执行状态。
+          追踪此工单的审批和执行状态。
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12"></TableHead>
-              <TableHead>工单ID</TableHead>
-              <TableHead>类型</TableHead>
-              <TableHead>状态</TableHead>
-              <TableHead>申请人</TableHead>
-              <TableHead>申请时间</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {workOrderReports.map((report) => (
-              <Collapsible asChild key={report.id} open={openRows[report.id] || false} onOpenChange={() => toggleRow(report.id)}>
-                <>
-                  <TableRow className="cursor-pointer">
-                    <TableCell>
-                      <CollapsibleTrigger asChild>
-                         <Button variant="ghost" size="icon">
-                            {openRows[report.id] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                         </Button>
-                      </CollapsibleTrigger>
-                    </TableCell>
-                    <TableCell className="font-medium">{report.id}</TableCell>
-                    <TableCell>{report.type}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn('border-0 font-normal', getStatusVariant(report.status))}>
-                        {report.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{report.applicant}</TableCell>
-                    <TableCell>{report.applicationTime}</TableCell>
-                  </TableRow>
-                  <CollapsibleContent asChild>
-                    <TableRow className="bg-muted/50 hover:bg-muted/50">
-                        <TableCell colSpan={6} className="p-0">
-                            <div className="p-6 space-y-6">
-                                <div>
-                                    <h4 className="font-medium mb-4">审批进度</h4>
-                                    <ApprovalTimeline steps={report.approvalStatus} />
-                                </div>
-                                <div>
-                                    <h4 className="font-medium mb-2">服务器处理详情</h4>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>主机名</TableHead>
-                                                <TableHead>处理进度</TableHead>
-                                                <TableHead>处理人</TableHead>
-                                                <TableHead>异常说明</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {report.servers.map(server => (
-                                                <TableRow key={server.id}>
-                                                    <TableCell className="font-mono text-xs">{server.hostname}</TableCell>
-                                                    <TableCell>{server.progress}</TableCell>
-                                                    <TableCell>{server.handler}</TableCell>
-                                                    <TableCell className={cn(server.exception ? "text-red-600" : "")}>
-                                                        {server.exception ? (
-                                                            <div className="flex items-start gap-2">
-                                                                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0"/>
-                                                                <span>{server.exception}</span>
-                                                            </div>
-                                                        ) : "无"}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            </div>
-                        </TableCell>
+      <CardContent className="space-y-8">
+        {/* Basic Info */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4 text-sm">
+            <div className="space-y-1">
+                <p className="text-muted-foreground">工单类型</p>
+                <p className="font-medium">{report.type}</p>
+            </div>
+             <div className="space-y-1">
+                <p className="text-muted-foreground">当前状态</p>
+                <Badge variant="outline" className={cn('border-0 font-normal', getStatusVariant(report.status))}>
+                  {report.status}
+                </Badge>
+            </div>
+            <div className="space-y-1">
+                <p className="text-muted-foreground">申请人</p>
+                <p className="font-medium">{report.applicant}</p>
+            </div>
+            <div className="space-y-1">
+                <p className="text-muted-foreground">申请时间</p>
+                <p className="font-medium">{report.applicationTime}</p>
+            </div>
+        </div>
+        
+        {/* Approval Status */}
+        <div>
+          <h4 className="font-medium mb-4 text-base">审批进度</h4>
+          <Card className="p-4">
+             <ApprovalTimeline steps={report.approvalStatus} />
+          </Card>
+        </div>
+
+        {/* Server Details */}
+        <div>
+          <h4 className="font-medium mb-2 text-base">服务器处理详情</h4>
+          <div className="border rounded-lg">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>主机名</TableHead>
+                        <TableHead>处理进度</TableHead>
+                        <TableHead>处理人</TableHead>
+                        <TableHead>异常说明</TableHead>
                     </TableRow>
-                  </CollapsibleContent>
-                </>
-              </Collapsible>
-            ))}
-          </TableBody>
-        </Table>
+                </TableHeader>
+                <TableBody>
+                    {report.servers.map(server => (
+                        <TableRow key={server.id}>
+                            <TableCell className="font-mono text-xs">{server.hostname}</TableCell>
+                            <TableCell>{server.progress}</TableCell>
+                            <TableCell>{server.handler}</TableCell>
+                            <TableCell className={cn(server.exception ? "text-red-600" : "")}>
+                                {server.exception ? (
+                                    <div className="flex items-start gap-2">
+                                        <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0"/>
+                                        <span>{server.exception}</span>
+                                    </div>
+                                ) : "无"}
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -193,7 +191,7 @@ export default function ReportsPage() {
         <div className="flex items-center justify-between">
             <div>
                 <h1 className="text-3xl font-bold">工单进度中心</h1>
-                <p className="text-muted-foreground">分析工单处理效率和追踪关键绩效指标。</p>
+                <p className="text-muted-foreground">追踪单个工单的详细处理进度。</p>
             </div>
         </div>
         <WorkOrderProgress />
