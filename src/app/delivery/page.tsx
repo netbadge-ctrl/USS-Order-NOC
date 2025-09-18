@@ -213,7 +213,7 @@ function DeliveryPage() {
                                                         {item.vpc.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.compute.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 1}, {'text-red-600': i > 0 && i < 2})}>{line}</p>)}
+                                                        {item.compute.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
                                                         </TableCell>
                                                         <TableCell><p className="text-xs text-red-600">{item.storageNet}</p></TableCell>
                                                         <TableCell>
