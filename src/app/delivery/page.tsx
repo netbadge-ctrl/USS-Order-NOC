@@ -158,6 +158,7 @@ function DeliveryPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    <Button variant="outline">发起NOC工单</Button>
                                     <Button variant="outline">导出清单</Button>
                                 </div>
                             </div>
