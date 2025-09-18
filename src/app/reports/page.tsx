@@ -17,7 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,18 +26,15 @@ import {
   CheckCircle2,
   Hourglass,
   CircleDot,
-  Clock,
 } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { workOrderReports, processingTimeStats } from '@/lib/data';
+import { workOrderReports } from '@/lib/data';
 import type { WorkOrderReport, ApprovalStep } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 
 const getStatusVariant = (status: WorkOrderReport['status']) => {
@@ -99,7 +95,7 @@ function WorkOrderProgress() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>工单进度</CardTitle>
+        <CardTitle>工单列表</CardTitle>
         <CardDescription>
           追踪所有工单的审批和执行状态。
         </CardDescription>
@@ -190,84 +186,17 @@ function WorkOrderProgress() {
   );
 }
 
-function ProcessingTimeStats() {
-    const chartConfig = {
-        approval: {
-            label: '审批时长(h)',
-            color: 'hsl(var(--chart-1))',
-        },
-        execution: {
-            label: '执行时长(h)',
-            color: 'hsl(var(--chart-2))',
-        },
-    };
-
-    return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>按类型统计处理时长</CardTitle>
-                    <CardDescription>各类型工单的平均审批和执行时长。</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                        <BarChart accessibilityLayer data={processingTimeStats.byType}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />
-                            <YAxis />
-                            <Tooltip content={<ChartTooltipContent />} />
-                            <Legend />
-                            <Bar dataKey="审批时长(h)" fill="var(--color-approval)" radius={4} />
-                            <Bar dataKey="执行时长(h)" fill="var(--color-execution)" radius={4} />
-                        </BarChart>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>按月份统计处理时长</CardTitle>
-                    <CardDescription>近几个月所有工单的平均处理时长趋势。</CardDescription>
-                </CardHeader>
-                 <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                        <BarChart accessibilityLayer data={processingTimeStats.byMonth}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />
-                            <YAxis />
-                            <Tooltip content={<ChartTooltipContent />} />
-                            <Legend />
-                            <Bar dataKey="审批时长(h)" fill="var(--color-approval)" radius={4} />
-                            <Bar dataKey="执行时长(h)" fill="var(--color-execution)" radius={4} />
-                        </BarChart>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
-        </div>
-    )
-}
-
 
 export default function ReportsPage() {
   return (
     <div className="space-y-8">
         <div className="flex items-center justify-between">
             <div>
-                <h1 className="text-3xl font-bold">报告中心</h1>
+                <h1 className="text-3xl font-bold">工单进度中心</h1>
                 <p className="text-muted-foreground">分析工单处理效率和追踪关键绩效指标。</p>
             </div>
         </div>
-      <Tabs defaultValue="progress">
-        <TabsList>
-          <TabsTrigger value="progress">工单进度</TabsTrigger>
-          <TabsTrigger value="statistics">处理时长统计</TabsTrigger>
-        </TabsList>
-        <TabsContent value="progress" className="mt-6">
-          <WorkOrderProgress />
-        </TabsContent>
-        <TabsContent value="statistics" className="mt-6">
-          <ProcessingTimeStats />
-        </TabsContent>
-      </Tabs>
+        <WorkOrderProgress />
     </div>
   );
 }

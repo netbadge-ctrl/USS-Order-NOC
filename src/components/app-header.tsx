@@ -13,8 +13,8 @@ export default function AppHeader() {
   const pathname = usePathname();
 
   const navLinks = [
-    { href: '/', label: '工单' },
-    { href: '/reports', label: '报告' },
+    { href: '/', label: '创建工单' },
+    { href: '/reports', label: '工单进度' },
   ];
 
   return (
