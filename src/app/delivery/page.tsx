@@ -75,20 +75,6 @@ function DeliveryPage() {
         <SidebarContent className="p-0">
           <SidebarMenu className="gap-0">
             <SidebarMenuItem>
-              <SidebarMenuButton>需求说明</SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton>实例</SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton>BOM采购</SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-          <div className="px-2">
-            <div className="h-px w-full bg-border my-2" />
-          </div>
-          <SidebarMenu className="gap-0">
-            <SidebarMenuItem>
               <SidebarMenuButton>
                 <HardDrive />
                 设备选型
@@ -156,9 +142,6 @@ function DeliveryPage() {
          <div className="mt-4 border-b">
             <Tabs defaultValue="delivery" className="w-full">
                 <TabsList className="bg-transparent p-0 h-auto gap-6">
-                    <TabsTrigger value="info" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground">需求说明</TabsTrigger>
-                    <TabsTrigger value="instance" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground">实例</TabsTrigger>
-                    <TabsTrigger value="bom" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground">BOM采购</TabsTrigger>
                     <TabsTrigger value="delivery" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 font-semibold text-foreground">交付</TabsTrigger>
                     <TabsTrigger value="logs" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground">日志</TabsTrigger>
                 </TabsList>
