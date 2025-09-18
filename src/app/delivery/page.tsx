@@ -72,50 +72,7 @@ const deliveryData = [
 
 function DeliveryPage() {
   return (
-    <SidebarProvider>
-      <Sidebar collapsible="none" className="border-r">
-        <SidebarContent className="p-0">
-          <SidebarMenu className="gap-0">
-            <SidebarMenuItem>
-              <SidebarMenuButton>
-                <HardDrive />
-                设备定型
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton isActive>
-                <List />
-                交付清单
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton>
-                <Settings />
-                系统部处理
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton>
-                <Package />
-                产品线验收
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton>
-                <Wrench />
-                NOC工单
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton>
-                <Power />
-                交付计划
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-      </Sidebar>
-      <div className="flex flex-col flex-1">
+    <div className="flex flex-col w-full">
         <div className="flex items-center justify-between p-6 border-b bg-gray-50/50">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>北京箭厂科技有限公司</span>
@@ -129,128 +86,173 @@ function DeliveryPage() {
                 <Button variant="destructive">退回</Button>
             </div>
         </div>
-        <SidebarInset className="p-6 pt-0 bg-gray-50/50 flex flex-col">
-            <div className="border-b">
-                <Tabs defaultValue="delivery" className="w-full">
-                    <TabsList className="bg-transparent p-0 h-auto gap-6 -mb-px">
-                        <TabsTrigger value="requirements" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">需求说明</TabsTrigger>
-                        <TabsTrigger value="architecture" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">架构</TabsTrigger>
-                        <TabsTrigger value="bom" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">BOM&采购</TabsTrigger>
-                        <TabsTrigger value="quote" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">询价</TabsTrigger>
-                        <TabsTrigger value="delivery" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 font-semibold text-foreground">交付</TabsTrigger>
-                        <TabsTrigger value="logs" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">日志</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="delivery" className="pt-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold">交付设备清单</h2>
-                            <div className="flex items-center gap-2">
-                            <Button variant="outline"><Clock className="mr-2 h-4 w-4"/>填写预计交付时间</Button>
-                            <Button><Bell className="mr-2 h-4 w-4"/>通知系统部介入</Button>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="relative w-64">
-                                <Input placeholder="搜索设备SN/机架位置" className="pr-8" />
-                                <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            </div>
-                            <Button variant="outline">导出清单</Button>
-                        </div>
-
-                        <Alert variant="default" className="mt-4 bg-blue-50 border-blue-200 text-blue-800">
-                            <Info className="h-4 w-4 text-blue-500" />
-                            <AlertDescription>
-                                图例说明: 黑色字体为当前服务器配置, <span className="text-blue-600">蓝色字体为需交付服务器配置</span>, <span className="text-red-600">红色字体为用户需求配置</span>.
-                            </AlertDescription>
-                        </Alert>
-                        
-                        <Tabs defaultValue="gpu" className="mt-4">
-                            <TabsList>
-                                <TabsTrigger value="gpu">GPU服务器</TabsTrigger>
-                                <TabsTrigger value="cpu">CPU服务器</TabsTrigger>
+        <div className="flex flex-1">
+            <SidebarProvider>
+                <Sidebar collapsible="none" className="border-r">
+                    <SidebarContent className="p-0">
+                    <SidebarMenu className="gap-0">
+                        <SidebarMenuItem>
+                        <SidebarMenuButton>
+                            <HardDrive />
+                            设备定型
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton isActive>
+                            <List />
+                            交付清单
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton>
+                            <Settings />
+                            系统部处理
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton>
+                            <Package />
+                            产品线验收
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton>
+                            <Wrench />
+                            NOC工单
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton>
+                            <Power />
+                            交付计划
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                    </SidebarContent>
+                </Sidebar>
+                <SidebarInset className="p-6 pt-0 bg-gray-50/50 flex flex-col">
+                    <div className="border-b">
+                        <Tabs defaultValue="delivery" className="w-full">
+                            <TabsList className="bg-transparent p-0 h-auto gap-6 -mb-px">
+                                <TabsTrigger value="requirements" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">需求说明</TabsTrigger>
+                                <TabsTrigger value="architecture" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">架构</TabsTrigger>
+                                <TabsTrigger value="bom" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">BOM&采购</TabsTrigger>
+                                <TabsTrigger value="quote" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">询价</TabsTrigger>
+                                <TabsTrigger value="delivery" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 font-semibold text-foreground">交付</TabsTrigger>
+                                <TabsTrigger value="logs" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">日志</TabsTrigger>
                             </TabsList>
-                            <TabsContent value="gpu">
-                                <div className="border rounded-lg mt-4 bg-white">
-                                    <Table>
-                                        <TableHeader className="bg-gray-50">
-                                            <TableRow>
-                                                <TableHead>设备SN/状态</TableHead>
-                                                <TableHead>GPU</TableHead>
-                                                <TableHead>CPU</TableHead>
-                                                <TableHead>内存</TableHead>
-                                                <TableHead>存储</TableHead>
-                                                <TableHead>VPC网络</TableHead>
-                                                <TableHead>计算网络</TableHead>
-                                                <TableHead>存储网络</TableHead>
-                                                <TableHead>机房</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {deliveryData.map((item, index) => (
-                                                <TableRow key={index}>
-                                                    <TableCell>
-                                                        <p className="font-mono text-xs">{item.sn}</p>
-                                                        <Badge variant="outline" className="mt-1 bg-green-100 text-green-800 border-green-200 font-normal">{item.status}</Badge>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                    {item.gpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                    {item.cpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                    {item.memory.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                    {item.storage.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                    {item.vpc.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                    {item.compute.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 1}, {'text-red-600': i > 0 && i < 2})}>{line}</p>)}
-                                                    </TableCell>
-                                                    <TableCell><p className="text-xs text-red-600">{item.storageNet}</p></TableCell>
-                                                    <TableCell>
-                                                        {item.rack.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                                <div className="flex items-center justify-between mt-4 text-sm">
-                                    <p className="text-muted-foreground">共 1 条</p>
+                            <TabsContent value="delivery" className="pt-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-semibold">交付设备清单</h2>
                                     <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-2">
-                                            <Button variant="outline" size="sm">{'<'}</Button>
-                                            <Button variant="outline" size="sm" className="bg-gray-100">1</Button>
-                                            <Button variant="outline" size="sm">{'>'}</Button>
-                                    </div>
-                                    <Select defaultValue="10">
-                                            <SelectTrigger className="w-28 h-9 text-xs">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="10">10条/页</SelectItem>
-                                                <SelectItem value="20">20条/页</SelectItem>
-                                                <SelectItem value="50">50条/页</SelectItem>
-                                            </SelectContent>
-                                    </Select>
+                                    <Button variant="outline"><Clock className="mr-2 h-4 w-4"/>填写预计交付时间</Button>
+                                    <Button><Bell className="mr-2 h-4 w-4"/>通知系统部介入</Button>
                                     </div>
                                 </div>
-                            </TabsContent>
-                            <TabsContent value="cpu">
-                                <div className="flex items-center justify-center h-40 border rounded-lg mt-4 bg-white">
-                                    <p className="text-muted-foreground">没有CPU服务器数据。</p>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="relative w-64">
+                                        <Input placeholder="搜索设备SN/机架位置" className="pr-8" />
+                                        <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                    <Button variant="outline">导出清单</Button>
                                 </div>
+
+                                <Alert variant="default" className="mt-4 bg-blue-50 border-blue-200 text-blue-800">
+                                    <Info className="h-4 w-4 text-blue-500" />
+                                    <AlertDescription>
+                                        图例说明: 黑色字体为当前服务器配置, <span className="text-blue-600">蓝色字体为需交付服务器配置</span>, <span className="text-red-600">红色字体为用户需求配置</span>.
+                                    </AlertDescription>
+                                </Alert>
+                                
+                                <Tabs defaultValue="gpu" className="mt-4">
+                                    <TabsList>
+                                        <TabsTrigger value="gpu">GPU服务器</TabsTrigger>
+                                        <TabsTrigger value="cpu">CPU服务器</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="gpu">
+                                        <div className="border rounded-lg mt-4 bg-white">
+                                            <Table>
+                                                <TableHeader className="bg-gray-50">
+                                                    <TableRow>
+                                                        <TableHead>设备SN/状态</TableHead>
+                                                        <TableHead>GPU</TableHead>
+                                                        <TableHead>CPU</TableHead>
+                                                        <TableHead>内存</TableHead>
+                                                        <TableHead>存储</TableHead>
+                                                        <TableHead>VPC网络</TableHead>
+                                                        <TableHead>计算网络</TableHead>
+                                                        <TableHead>存储网络</TableHead>
+                                                        <TableHead>机房</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {deliveryData.map((item, index) => (
+                                                        <TableRow key={index}>
+                                                            <TableCell>
+                                                                <p className="font-mono text-xs">{item.sn}</p>
+                                                                <Badge variant="outline" className="mt-1 bg-green-100 text-green-800 border-green-200 font-normal">{item.status}</Badge>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                            {item.gpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                            {item.cpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                            {item.memory.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                            {item.storage.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                            {item.vpc.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                            {item.compute.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 1}, {'text-red-600': i > 0 && i < 2})}>{line}</p>)}
+                                                            </TableCell>
+                                                            <TableCell><p className="text-xs text-red-600">{item.storageNet}</p></TableCell>
+                                                            <TableCell>
+                                                                {item.rack.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i > 0})}>{line}</p>)}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                        <div className="flex items-center justify-between mt-4 text-sm">
+                                            <p className="text-muted-foreground">共 1 条</p>
+                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2">
+                                                    <Button variant="outline" size="sm">{'<'}</Button>
+                                                    <Button variant="outline" size="sm" className="bg-gray-100">1</Button>
+                                                    <Button variant="outline" size="sm">{'>'}</Button>
+                                            </div>
+                                            <Select defaultValue="10">
+                                                    <SelectTrigger className="w-28 h-9 text-xs">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="10">10条/页</SelectItem>
+                                                        <SelectItem value="20">20条/页</SelectItem>
+                                                        <SelectItem value="50">50条/页</SelectItem>
+                                                    </SelectContent>
+                                            </Select>
+                                            </div>
+                                        </div>
+                                    </TabsContent>
+                                    <TabsContent value="cpu">
+                                        <div className="flex items-center justify-center h-40 border rounded-lg mt-4 bg-white">
+                                            <p className="text-muted-foreground">没有CPU服务器数据。</p>
+                                        </div>
+                                    </TabsContent>
+                                </Tabs>
                             </TabsContent>
                         </Tabs>
-                    </TabsContent>
-                </Tabs>
-            </div>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+                    </div>
+                </SidebarInset>
+            </SidebarProvider>
+        </div>
+    </div>
   );
 }
 
