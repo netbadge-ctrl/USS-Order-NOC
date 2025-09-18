@@ -59,3 +59,32 @@ export type HardwareChangeSuggestion = {
         details: string;
     };
 };
+
+export type ApprovalStep = {
+    step: string;
+    status: '已完成' | '进行中' | '未开始' | '异常';
+    handler: string;
+    time: string;
+};
+
+export type ServerProgress = {
+    id: string;
+    hostname: string;
+    progress: string;
+    handler: string;
+    exception: string | null;
+};
+
+export type WorkOrderReport = {
+    id: string;
+    type: string;
+    status: '处理中' | '已完成' | '异常' | '已取消';
+    applicant: string;
+    applicationTime: string;
+    approvalStatus: ApprovalStep[];
+    servers: ServerProgress[];
+    processingTime: {
+        approval: number; // hours
+        execution: number; // hours
+    };
+};

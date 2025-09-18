@@ -1,5 +1,5 @@
 
-import type { Server } from './types';
+import type { Server, WorkOrderReport } from './types';
 
 const baseServers: Server[] = [
   { 
@@ -198,3 +198,89 @@ export const targetModels = {
         }
     ]
 }
+
+
+export const workOrderReports: WorkOrderReport[] = [
+    {
+        id: 'WO-202405-001',
+        type: '硬件变更',
+        status: '处理中',
+        applicant: '张三',
+        applicationTime: '2024-05-20 10:30',
+        approvalStatus: [
+            { step: '提交工单', status: '已完成', handler: '张三', time: '2024-05-20 10:30' },
+            { step: '主管审批', status: '已完成', handler: '李四', time: '2024-05-20 11:00' },
+            { step: 'IDC审批', status: '进行中', handler: '王五', time: '' },
+            { step: '执行', status: '未开始', handler: '', time: '' },
+            { step: '完成', status: '未开始', handler: '', time: '' },
+        ],
+        servers: [
+            { id: 'srv-7020', hostname: 'qyyc01-test-ec2240001216.qyyc01.ksyun.com', progress: '已到货，待上架', handler: '赵六', exception: null },
+            { id: 'srv-7022', hostname: 'qyyc01-test-ec2240001218.qyyc01.ksyun.com', progress: '配件采购中', handler: '赵六', exception: null },
+        ],
+        processingTime: {
+            approval: 0.5,
+            execution: 0,
+        }
+    },
+    {
+        id: 'WO-202405-002',
+        type: '搬迁',
+        status: '已完成',
+        applicant: '李四',
+        applicationTime: '2024-05-18 14:00',
+        approvalStatus: [
+             { step: '提交工单', status: '已完成', handler: '李四', time: '2024-05-18 14:00' },
+            { step: '主管审批', status: '已完成', handler: '王五', time: '2024-05-18 14:30' },
+            { step: 'IDC审批', status: '已完成', handler: '赵六', time: '2024-05-18 16:00' },
+            { step: '执行', status: '已完成', handler: '孙七', time: '2024-05-19 10:00' },
+            { step: '完成', status: '已完成', handler: '孙七', time: '2024-05-19 18:30' },
+        ],
+        servers: [
+            { id: 'srv-7019', hostname: 'qyyc01-test-ec2240001215.qyyc01.ksyun.com', progress: '已完成', handler: '孙七', exception: null },
+        ],
+        processingTime: {
+            approval: 2,
+            execution: 28.5,
+        }
+    },
+     {
+        id: 'WO-202405-003',
+        type: '安装系统',
+        status: '异常',
+        applicant: '王五',
+        applicationTime: '2024-05-21 09:00',
+        approvalStatus: [
+            { step: '提交工单', status: '已完成', handler: '王五', time: '2024-05-21 09:00' },
+            { step: '主管审批', status: '已完成', handler: '张三', time: '2024-05-21 09:30' },
+            { step: 'IDC审批', status: '已完成', handler: '赵六', time: '2024-05-21 10:00' },
+            { step: '执行', status: '异常', handler: '周八', time: '2024-05-21 11:00' },
+            { step: '完成', status: '未开始', handler: '', time: '' },
+        ],
+        servers: [
+            { id: 'srv-7024', hostname: 'qyyc01-test-ec2240001220.qyyc01.ksyun.com', progress: '安装失败', handler: '周八', exception: 'PXE-E53: No boot filename received. 无法获取启动文件，请检查网络或DHCP配置。' },
+            { id: 'srv-7026', hostname: 'qyyc01-test-ec2240001222.qyyc01.ksyun.com', progress: '安装失败', handler: '周八', exception: 'RAID卡配置错误，无法找到逻辑驱动器。' },
+            { id: 'srv-7028', hostname: 'qyyc01-test-ec2240001224.qyyc01.ksyun.com', progress: '排队中', handler: '周八', exception: null },
+        ],
+        processingTime: {
+            approval: 1,
+            execution: 2, // Assuming it's still ongoing
+        }
+    },
+];
+
+export const processingTimeStats = {
+  byType: [
+    { name: '硬件变更', '审批时长(h)': 4.2, '执行时长(h)': 28.5 },
+    { name: '搬迁', '审批时长(h)': 3.1, '执行时长(h)': 42.1 },
+    { name: '安装系统', '审批时长(h)': 1.5, '执行时长(h)': 8.3 },
+    { name: '附加操作', '审批时长(h)': 2.0, '执行时长(h)': 5.0 },
+  ],
+  byMonth: [
+    { name: '一月', '审批时长(h)': 3.5, '执行时长(h)': 22.4 },
+    { name: '二月', '审批时长(h)': 2.8, '执行时长(h)': 34.9 },
+    { name: '三月', '审批时长(h)': 4.5, '执行时长(h)': 25.7 },
+    { name: '四月', '审批时长(h)': 3.9, '执行时长(h)': 30.2 },
+    { name: '五月', '审批时长(h)': 2.9, '执行时长(h)': 26.8 },
+  ],
+};

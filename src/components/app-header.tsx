@@ -6,24 +6,36 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Menu, Package2 } from "lucide-react";
 import Link from "next/link";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { usePathname } from 'next/navigation';
+import { cn } from "@/lib/utils";
 
 export default function AppHeader() {
+  const pathname = usePathname();
+
+  const navLinks = [
+    { href: '/', label: '工单' },
+    { href: '/reports', label: '报告' },
+  ];
+
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-card px-4 lg:px-6 sticky top-0 z-30">
       <nav className="flex-1 flex items-center gap-6 text-lg font-medium">
-        <Link href="#" className="flex items-center gap-2 font-semibold">
+        <Link href="/" className="flex items-center gap-2 font-semibold">
           <Package2 className="h-6 w-6" />
           <span className="hidden md:inline-block">IDC 工单系统</span>
         </Link>
-        <Link
-          href="#"
-          className="text-foreground transition-colors hover:text-foreground font-semibold border-b-2 border-primary text-sm"
-        >
-          工单
-        </Link>
-        <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground text-sm">
-          报告
-        </Link>
+        {navLinks.map(link => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={cn(
+                "text-sm transition-colors hover:text-foreground",
+                pathname === link.href ? "text-foreground font-semibold border-b-2 border-primary" : "text-muted-foreground"
+            )}
+          >
+            {link.label}
+          </Link>
+        ))}
       </nav>
       
       <div className="flex items-center gap-4 md:gap-2 lg:gap-4">
@@ -59,16 +71,22 @@ export default function AppHeader() {
         </SheetTrigger>
         <SheetContent side="left">
           <nav className="grid gap-6 text-lg font-medium">
-            <Link href="#" className="flex items-center gap-2 text-lg font-semibold mb-4">
+            <Link href="/" className="flex items-center gap-2 text-lg font-semibold mb-4">
               <Package2 className="h-6 w-6" />
               <span>IDC 工单系统</span>
             </Link>
-            <Link href="#" className="hover:text-foreground">
-              工单
-            </Link>
-            <Link href="#" className="text-muted-foreground hover:text-foreground">
-              报告
-            </Link>
+            {navLinks.map(link => (
+                <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                        "transition-colors hover:text-foreground",
+                        pathname === link.href ? "text-foreground font-semibold" : "text-muted-foreground"
+                    )}
+                >
+                    {link.label}
+                </Link>
+            ))}
           </nav>
         </SheetContent>
       </Sheet>
