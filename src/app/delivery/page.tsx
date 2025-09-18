@@ -83,9 +83,6 @@ function DeliveryPage() {
             <SidebarMenuItem>
               <SidebarMenuButton>BOM采购</SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton>排货</SidebarMenuButton>
-            </SidebarMenuItem>
           </SidebarMenu>
           <div className="px-2">
             <div className="h-px w-full bg-border my-2" />
@@ -162,7 +159,6 @@ function DeliveryPage() {
                     <TabsTrigger value="info" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground">需求说明</TabsTrigger>
                     <TabsTrigger value="instance" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground">实例</TabsTrigger>
                     <TabsTrigger value="bom" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground">BOM采购</TabsTrigger>
-                     <TabsTrigger value="dispatch" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground">排货</TabsTrigger>
                     <TabsTrigger value="delivery" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 font-semibold text-foreground">交付</TabsTrigger>
                     <TabsTrigger value="logs" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground">日志</TabsTrigger>
                 </TabsList>
