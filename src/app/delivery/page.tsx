@@ -143,18 +143,18 @@ function DeliveryPage() {
                             </TabsList>
                             <TabsContent value="delivery" className="pt-6">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-lg font-semibold">交付设备清单</h2>
+                                    <div className="flex items-center gap-4">
+                                        <h2 className="text-lg font-semibold">交付设备清单</h2>
+                                        <div className="relative w-64">
+                                            <Input placeholder="搜索设备SN/机架位置" className="pr-8" />
+                                            <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                    </div>
                                     <div className="flex items-center gap-2">
-                                    <Button variant="outline"><Clock className="mr-2 h-4 w-4"/>填写预计交付时间</Button>
-                                    <Button><Bell className="mr-2 h-4 w-4"/>通知系统部介入</Button>
+                                        <Button variant="outline">导出清单</Button>
+                                        <Button variant="outline"><Clock className="mr-2 h-4 w-4"/>填写预计交付时间</Button>
+                                        <Button><Bell className="mr-2 h-4 w-4"/>通知系统部介入</Button>
                                     </div>
-                                </div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="relative w-64">
-                                        <Input placeholder="搜索设备SN/机架位置" className="pr-8" />
-                                        <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    </div>
-                                    <Button variant="outline">导出清单</Button>
                                 </div>
 
                                 <Alert variant="default" className="mt-4 bg-blue-50 border-blue-200 text-blue-800">
