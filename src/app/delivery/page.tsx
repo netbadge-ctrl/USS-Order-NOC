@@ -88,7 +88,7 @@ function DeliveryPage() {
         </div>
 
         <Tabs defaultValue="delivery" className="w-full flex flex-col flex-1">
-            <div className="border-b px-6">
+            <div className="border-b px-6 flex items-center justify-between">
                 <TabsList className="bg-transparent p-0 h-auto gap-6 -mb-px">
                     <TabsTrigger value="requirements" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">需求说明</TabsTrigger>
                     <TabsTrigger value="architecture" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">架构</TabsTrigger>
@@ -97,6 +97,10 @@ function DeliveryPage() {
                     <TabsTrigger value="delivery" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 font-semibold text-foreground">交付</TabsTrigger>
                     <TabsTrigger value="logs" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">日志</TabsTrigger>
                 </TabsList>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline"><Clock className="mr-2 h-4 w-4"/>填写预计交付时间</Button>
+                    <Button><Bell className="mr-2 h-4 w-4"/>通知系统部介入</Button>
+                </div>
             </div>
 
             <div className="flex flex-1">
@@ -155,8 +159,6 @@ function DeliveryPage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Button variant="outline">导出清单</Button>
-                                    <Button variant="outline"><Clock className="mr-2 h-4 w-4"/>填写预计交付时间</Button>
-                                    <Button><Bell className="mr-2 h-4 w-4"/>通知系统部介入</Button>
                                 </div>
                             </div>
 
@@ -259,5 +261,3 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
-
-    
