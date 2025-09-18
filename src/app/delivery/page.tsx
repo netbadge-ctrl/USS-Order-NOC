@@ -198,26 +198,26 @@ function DeliveryPage() {
                                                             <Badge variant="outline" className="mt-1 bg-green-100 text-green-800 border-green-200 font-normal">{item.status}</Badge>
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.gpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-red-600': i === 1}, {'text-blue-600': i === 2})}>{line}</p>)}
+                                                        {item.gpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.cpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-red-600': i === 1}, {'text-blue-600': i === 2})}>{line}</p>)}
+                                                        {item.cpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.memory.map((line, i) => <p key={i} className={cn('text-xs', {'text-red-600': i === 1}, {'text-blue-600': i === 2})}>{line}</p>)}
+                                                        {item.memory.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.storage.map((line, i) => <p key={i} className={cn('text-xs', {'text-red-600': i === 1}, {'text-blue-600': i === 2})}>{line}</p>)}
+                                                        {item.storage.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.vpc.map((line, i) => <p key={i} className={cn('text-xs', {'text-red-600': i === 1}, {'text-blue-600': i === 2})}>{line}</p>)}
+                                                        {item.vpc.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
                                                         </TableCell>
                                                         <TableCell>
                                                         {item.compute.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
                                                         </TableCell>
                                                         <TableCell><p className="text-xs text-red-600">{item.storageNet}</p></TableCell>
                                                         <TableCell>
-                                                            {item.rack.map((line, i) => <p key={i} className={cn('text-xs', {'text-red-600': i === 1}, {'text-blue-600': i === 2})}>{line}</p>)}
+                                                            {item.rack.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
