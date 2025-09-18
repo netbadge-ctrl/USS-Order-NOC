@@ -73,7 +73,7 @@ const deliveryData = [
 function DeliveryPage() {
   return (
     <div className="flex flex-col w-full">
-        <div className="flex items-center justify-between p-6 border-b bg-gray-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50/50">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>北京箭厂科技有限公司</span>
                 <ChevronRight className="h-4 w-4" />
@@ -88,14 +88,14 @@ function DeliveryPage() {
         </div>
 
         <Tabs defaultValue="delivery" className="w-full flex flex-col flex-1">
-            <div className="border-b px-6 flex items-center justify-between">
+            <div className="border-b px-6 flex items-center justify-between py-2">
                 <TabsList className="bg-transparent p-0 h-auto gap-6 -mb-px">
-                    <TabsTrigger value="requirements" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">需求说明</TabsTrigger>
-                    <TabsTrigger value="architecture" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">架构</TabsTrigger>
-                    <TabsTrigger value="bom" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">BOM&采购</TabsTrigger>
-                    <TabsTrigger value="quote" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">询价</TabsTrigger>
-                    <TabsTrigger value="delivery" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 font-semibold text-foreground">交付</TabsTrigger>
-                    <TabsTrigger value="logs" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none p-2 text-muted-foreground font-medium">日志</TabsTrigger>
+                    <TabsTrigger value="requirements" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">需求说明</TabsTrigger>
+                    <TabsTrigger value="architecture" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">架构</TabsTrigger>
+                    <TabsTrigger value="bom" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">BOM&采购</TabsTrigger>
+                    <TabsTrigger value="quote" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">询价</TabsTrigger>
+                    <TabsTrigger value="delivery" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 font-semibold text-foreground">交付</TabsTrigger>
+                    <TabsTrigger value="logs" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">日志</TabsTrigger>
                 </TabsList>
                 <div className="flex items-center gap-2">
                     <Button variant="outline"><Clock className="mr-2 h-4 w-4"/>填写预计交付时间</Button>
@@ -261,3 +261,5 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
+
+    
