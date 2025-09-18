@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -15,6 +16,7 @@ export default function AppHeader() {
   const navLinks = [
     { href: '/', label: '创建工单' },
     { href: '/reports', label: '工单进度' },
+    { href: '/delivery', label: '交付清单' },
   ];
 
   return (
@@ -93,3 +95,5 @@ export default function AppHeader() {
     </header>
   );
 }
+
+    
