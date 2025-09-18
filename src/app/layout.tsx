@@ -20,7 +20,7 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <body className={`${inter.className} antialiased flex flex-col min-h-screen`}>
           <AppHeader />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-background">
+          <main className="flex-1 flex bg-background">
             {children}
           </main>
         <Toaster />
@@ -28,3 +28,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    
