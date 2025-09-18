@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import {
   SidebarProvider,
   Sidebar,
@@ -30,7 +31,18 @@ import {
   ChevronDown,
   Info,
   Bell,
+  AlertTriangle,
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -65,12 +77,56 @@ const deliveryData = [
     vpc: ['WQDX_25G_2*1 + WGDX', '25GE_2*1', '25GE_2*1'],
     compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_RoCE *...', '200GE_IB * 2'],
     storageNet: '无',
-    rack: ['NXDX01', 'NXDX01', 'NXDX01'],
+    rack: ['NXDX01', 'NXDX01-New', 'NXDX01'],
     deliveryPlan: '建立沟通群'
   }
 ];
 
+type ChangeSummary = {
+  hardwareChanges: { sn: string; changes: string[] }[];
+  relocationChanges: { sn: string; from: string; to: string }[];
+};
+
+
 function DeliveryPage() {
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [changeSummary, setChangeSummary] = useState<ChangeSummary | null>(null);
+
+    const handleInitiateWorkOrder = () => {
+        const summary: ChangeSummary = {
+            hardwareChanges: [],
+            relocationChanges: [],
+        };
+
+        deliveryData.forEach(item => {
+            const hardwareChangesForItem: string[] = [];
+            const checkDiff = (component: string, current: string, target: string) => {
+                if (current !== target) {
+                    hardwareChangesForItem.push(`${component}: ${current} -> ${target}`);
+                }
+            };
+            
+            checkDiff('GPU', item.gpu[0], item.gpu[1]);
+            checkDiff('CPU', item.cpu[0], item.cpu[1]);
+            checkDiff('内存', item.memory[0], item.memory[1]);
+            checkDiff('存储', item.storage[0], item.storage[1]);
+            checkDiff('VPC网络', item.vpc[0], item.vpc[1]);
+            checkDiff('计算网络', item.compute[0], item.compute[1]);
+
+            if (hardwareChangesForItem.length > 0) {
+                summary.hardwareChanges.push({ sn: item.sn, changes: hardwareChangesForItem });
+            }
+
+            if (item.rack[0] !== item.rack[1]) {
+                summary.relocationChanges.push({ sn: item.sn, from: item.rack[0], to: item.rack[1] });
+            }
+        });
+        
+        setChangeSummary(summary);
+        setIsDialogOpen(true);
+    };
+
+
   return (
     <div className="flex flex-col w-full">
         <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50/50">
@@ -158,7 +214,7 @@ function DeliveryPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button variant="outline">发起NOC工单</Button>
+                                    <Button variant="outline" onClick={handleInitiateWorkOrder}>发起NOC工单</Button>
                                     <Button variant="outline">导出清单</Button>
                                 </div>
                             </div>
@@ -257,6 +313,57 @@ function DeliveryPage() {
                 </SidebarProvider>
             </div>
         </Tabs>
+         <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <AlertDialogContent className="max-w-2xl">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>确认工单操作</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        系统检测到以下配置变更，请确认是否继续发起NOC工单。
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="max-h-[60vh] overflow-y-auto pr-4 space-y-6">
+                    {changeSummary && (changeSummary.hardwareChanges.length > 0 || changeSummary.relocationChanges.length > 0) ? (
+                        <>
+                            {changeSummary.hardwareChanges.length > 0 && (
+                                <div className="space-y-4">
+                                    <h4 className="font-semibold text-lg flex items-center"><Wrench className="mr-2 h-5 w-5 text-blue-500" />硬件改配</h4>
+                                    {changeSummary.hardwareChanges.map(item => (
+                                        <div key={item.sn} className="p-3 bg-muted/50 rounded-lg">
+                                            <p className="font-semibold text-sm text-foreground mb-2">服务器SN: <span className="font-mono">{item.sn}</span></p>
+                                            <ul className="list-disc list-inside space-y-1 text-sm">
+                                                {item.changes.map((change, index) => <li key={index}>{change}</li>)}
+                                            </ul>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {changeSummary.relocationChanges.length > 0 && (
+                                <div className="space-y-4">
+                                    <h4 className="font-semibold text-lg flex items-center"><Package className="mr-2 h-5 w-5 text-green-500" />服务器搬迁</h4>
+                                    {changeSummary.relocationChanges.map(item => (
+                                        <div key={item.sn} className="p-3 bg-muted/50 rounded-lg">
+                                             <p className="font-semibold text-sm text-foreground mb-1">服务器SN: <span className="font-mono">{item.sn}</span></p>
+                                             <p className="text-sm">机房/机架: <span className="font-medium">{item.from}</span> -> <span className="font-medium text-blue-600">{item.to}</span></p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center text-center p-8 bg-muted/50 rounded-lg">
+                             <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
+                            <p className="font-semibold">未检测到配置变更。</p>
+                            <p className="text-sm text-muted-foreground">所有服务器的当前配置与目标配置一致。</p>
+                        </div>
+                    )}
+                </div>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction>确认提交</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
