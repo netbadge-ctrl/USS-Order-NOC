@@ -188,12 +188,6 @@ function WorkOrderProgress() {
 export default function ReportsPage() {
   return (
     <div className="space-y-8">
-        <div className="flex items-center justify-between">
-            <div>
-                <h1 className="text-3xl font-bold">工单进度中心</h1>
-                <p className="text-muted-foreground">追踪单个工单的详细处理进度。</p>
-            </div>
-        </div>
         <WorkOrderProgress />
     </div>
   );
