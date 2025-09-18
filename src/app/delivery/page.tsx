@@ -75,10 +75,9 @@ const deliveryData = [
     memory: ['WQDX_64G_3200*16', '1024G', '1024G'],
     storage: ['WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', '7680GB_U.2/NVME*1', '7680GB_U.2/NVME*2'],
     vpc: ['WQDX_25G_2*1 + WGDX', '25GE_2*1', '25GE_2*1'],
-    compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_RoCE *...', '200GE_IB * 2'],
+    compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_IB * 2', '200GE_RoCE *...'],
     storageNet: '无',
-    rack: ['NXDX01', 'NXDX01-New', 'NXDX01'],
-    deliveryPlan: '建立沟通群'
+    rack: ['NXDX01', 'NXDX01-New', 'NXDX01']
   }
 ];
 
@@ -142,9 +141,8 @@ function DeliveryPage() {
                 <Button variant="destructive">退回</Button>
             </div>
         </div>
-
         <Tabs defaultValue="delivery" className="w-full flex flex-col flex-1">
-            <div className="border-b px-6 flex items-center justify-between py-2">
+             <div className="border-b px-6 flex items-center justify-between py-2">
                 <TabsList className="bg-transparent p-0 h-auto gap-6 -mb-px">
                     <TabsTrigger value="requirements" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">需求说明</TabsTrigger>
                     <TabsTrigger value="architecture" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">架构</TabsTrigger>
@@ -281,26 +279,7 @@ function DeliveryPage() {
                                             </TableBody>
                                         </Table>
                                     </div>
-                                    <div className="flex items-center justify-between mt-4 text-sm">
-                                        <p className="text-muted-foreground">共 1 条</p>
-                                        <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-2">
-                                                <Button variant="outline" size="sm">{'<'}</Button>
-                                                <Button variant="outline" size="sm" className="bg-gray-100">1</Button>
-                                                <Button variant="outline" size="sm">{'>'}</Button>
-                                        </div>
-                                        <Select defaultValue="10">
-                                                <SelectTrigger className="w-28 h-9 text-xs">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="10">10条/页</SelectItem>
-                                                    <SelectItem value="20">20条/页</SelectItem>
-                                                    <SelectItem value="50">50条/页</SelectItem>
-                                                </SelectContent>
-                                        </Select>
-                                        </div>
-                                    </div>
+                                    
                                 </TabsContent>
                                 <TabsContent value="cpu">
                                     <div className="flex items-center justify-center h-40 border rounded-lg mt-4 bg-white">
@@ -369,5 +348,7 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
+
+    
 
     
