@@ -122,16 +122,7 @@ function DeliveryPage() {
             <span className="text-foreground font-medium">无货源替换</span>
             <Badge variant="outline" className="ml-2 font-normal bg-blue-100 text-blue-800 border-blue-200">进行中</Badge>
         </div>
-        <div className="flex items-center justify-between mt-2">
-             <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-semibold">无货源替换</h1>
-                <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                        <AvatarFallback>李</AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm">李工</span>
-                </div>
-            </div>
+        <div className="flex items-center justify-end mt-2">
             <div className="flex items-center gap-2">
                 <Button variant="outline">交付计划</Button>
                 <Button variant="outline">建立沟通群</Button>
