@@ -22,10 +22,6 @@ export default function AppHeader() {
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-card px-4 lg:px-6 sticky top-0 z-30">
       <nav className="flex-1 flex items-center gap-6 text-lg font-medium">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <Package2 className="h-6 w-6" />
-          <span className="hidden md:inline-block">IDC 工单系统</span>
-        </Link>
         {navLinks.map(link => (
           <Link
             key={link.href}
