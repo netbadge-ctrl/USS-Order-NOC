@@ -70,7 +70,7 @@ const deliveryData = [
   {
     sn: '9800171603708812',
     status: '正常运行',
-    gpu: ['WQDX_GM302*8', 'GM302*8', 'GM302*8'],
+    gpu: ['WQDX_GM302*8', 'WQDX_GM302*8', 'GM302*8'],
     cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8358P*2'],
     memory: ['WQDX_64G_3200*16', '1024G', '1024G'],
     storage: ['WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', '7680GB_U.2/NVME*1', '7680GB_U.2/NVME*2'],
@@ -218,7 +218,7 @@ function DeliveryPage() {
                             </div>
 
                             <Alert variant="default" className="mt-4 bg-blue-50 border-blue-200 text-blue-800">
-                                <Info className="h-4 w-4 text-blue-500" />
+                                
                                 <AlertDescription>
                                     图例说明: 黑色字体为当前服务器配置, <span className="text-blue-600">蓝色字体为需交付服务器配置</span>, <span className="text-red-600">红色字体为用户需求配置</span>.
                                 </AlertDescription>
