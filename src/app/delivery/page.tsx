@@ -5,14 +5,11 @@ import { useState } from 'react';
 import {
   SidebarProvider,
   Sidebar,
-  SidebarHeader,
-  SidebarTrigger,
   SidebarContent,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,15 +20,10 @@ import {
   Settings,
   List,
   HardDrive,
-  Users,
   Package,
-  ClipboardList,
   Wrench,
   Power,
-  ChevronDown,
-  Info,
   Bell,
-  AlertTriangle,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -43,7 +35,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -56,21 +47,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Pagination } from '@/components/pagination';
 
 const deliveryData = [
   {
     sn: '9800171603708812',
     status: '正常运行',
-    gpu: ['WQDX_GM302*8', 'WQDX_GM302*8', 'GM302*8'],
+    gpu: ['WQDX_GM302*8', 'GM302*8', 'WQDX_GM302*8'],
     cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8358P*2'],
     memory: ['WQDX_64G_3200*16', '1024G', '1024G'],
     storage: ['WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', '7680GB_U.2/NVME*1', '7680GB_U.2/NVME*2'],
@@ -127,18 +110,18 @@ function DeliveryPage() {
 
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="w-full flex flex-col flex-1">
         <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50/50">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>北京箭厂科技有限公司</span>
                 <ChevronRight className="h-4 w-4" />
                 <span>北京箭厂GPU需求</span>
-                <Badge variant="outline" className="ml-2 font-normal bg-blue-100 text-blue-800 border-blue-200">完成资源预留 <Info className='inline-block w-3 h-3 ml-1'/></Badge>
+                <Badge variant="outline" className="ml-2 font-normal bg-blue-100 text-blue-800 border-blue-200">完成资源预留</Badge>
             </div>
             <div className="flex items-center gap-2">
-                <Button variant="outline">交付计划</Button>
-                <Button variant="outline">建立沟通群</Button>
-                <Button variant="destructive">退回</Button>
+                <Button variant="link">交付计划</Button>
+                <Button variant="link">建立沟通群</Button>
+                <Button variant="outline">返回</Button>
             </div>
         </div>
         <Tabs defaultValue="delivery" className="w-full flex flex-col flex-1">
@@ -348,7 +331,3 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
-
-    
-
-    
