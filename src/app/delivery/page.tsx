@@ -101,7 +101,7 @@ const deliveryData = [
     vpc: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
     compute: ['100GE_IB*4', '200GE_IB*8', '400GE_IB*8'],
     storageNet: '无',
-    rack: ['HZA01', 'HZA02', 'GZA01']
+    rack: ['HZA01', 'GZA01', 'GZA01']
   },
   {
     sn: '9800171603708816',
@@ -119,7 +119,7 @@ const deliveryData = [
 
 type GroupedChangeSummary = {
   hardwareChanges: Map<string, { sns: string[], changes: string[] }>;
-  relocationChanges: { sn: string; from: string; to: string }[];
+  relocationChanges: Map<string, { from: string[], sns: string[] }>;
 };
 
 function DeliveryPage() {
@@ -130,13 +130,11 @@ function DeliveryPage() {
     const handleInitiateWorkOrder = async () => {
         setIsLoading(true);
         
-        // Simulate a delay for loading state
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Hardcoded summary for demo purposes
         const summary: GroupedChangeSummary = {
             hardwareChanges: new Map(),
-            relocationChanges: [],
+            relocationChanges: new Map(),
         };
         
         const hardwareGroup1Key = `目标配置 A|${JSON.stringify(["内存: 64G_4800*16", "存储: NVME_3.84T*4"])}`;
@@ -154,7 +152,7 @@ function DeliveryPage() {
 
         const hardwareGroup2Key = `目标配置 B|${JSON.stringify(["GPU: WQDX_H800*8", "内存: 128G_4800*16"])}`;
         summary.hardwareChanges.set(hardwareGroup2Key, {
-            sns: ['9800171603708814', '9800171603708815', '9800171603708816'],
+            sns: ['9800171603708814', '9800171603708815'],
             changes: [
                 "GPU: WQDX_H800*8",
                 "内存: 128G_4800*16",
@@ -162,14 +160,11 @@ function DeliveryPage() {
             ],
         });
 
-
-        summary.relocationChanges = [
-            { sn: '9800171603708812', from: 'NXDX01', to: 'GZA01' },
-            { sn: '9800171603708813', from: 'BJF01', to: 'GZA01' },
-            { sn: '9800171603708814', from: 'SZA01', to: 'GZA01' },
-            { sn: '9800171603708815', from: 'HZA01', to: 'GZA01' },
-            { sn: '9800171603708816', from: 'GZA01', to: 'SHB02' }
-        ];
+        const relocationGroup1 = { from: ['NXDX01', 'BJF01', 'SZA01', 'HZA01'], sns: ['9800171603708812', '9800171603708813', '9800171603708814', '9800171603708815']};
+        summary.relocationChanges.set('GZA01', relocationGroup1);
+        
+        const relocationGroup2 = { from: ['GZA01'], sns: ['9800171603708816']};
+        summary.relocationChanges.set('SHB02', relocationGroup2);
         
         setChangeSummary(summary);
         setIsLoading(false);
@@ -359,7 +354,7 @@ function DeliveryPage() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="max-h-[60vh] overflow-y-auto pr-4 space-y-6">
-                    {changeSummary && (changeSummary.hardwareChanges.size > 0 || changeSummary.relocationChanges.length > 0) ? (
+                    {changeSummary && (changeSummary.hardwareChanges.size > 0 || changeSummary.relocationChanges.size > 0) ? (
                         <>
                             {changeSummary.hardwareChanges.size > 0 && (
                                 <div className="space-y-4">
@@ -383,13 +378,20 @@ function DeliveryPage() {
                                 </div>
                             )}
 
-                            {changeSummary.relocationChanges.length > 0 && (
+                            {changeSummary.relocationChanges.size > 0 && (
                                 <div className="space-y-4">
                                     <h4 className="font-semibold text-lg flex items-center"><Package className="mr-2 h-5 w-5 text-green-500" />服务器搬迁</h4>
-                                    {changeSummary.relocationChanges.map(item => (
-                                        <div key={item.sn} className="p-3 bg-muted/50 rounded-lg">
-                                             <p className="font-semibold text-sm text-foreground mb-1">服务器SN: <span className="font-mono">{item.sn}</span></p>
-                                             <p className="text-sm">机房/机架: <span className="font-medium">{item.from}</span> -> <span className="font-medium text-blue-600">{item.to}</span></p>
+                                     {Array.from(changeSummary.relocationChanges.entries()).map(([to, group]) => (
+                                        <div key={to} className="p-4 bg-muted/50 rounded-lg space-y-3">
+                                            <div>
+                                                <p className="font-semibold text-sm text-foreground mb-2">目标机房/机架: <span className="font-medium text-blue-600">{to}</span></p>
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-sm text-foreground mb-2">以下服务器将搬迁至此位置:</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                  {group.sns.map(sn => <Badge key={sn} variant="secondary" className="font-mono">{sn}</Badge>)}
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -414,5 +416,7 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
+
+    
 
     
