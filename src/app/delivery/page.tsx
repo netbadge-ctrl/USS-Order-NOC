@@ -51,9 +51,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { getHardwareSuggestion } from '@/ai/flows/hardware-suggestion-flow';
-import type { HardwareSuggestionOutput, HardwareSuggestionInput } from '@/ai/flows/hardware-suggestion-flow';
-import { ServerHardwareConfig } from '@/lib/types';
+import { useToast } from "@/hooks/use-toast"
 
 
 const deliveryData = [
@@ -149,6 +147,7 @@ type GroupedChangeSummary = {
 };
 
 function DeliveryPage() {
+    const { toast } = useToast()
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [changeSummary, setChangeSummary] = useState<GroupedChangeSummary | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -196,6 +195,16 @@ function DeliveryPage() {
         setIsLoading(false);
         setIsDialogOpen(true);
     };
+
+    const handleSubmitWorkOrder = () => {
+        // Simulate API call
+        const nocId = `NOC-${Math.floor(Math.random() * 100000)}`
+        toast({
+            title: "工单创建成功",
+            description: `NOC工单 ${nocId} 已创建。您可以在“工单进度”页面查看操作工单进度。`,
+            variant: "default",
+        })
+    }
 
 
   return (
@@ -439,7 +448,7 @@ function DeliveryPage() {
                 </div>
                 <AlertDialogFooter>
                     <AlertDialogCancel>取消</AlertDialogCancel>
-                    <AlertDialogAction>确认提交</AlertDialogAction>
+                    <AlertDialogAction onClick={handleSubmitWorkOrder}>确认提交</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
@@ -448,3 +457,5 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
+
+    
