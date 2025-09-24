@@ -21,43 +21,28 @@ export default function AppHeader() {
 
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-card px-4 lg:px-6 sticky top-0 z-30">
-      <nav className="flex-1 flex items-center gap-6 text-lg font-medium">
+      <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-lg font-semibold md:text-base"
+        >
+          <Package2 className="h-6 w-6" />
+          <span className="sr-only">IDC Ops Center</span>
+        </Link>
         {navLinks.map(link => (
           <Link
             key={link.href}
             href={link.href}
             className={cn(
-                "text-sm transition-colors hover:text-foreground",
-                pathname === link.href ? "text-foreground font-semibold border-b-2 border-primary" : "text-muted-foreground"
+                "transition-colors hover:text-foreground",
+                pathname === link.href ? "text-foreground font-semibold" : "text-muted-foreground"
             )}
           >
             {link.label}
           </Link>
         ))}
       </nav>
-      
-      <div className="flex items-center gap-4 md:gap-2 lg:gap-4">
-        <p className="text-xs text-muted-foreground mr-4">这是原型演示切换功能用的菜单，不是需求中的一部分</p>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>我的账户</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>设置</DropdownMenuItem>
-            <DropdownMenuItem>支持</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>登出</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-       <Sheet>
+      <Sheet>
         <SheetTrigger asChild>
           <Button
             variant="outline"
@@ -89,8 +74,27 @@ export default function AppHeader() {
           </nav>
         </SheetContent>
       </Sheet>
+      <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4 justify-end">
+        <p className="text-xs text-muted-foreground mr-4">这是原型演示切换功能用的菜单，不是需求中的一部分</p>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>我的账户</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>设置</DropdownMenuItem>
+            <DropdownMenuItem>支持</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>登出</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
   );
 }
-
-    
