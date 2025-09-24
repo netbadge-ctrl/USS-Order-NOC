@@ -157,8 +157,10 @@ function DeliveryPage() {
             relocationChanges: [],
         };
 
-        for (const item of deliveryData) {
+        const promises = deliveryData.map(async (item) => {
             const isGpuServer = item.gpu[0] !== 'N/A';
+            let hardwareChange = { sn: item.sn, changes: [] as string[] };
+            let relocationChange = null;
 
             try {
                 const suggestion = await getHardwareSuggestion({
@@ -187,18 +189,29 @@ function DeliveryPage() {
 
                 const formattedChanges = formatSuggestion(suggestion);
                 if (formattedChanges.length > 0) {
-                    summary.hardwareChanges.push({ sn: item.sn, changes: formattedChanges });
+                    hardwareChange.changes = formattedChanges;
                 }
 
             } catch (error) {
                 console.error(`Failed to get hardware suggestion for SN ${item.sn}:`, error);
-                // Optionally add an error message to the summary
-                 summary.hardwareChanges.push({ sn: item.sn, changes: [`获取改配建议失败: ${(error as Error).message}`] });
+                hardwareChange.changes = [`获取改配建议失败: ${(error as Error).message}`];
             }
 
-
             if (item.rack[0] !== item.rack[1]) {
-                summary.relocationChanges.push({ sn: item.sn, from: item.rack[0], to: item.rack[1] });
+                relocationChange = { sn: item.sn, from: item.rack[0], to: item.rack[1] };
+            }
+
+            return { hardwareChange, relocationChange };
+        });
+
+        const results = await Promise.all(promises);
+
+        for (const result of results) {
+            if (result.hardwareChange.changes.length > 0) {
+                summary.hardwareChanges.push(result.hardwareChange);
+            }
+            if (result.relocationChange) {
+                summary.relocationChanges.push(result.relocationChange);
             }
         }
         
