@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   SidebarProvider,
   Sidebar,
@@ -24,6 +24,7 @@ import {
   Wrench,
   Power,
   Bell,
+  LoaderCircle
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -48,6 +49,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { getHardwareSuggestion } from '@/ai/flows/hardware-suggestion-flow';
+import type { HardwareSuggestionOutput } from '@/ai/flows/hardware-suggestion-flow';
 
 const deliveryData = [
   {
@@ -61,6 +64,54 @@ const deliveryData = [
     compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_IB * 2', '200GE_RoCE *...'],
     storageNet: '无',
     rack: ['NXDX01', 'NXDX01-New', 'NXDX01']
+  },
+  {
+    sn: '9800171603708813',
+    status: '维护中',
+    gpu: ['N/A', 'N/A', 'N/A'],
+    cpu: ['Intel_4314*2', 'Intel_5318Y*2', 'Intel_5318Y*2'],
+    memory: ['128G', '256G', '512G'],
+    storage: ['SATA_4T*12', 'NVME_1.92T*4', 'NVME_3.84T*8'],
+    vpc: ['10GE_2*1', '25GE_2*1', '100GE_2*1'],
+    compute: ['N/A', 'N/A', 'N/A'],
+    storageNet: '无',
+    rack: ['BJF01', 'BJF01', 'SHB02']
+  },
+  {
+    sn: '9800171603708814',
+    status: '正常运行',
+    gpu: ['WQDX_GM302*4', 'GM302*8', 'GM302*8'],
+    cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8358P*2'],
+    memory: ['WQDX_32G_3200*16', '64G_3200*16', '64G_3200*16'],
+    storage: ['SATA_480G*2', 'SATA_480G*2 + NVME_3.84T*2', 'SATA_480G*2 + NVME_7.68T*4'],
+    vpc: ['25GE_2*1', '25GE_2*1', '25GE_2*1'],
+    compute: ['100GE_IB*2', '200GE_IB*2', '200GE_IB*4'],
+    storageNet: '无',
+    rack: ['SZA01', 'SZA01', 'SZA01']
+  },
+  {
+    sn: '9800171603708815',
+    status: '已停止',
+    gpu: ['N/A', 'N/A', 'N/A'],
+    cpu: ['Intel_4314*2', 'Intel_4314*2', 'Intel_4316*2'],
+    memory: ['128G', '256G', '256G'],
+    storage: ['SATA_4T*6', 'SATA_4T*12', 'SATA_8T*12'],
+    vpc: ['10GE_2*1', '25GE_2*1', '25GE_2*1'],
+    compute: ['N/A', 'N/A', 'N/A'],
+    storageNet: '无',
+    rack: ['HZA01', 'HZA02', 'HZA02']
+  },
+  {
+    sn: '9800171603708816',
+    status: '正常运行',
+    gpu: ['WQDX_A800*8', 'WQDX_A800*8', 'WQDX_H800*8'],
+    cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
+    memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
+    storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
+    vpc: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
+    compute: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
+    storageNet: '200GE_RoCE*2',
+    rack: ['GZA01', 'GZA01', 'GZA01']
   }
 ];
 
@@ -73,45 +124,93 @@ type ChangeSummary = {
 function DeliveryPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [changeSummary, setChangeSummary] = useState<ChangeSummary | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleInitiateWorkOrder = () => {
+    const formatSuggestion = (suggestion: HardwareSuggestionOutput): string[] => {
+      const changes: string[] = [];
+      const formatItem = (label: string, item?: { action: string; details: string }) => {
+        if (!item || item.action === 'none') return;
+        let actionText;
+        switch (item.action) {
+          case 'add': actionText = '新增'; break;
+          case 'remove': actionText = '移除'; break;
+          case 'replace': actionText = '更换'; break;
+          default: actionText = item.action;
+        }
+        changes.push(`${label}: ${actionText} - ${item.details}`);
+      };
+
+      formatItem('CPU', suggestion.cpu);
+      formatItem('内存', suggestion.memory);
+      formatItem('存储', suggestion.storage);
+      formatItem('GPU', suggestion.gpu);
+      formatItem('网卡', suggestion.nic);
+      formatItem('网络', suggestion.network);
+
+      return changes;
+    };
+
+    const handleInitiateWorkOrder = async () => {
+        setIsLoading(true);
         const summary: ChangeSummary = {
             hardwareChanges: [],
             relocationChanges: [],
         };
 
-        deliveryData.forEach(item => {
-            const hardwareChangesForItem: string[] = [];
-            const checkDiff = (component: string, current: string, target: string) => {
-                if (current !== target) {
-                    hardwareChangesForItem.push(`${component}: ${current} -> ${target}`);
-                }
-            };
-            
-            checkDiff('GPU', item.gpu[0], item.gpu[1]);
-            checkDiff('CPU', item.cpu[0], item.cpu[1]);
-            checkDiff('内存', item.memory[0], item.memory[1]);
-            checkDiff('存储', item.storage[0], item.storage[1]);
-            checkDiff('VPC网络', item.vpc[0], item.vpc[1]);
-            checkDiff('计算网络', item.compute[0], item.compute[1]);
+        for (const item of deliveryData) {
+            const isGpuServer = item.gpu[0] !== 'N/A';
 
-            if (hardwareChangesForItem.length > 0) {
-                summary.hardwareChanges.push({ sn: item.sn, changes: hardwareChangesForItem });
+            try {
+                const suggestion = await getHardwareSuggestion({
+                    serverType: isGpuServer ? 'GPU' : 'CPU',
+                    currentConfig: {
+                        cpu: item.cpu[0],
+                        memory: item.memory[0],
+                        storage: item.storage[0],
+                        gpu: isGpuServer ? item.gpu[0] : undefined,
+                        vpcNetwork: isGpuServer ? item.vpc[0] : undefined,
+                        computeNetwork: isGpuServer ? item.compute[0] : undefined,
+                        storageNetwork: item.storageNet,
+                        nic: !isGpuServer ? item.vpc[0] : undefined,
+                    },
+                    targetConfig: {
+                        cpu: item.cpu[2], // Target is the user requirement (red)
+                        memory: item.memory[2],
+                        storage: item.storage[2],
+                        gpu: isGpuServer ? item.gpu[2] : undefined,
+                        vpcNetwork: isGpuServer ? item.vpc[2] : undefined,
+                        computeNetwork: isGpuServer ? item.compute[2] : undefined,
+                        storageNetwork: item.storageNet, // Assuming storageNet doesn't change or is part of requirement
+                        nic: !isGpuServer ? item.vpc[2] : undefined,
+                    }
+                });
+
+                const formattedChanges = formatSuggestion(suggestion);
+                if (formattedChanges.length > 0) {
+                    summary.hardwareChanges.push({ sn: item.sn, changes: formattedChanges });
+                }
+
+            } catch (error) {
+                console.error(`Failed to get hardware suggestion for SN ${item.sn}:`, error);
+                // Optionally add an error message to the summary
+                 summary.hardwareChanges.push({ sn: item.sn, changes: [`获取改配建议失败: ${(error as Error).message}`] });
             }
+
 
             if (item.rack[0] !== item.rack[1]) {
                 summary.relocationChanges.push({ sn: item.sn, from: item.rack[0], to: item.rack[1] });
             }
-        });
+        }
         
         setChangeSummary(summary);
+        setIsLoading(false);
         setIsDialogOpen(true);
     };
 
 
   return (
     <div className="w-full flex flex-col flex-1">
-        <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50/50">
+      <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50/50">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>北京箭厂科技有限公司</span>
                 <ChevronRight className="h-4 w-4" />
@@ -195,7 +294,10 @@ function DeliveryPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button variant="outline" onClick={handleInitiateWorkOrder}>发起NOC工单</Button>
+                                    <Button variant="outline" onClick={handleInitiateWorkOrder} disabled={isLoading}>
+                                        {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                                        发起NOC工单
+                                    </Button>
                                     <Button variant="outline">导出清单</Button>
                                 </div>
                             </div>
@@ -233,7 +335,11 @@ function DeliveryPage() {
                                                     <TableRow key={index}>
                                                         <TableCell>
                                                             <p className="font-mono text-xs">{item.sn}</p>
-                                                            <Badge variant="outline" className="mt-1 bg-green-100 text-green-800 border-green-200 font-normal">{item.status}</Badge>
+                                                            <Badge variant="outline" className={cn("mt-1 font-normal", {
+                                                                'bg-green-100 text-green-800 border-green-200': item.status === '正常运行',
+                                                                'bg-yellow-100 text-yellow-800 border-yellow-200': item.status === '维护中',
+                                                                'bg-red-100 text-red-800 border-red-200': item.status === '已停止',
+                                                            })}>{item.status}</Badge>
                                                         </TableCell>
                                                         <TableCell>
                                                         {item.gpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
@@ -276,7 +382,7 @@ function DeliveryPage() {
             </div>
         </Tabs>
          <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <AlertDialogContent className="max-w-2xl">
+            <AlertDialogContent className="max-w-4xl">
                 <AlertDialogHeader>
                     <AlertDialogTitle>确认工单操作</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -331,3 +437,5 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
+
+    
