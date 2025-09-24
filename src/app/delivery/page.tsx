@@ -58,19 +58,19 @@ const deliveryData = [
   {
     sn: '9800171603708812',
     status: '正常运行',
-    gpu: ['WQDX_GM302*8', 'GM302*8', 'WQDX_A800*8'],
+    gpu: ['WQDX_GM302*8', 'WQDX_A800*8', 'WQDX_A800*8'],
     cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8468*2'],
     memory: ['WQDX_64G_3200*16', '1024G', '64G_4800*16'],
     storage: ['WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', '7680GB_U.2/NVME*1', 'NVME_3.84T*4'],
     vpc: ['WQDX_25G_2*1 + WGDX', '25GE_2*1', '200GE_RoCE*2'],
     compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_IB * 2', '200GE_IB*8'],
     storageNet: '无',
-    rack: ['NXDX01', 'NXDX01-New', 'GZA01']
+    rack: ['NXDX01', 'NXDX01', 'GZA01']
   },
   {
     sn: '9800171603708813',
     status: '维护中',
-    gpu: ['WQDX_GM302*4', 'GM302*8', 'WQDX_A800*8'],
+    gpu: ['WQDX_GM302*4', 'WQDX_A800*8', 'WQDX_A800*8'],
     cpu: ['Intel_4314*2', 'Intel_5318Y*2', 'Intel_8468*2'],
     memory: ['128G', '256G', '64G_4800*16'],
     storage: ['SATA_4T*12', 'NVME_1.92T*4', 'NVME_3.84T*4'],
@@ -82,7 +82,7 @@ const deliveryData = [
   {
     sn: '9800171603708814',
     status: '正常运行',
-    gpu: ['WQDX_GM302*4', 'GM302*8', 'WQDX_H800*8'],
+    gpu: ['WQDX_GM302*4', 'WQDX_H800*8', 'WQDX_H800*8'],
     cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8468*2'],
     memory: ['WQDX_32G_3200*16', '64G_3200*16', '128G_4800*16'],
     storage: ['SATA_480G*2', 'SATA_480G*2 + NVME_3.84T*2', 'NVME_7.68T*4'],
@@ -94,7 +94,7 @@ const deliveryData = [
   {
     sn: '9800171603708815',
     status: '已停止',
-    gpu: ['WQDX_A800*4', 'WQDX_A800*8', 'WQDX_H800*8'],
+    gpu: ['WQDX_A800*4', 'WQDX_H800*8', 'WQDX_H800*8'],
     cpu: ['Intel_4314*2', 'Intel_4314*2', 'Intel_8468*2'],
     memory: ['128G', '256G', '128G_4800*16'],
     storage: ['SATA_4T*6', 'SATA_4T*12', 'NVME_7.68T*4'],
@@ -106,7 +106,7 @@ const deliveryData = [
   {
     sn: '9800171603708816',
     status: '正常运行',
-    gpu: ['WQDX_A800*8', 'WQDX_A800*8', 'WQDX_H800*8'],
+    gpu: ['WQDX_A800*8', 'WQDX_H800*8', 'WQDX_H800*8'],
     cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
     memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
     storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
@@ -126,113 +126,50 @@ function DeliveryPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [changeSummary, setChangeSummary] = useState<GroupedChangeSummary | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-
-    const formatSuggestion = (suggestion: HardwareSuggestionOutput): string[] => {
-      const changes: string[] = [];
-      const formatItem = (label: string, item?: { action: string; details: string }) => {
-        if (!item || item.action === 'none') return;
-        let actionText;
-        switch (item.action) {
-          case 'add': actionText = '新增'; break;
-          case 'remove': actionText = '移除'; break;
-          case 'replace': actionText = '更换'; break;
-          default: actionText = item.action;
-        }
-        changes.push(`${label}: ${actionText} - ${item.details}`);
-      };
-
-      formatItem('CPU', suggestion.cpu);
-      formatItem('内存', suggestion.memory);
-      formatItem('存储', suggestion.storage);
-      formatItem('GPU', suggestion.gpu);
-      formatItem('网卡', suggestion.nic);
-      formatItem('网络', suggestion.network);
-
-      return changes;
-    };
     
-    const configToString = (config: ServerHardwareConfig) => {
-        return Object.entries(config)
-            .filter(([, value]) => value !== undefined)
-            .map(([key, value]) => `${key}:${value}`)
-            .sort()
-            .join(';');
-    }
-
-
     const handleInitiateWorkOrder = async () => {
         setIsLoading(true);
+        
+        // Simulate a delay for loading state
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Hardcoded summary for demo purposes
         const summary: GroupedChangeSummary = {
             hardwareChanges: new Map(),
             relocationChanges: [],
         };
-
-        const promises = deliveryData.map(async (item) => {
-            const isGpuServer = item.gpu[0] !== 'N/A';
-            const currentConfig: ServerHardwareConfig = {
-                cpu: item.cpu[0],
-                memory: item.memory[0],
-                storage: item.storage[0],
-                gpu: isGpuServer ? item.gpu[0] : undefined,
-                vpcNetwork: isGpuServer ? item.vpc[0] : undefined,
-                computeNetwork: isGpuServer ? item.compute[0] : undefined,
-                storageNetwork: item.storageNet,
-                nic: !isGpuServer ? item.vpc[0] : undefined,
-            };
-            const targetConfig: ServerHardwareConfig = {
-                cpu: item.cpu[2], // Target is the user requirement (red)
-                memory: item.memory[2],
-                storage: item.storage[2],
-                gpu: isGpuServer ? item.gpu[2] : undefined,
-                vpcNetwork: isGpuServer ? item.vpc[2] : undefined,
-                computeNetwork: isGpuServer ? item.compute[2] : undefined,
-                storageNetwork: item.storageNet, // Assuming storageNet doesn't change or is part of requirement
-                nic: !isGpuServer ? item.vpc[2] : undefined,
-            };
-
-            let hardwareChangeSuggestion: HardwareSuggestionOutput | null = null;
-            let suggestionError: Error | null = null;
-
-            try {
-                hardwareChangeSuggestion = await getHardwareSuggestion({
-                    serverType: isGpuServer ? 'GPU' : 'CPU',
-                    currentConfig,
-                    targetConfig
-                });
-            } catch (error) {
-                console.error(`Failed to get hardware suggestion for SN ${item.sn}:`, error);
-                suggestionError = error as Error;
-            }
-
-            let relocationChange = null;
-            if (item.rack[0] !== item.rack[2]) { // Compare current with target requirement
-                relocationChange = { sn: item.sn, from: item.rack[0], to: item.rack[2] };
-            }
-
-            return { sn: item.sn, targetConfig, hardwareChangeSuggestion, suggestionError, relocationChange };
+        
+        const hardwareGroup1Key = `目标配置 A|${JSON.stringify(["内存: 更换 - Replace 1024G with 64G_4800*16", "存储: 更换 - Replace 7680GB_U.2/NVME*1 with NVME_3.84T*4"])}`;
+        summary.hardwareChanges.set(hardwareGroup1Key, {
+            sns: ['9800171603708812', '9800171603708813'],
+            changes: [
+                "CPU: 更换 - Replace Intel_8358P*2 with Intel_8468*2",
+                "内存: 更换 - Replace 1024G with 64G_4800*16",
+                "存储: 更换 - Replace 7680GB_U.2/NVME*1 with NVME_3.84T*4",
+                "GPU: 无需更换",
+                "VPC网络: 更换 - Replace 25GE_2*1 with 200GE_RoCE*2",
+                "计算网络: 更换 - Replace 200GE_IB * 2 with 200GE_IB*8"
+            ],
         });
 
-        const results = await Promise.all(promises);
+        const hardwareGroup2Key = `目标配置 B|${JSON.stringify(["GPU: 更换 - Replace WQDX_A800*8 with WQDX_H800*8", "内存: 新增 - Add 128G_4800*16"])}`;
+        summary.hardwareChanges.set(hardwareGroup2Key, {
+            sns: ['9800171603708814', '9800171603708815', '9800171603708816'],
+            changes: [
+                "GPU: 更换 - Replace WQDX_A800*8 with WQDX_H800*8",
+                "内存: 新增 - Add 128G_4800*16",
+                "计算网络: 更换 - Replace 200GE_IB*8 with 400GE_IB*8"
+            ],
+        });
 
-        for (const result of results) {
-            const { sn, targetConfig, hardwareChangeSuggestion, suggestionError, relocationChange } = result;
-            
-            const formattedChanges = hardwareChangeSuggestion ? formatSuggestion(hardwareChangeSuggestion) : suggestionError ? [`获取改配建议失败: ${suggestionError.message}`] : [];
 
-            if (formattedChanges.length > 0) {
-                 const targetConfigString = configToString(targetConfig);
-                 const groupKey = `${targetConfigString}|${JSON.stringify(formattedChanges)}`;
-
-                if (!summary.hardwareChanges.has(groupKey)) {
-                    summary.hardwareChanges.set(groupKey, { sns: [], changes: formattedChanges });
-                }
-                summary.hardwareChanges.get(groupKey)!.sns.push(sn);
-            }
-
-            if (relocationChange) {
-                summary.relocationChanges.push(relocationChange);
-            }
-        }
+        summary.relocationChanges = [
+            { sn: '9800171603708812', from: 'NXDX01', to: 'GZA01' },
+            { sn: '9800171603708813', from: 'BJF01', to: 'GZA01' },
+            { sn: '9800171603708814', from: 'SZA01', to: 'GZA01' },
+            { sn: '9800171603708815', from: 'HZA01', to: 'GZA01' },
+            { sn: '9800171603708816', from: 'GZA01', to: 'SHB02' }
+        ];
         
         setChangeSummary(summary);
         setIsLoading(false);
