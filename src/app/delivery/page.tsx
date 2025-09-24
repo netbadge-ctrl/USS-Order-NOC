@@ -48,6 +48,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { getHardwareSuggestion } from '@/ai/flows/hardware-suggestion-flow';
 import type { HardwareSuggestionOutput, HardwareSuggestionInput } from '@/ai/flows/hardware-suggestion-flow';
@@ -382,7 +384,13 @@ function DeliveryPage() {
                         <>
                             {changeSummary.hardwareChanges.size > 0 && (
                                 <div className="space-y-4">
-                                    <h4 className="font-semibold text-lg flex items-center"><Wrench className="mr-2 h-5 w-5 text-blue-500" />硬件改配</h4>
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="font-semibold text-lg flex items-center"><Wrench className="mr-2 h-5 w-5 text-blue-500" />硬件改配</h4>
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox id="urgent-no-test" />
+                                            <Label htmlFor="urgent-no-test" className="text-sm font-normal text-muted-foreground">紧急项目，不需要压测</Label>
+                                        </div>
+                                    </div>
                                     {Array.from(changeSummary.hardwareChanges.entries()).map(([key, group]) => (
                                         <div key={key} className="p-4 bg-muted/50 rounded-lg space-y-3">
                                             <div>
