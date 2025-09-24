@@ -107,8 +107,7 @@ function WorkOrderProgress() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-6 w-6"/>
+        <CardTitle>
           <span>工单详情: {report.id}</span>
         </CardTitle>
         <CardDescription>
