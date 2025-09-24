@@ -458,19 +458,6 @@ function DeliveryPage() {
                                                 </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                                     <div className="space-y-2 lg:col-span-2">
-                                                        <Label htmlFor={`datacenter-${to}`}>机房</Label>
-                                                        <Select defaultValue="qyyc01">
-                                                            <SelectTrigger id={`datacenter-${to}`}>
-                                                                <SelectValue placeholder="选择机房" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                            <SelectItem value="qyyc01">QYYC01-庆阳云创机房</SelectItem>
-                                                            <SelectItem value="bj01">BJ01-北京A数据中心</SelectItem>
-                                                            <SelectItem value="sh01">SH01-上海B数据中心</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="space-y-2 lg:col-span-2">
                                                         <Label htmlFor={`multi-tor-${to}`}>多机柜多TOR</Label>
                                                         <Select defaultValue="all">
                                                             <SelectTrigger id={`multi-tor-${to}`}>
