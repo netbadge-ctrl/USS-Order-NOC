@@ -36,9 +36,8 @@ export default function AppHeader() {
         ))}
       </nav>
       
-      <p className="text-xs text-muted-foreground mr-4">这是原型演示切换功能用的菜单，不是需求中的一部分</p>
-
       <div className="flex items-center gap-4 md:gap-2 lg:gap-4">
+        <p className="text-xs text-muted-foreground mr-4">这是原型演示切换功能用的菜单，不是需求中的一部分</p>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
