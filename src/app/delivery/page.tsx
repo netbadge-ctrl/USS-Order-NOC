@@ -52,6 +52,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast"
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 
 const deliveryData = [
@@ -431,6 +434,82 @@ function DeliveryPage() {
                                                 <p className="font-semibold text-sm text-foreground mb-2">以下服务器将搬迁至此位置:</p>
                                                 <div className="flex flex-wrap gap-2">
                                                   {group.sns.map(sn => <Badge key={sn} variant="secondary" className="font-mono">{sn}</Badge>)}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-6 pt-4 border-t mt-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
+                                                    <div className="flex items-center space-x-4">
+                                                    <Label>是否混布</Label>
+                                                    <RadioGroup defaultValue="no" className="flex">
+                                                        <div className="flex items-center space-x-2">
+                                                        <RadioGroupItem value="no" id={`mixed-no-${to}`} />
+                                                        <Label htmlFor={`mixed-no-${to}`} className="font-normal">否</Label>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2">
+                                                        <RadioGroupItem value="yes" id={`mixed-yes-${to}`} />
+                                                        <Label htmlFor={`mixed-yes-${to}`} className="font-normal">是</Label>
+                                                        </div>
+                                                    </RadioGroup>
+                                                    </div>
+                                                    <div className="col-start-4 flex items-center justify-end space-x-2">
+                                                    <Checkbox id={`rdma-${to}`} />
+                                                    <Label htmlFor={`rdma-${to}`} className="font-normal">RDMA网络开启</Label>
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                                    <div className="space-y-2 lg:col-span-2">
+                                                        <Label htmlFor={`datacenter-${to}`}>机房</Label>
+                                                        <Select defaultValue="qyyc01">
+                                                            <SelectTrigger id={`datacenter-${to}`}>
+                                                                <SelectValue placeholder="选择机房" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                            <SelectItem value="qyyc01">QYYC01-庆阳云创机房</SelectItem>
+                                                            <SelectItem value="bj01">BJ01-北京A数据中心</SelectItem>
+                                                            <SelectItem value="sh01">SH01-上海B数据中心</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="space-y-2 lg:col-span-2">
+                                                        <Label htmlFor={`multi-tor-${to}`}>多机柜多TOR</Label>
+                                                        <Select defaultValue="all">
+                                                            <SelectTrigger id={`multi-tor-${to}`}>
+                                                            <SelectValue placeholder="选择" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                            <SelectItem value="all">ALL</SelectItem>
+                                                            <SelectItem value="option1">选项1</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="space-y-2 lg:col-span-2">
+                                                        <Label htmlFor={`network-props-${to}`}>网络属性</Label>
+                                                        <Select defaultValue="all">
+                                                            <SelectTrigger id={`network-props-${to}`}>
+                                                            <SelectValue placeholder="选择" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                            <SelectItem value="all">ALL</SelectItem>
+                                                            <SelectItem value="option1">选项1</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="space-y-2 lg:col-span-2">
+                                                        <Label htmlFor={`rack-props-${to}`}>机柜业务属性</Label>
+                                                        <Select defaultValue="all">
+                                                            <SelectTrigger id={`rack-props-${to}`}>
+                                                            <SelectValue placeholder="选择" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                            <SelectItem value="all">ALL</SelectItem>
+                                                            <SelectItem value="option1">选项1</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`description-${to}`}>描述</Label>
+                                                    <Textarea id={`description-${to}`} placeholder="输入描述..." />
                                                 </div>
                                             </div>
                                         </div>
