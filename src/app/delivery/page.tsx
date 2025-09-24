@@ -55,66 +55,90 @@ import { ServerHardwareConfig } from '@/lib/types';
 
 
 const deliveryData = [
-  {
-    sn: '9800171603708812',
-    status: '正常运行',
-    gpu: ['WQDX_GM302*8', 'WQDX_A800*8', 'WQDX_A800*8'],
-    cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8468*2'],
-    memory: ['WQDX_64G_3200*16', '1024G', '64G_4800*16'],
-    storage: ['WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', '7680GB_U.2/NVME*1', 'NVME_3.84T*4'],
-    vpc: ['WQDX_25G_2*1 + WGDX', '25GE_2*1', '200GE_RoCE*2'],
-    compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_IB * 2', '200GE_IB*8'],
-    storageNet: '无',
-    rack: ['NXDX01', 'GZA01', 'GZA01']
-  },
-  {
-    sn: '9800171603708813',
-    status: '维护中',
-    gpu: ['WQDX_GM302*4', 'WQDX_A800*8', 'WQDX_A800*8'],
-    cpu: ['Intel_4314*2', 'Intel_5318Y*2', 'Intel_8468*2'],
-    memory: ['128G', '256G', '64G_4800*16'],
-    storage: ['SATA_4T*12', 'NVME_1.92T*4', 'NVME_3.84T*4'],
-    vpc: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
-    compute: ['100GE_IB*2', '200GE_IB * 2', '200GE_IB*8'],
-    storageNet: '无',
-    rack: ['BJF01', 'GZA01', 'GZA01']
-  },
-  {
-    sn: '9800171603708814',
-    status: '正常运行',
-    gpu: ['WQDX_GM302*4', 'WQDX_H800*8', 'WQDX_H800*8'],
-    cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8468*2'],
-    memory: ['WQDX_32G_3200*16', '64G_3200*16', '128G_4800*16'],
-    storage: ['SATA_480G*2', 'SATA_480G*2 + NVME_3.84T*2', 'NVME_7.68T*4'],
-    vpc: ['25GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
-    compute: ['100GE_IB*2', '200GE_IB*2', '400GE_IB*8'],
-    storageNet: '无',
-    rack: ['SZA01', 'GZA01', 'GZA01']
-  },
-  {
-    sn: '9800171603708815',
-    status: '已停止',
-    gpu: ['WQDX_A800*4', 'WQDX_H800*8', 'WQDX_H800*8'],
-    cpu: ['Intel_4314*2', 'Intel_4314*2', 'Intel_8468*2'],
-    memory: ['128G', '256G', '128G_4800*16'],
-    storage: ['SATA_4T*6', 'SATA_4T*12', 'NVME_7.68T*4'],
-    vpc: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
-    compute: ['100GE_IB*4', '200GE_IB*8', '400GE_IB*8'],
-    storageNet: '无',
-    rack: ['HZA01', 'GZA01', 'GZA01']
-  },
-  {
-    sn: '9800171603708816',
-    status: '正常运行',
-    gpu: ['WQDX_A800*8', 'WQDX_H800*8', 'WQDX_H800*8'],
-    cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
-    memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
-    storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
-    vpc: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
-    compute: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
-    storageNet: '200GE_RoCE*2',
-    rack: ['GZA01', 'GZA01', 'SHB02']
-  }
+    {
+        sn: '9800171603708812',
+        status: '正常运行',
+        gpu: ['WQDX_GM302*8', 'WQDX_A800*8', 'WQDX_A800*8'],
+        cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8468*2'],
+        memory: ['WQDX_64G_3200*16', '1024G', '64G_4800*16'],
+        storage: ['WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', '7680GB_U.2/NVME*1', 'NVME_3.84T*4'],
+        vpc: ['WQDX_25G_2*1 + WGDX', '25GE_2*1', '200GE_RoCE*2'],
+        compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_IB * 2', '200GE_IB*8'],
+        storageNet: '无',
+        rack: ['NXDX01', 'GZA01', 'GZA01']
+    },
+    {
+        sn: '9800171603708813',
+        status: '维护中',
+        gpu: ['WQDX_GM302*4', 'WQDX_A800*8', 'WQDX_A800*8'],
+        cpu: ['Intel_4314*2', 'Intel_5318Y*2', 'Intel_8468*2'],
+        memory: ['128G', '256G', '64G_4800*16'],
+        storage: ['SATA_4T*12', 'NVME_1.92T*4', 'NVME_3.84T*4'],
+        vpc: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
+        compute: ['100GE_IB*2', '200GE_IB * 2', '200GE_IB*8'],
+        storageNet: '无',
+        rack: ['BJF01', 'GZA01', 'GZA01']
+    },
+    {
+        sn: '9800171603708814',
+        status: '正常运行',
+        gpu: ['WQDX_GM302*4', 'WQDX_H800*8', 'WQDX_H800*8'],
+        cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8468*2'],
+        memory: ['WQDX_32G_3200*16', '64G_3200*16', '128G_4800*16'],
+        storage: ['SATA_480G*2', 'SATA_480G*2 + NVME_3.84T*2', 'NVME_7.68T*4'],
+        vpc: ['25GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
+        compute: ['100GE_IB*2', '200GE_IB*2', '400GE_IB*8'],
+        storageNet: '无',
+        rack: ['SZA01', 'GZA01', 'GZA01']
+    },
+    {
+        sn: '9800171603708815',
+        status: '已停止',
+        gpu: ['WQDX_A800*4', 'WQDX_H800*8', 'WQDX_H800*8'],
+        cpu: ['Intel_4314*2', 'Intel_4314*2', 'Intel_8468*2'],
+        memory: ['128G', '256G', '128G_4800*16'],
+        storage: ['SATA_4T*6', 'SATA_4T*12', 'NVME_7.68T*4'],
+        vpc: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
+        compute: ['100GE_IB*4', '200GE_IB*8', '400GE_IB*8'],
+        storageNet: '无',
+        rack: ['HZA01', 'GZA01', 'GZA01']
+    },
+    {
+        sn: '9800171603708816',
+        status: '正常运行',
+        gpu: ['WQDX_A800*8', 'WQDX_H800*8', 'WQDX_H800*8'],
+        cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
+        memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
+        storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
+        vpc: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
+        compute: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
+        storageNet: '200GE_RoCE*2',
+        rack: ['GZA01', 'GZA01', 'SHB02']
+    },
+    {
+        sn: '9800171603708817',
+        status: '正常运行',
+        gpu: ['WQDX_A800*8', 'WQDX_H800*8', 'WQDX_H800*8'],
+        cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
+        memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
+        storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
+        vpc: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
+        compute: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
+        storageNet: '200GE_RoCE*2',
+        rack: ['GZA01', 'GZA01', 'SHB02']
+    },
+    {
+        sn: '9800171603708818',
+        status: '正常运行',
+        gpu: ['WQDX_A800*8', 'WQDX_H800*8', 'WQDX_H800*8'],
+        cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
+        memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
+        storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
+        vpc: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
+        compute: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
+        storageNet: '200GE_RoCE*2',
+        rack: ['GZA01', 'GZA01', 'SHB02']
+    }
 ];
 
 type GroupedChangeSummary = {
@@ -350,7 +374,7 @@ function DeliveryPage() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>确认工单操作</AlertDialogTitle>
                     <AlertDialogDescription>
-                        系统检测到以下配置变更，请确认是否继续发起NOC工单。
+                        系统检测到以下配置变更，请确认是否继续发起NOC工单。涉及多个机房的，系统将会拆分多个NOC工单
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="max-h-[60vh] overflow-y-auto pr-4 space-y-6">
@@ -416,7 +440,3 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
-
-    
-
-    
