@@ -65,7 +65,7 @@ const deliveryData = [
     vpc: ['WQDX_25G_2*1 + WGDX', '25GE_2*1', '200GE_RoCE*2'],
     compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_IB * 2', '200GE_IB*8'],
     storageNet: '无',
-    rack: ['NXDX01', 'NXDX01', 'GZA01']
+    rack: ['NXDX01', 'GZA01', 'GZA01']
   },
   {
     sn: '9800171603708813',
@@ -77,7 +77,7 @@ const deliveryData = [
     vpc: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
     compute: ['100GE_IB*2', '200GE_IB * 2', '200GE_IB*8'],
     storageNet: '无',
-    rack: ['BJF01', 'BJF01', 'GZA01']
+    rack: ['BJF01', 'GZA01', 'GZA01']
   },
   {
     sn: '9800171603708814',
@@ -89,7 +89,7 @@ const deliveryData = [
     vpc: ['25GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
     compute: ['100GE_IB*2', '200GE_IB*2', '400GE_IB*8'],
     storageNet: '无',
-    rack: ['SZA01', 'SZA01', 'GZA01']
+    rack: ['SZA01', 'GZA01', 'GZA01']
   },
   {
     sn: '9800171603708815',
@@ -139,26 +139,26 @@ function DeliveryPage() {
             relocationChanges: [],
         };
         
-        const hardwareGroup1Key = `目标配置 A|${JSON.stringify(["内存: 更换 - Replace 1024G with 64G_4800*16", "存储: 更换 - Replace 7680GB_U.2/NVME*1 with NVME_3.84T*4"])}`;
+        const hardwareGroup1Key = `目标配置 A|${JSON.stringify(["内存: 64G_4800*16", "存储: NVME_3.84T*4"])}`;
         summary.hardwareChanges.set(hardwareGroup1Key, {
             sns: ['9800171603708812', '9800171603708813'],
             changes: [
-                "CPU: 更换 - Replace Intel_8358P*2 with Intel_8468*2",
-                "内存: 更换 - Replace 1024G with 64G_4800*16",
-                "存储: 更换 - Replace 7680GB_U.2/NVME*1 with NVME_3.84T*4",
-                "GPU: 无需更换",
-                "VPC网络: 更换 - Replace 25GE_2*1 with 200GE_RoCE*2",
-                "计算网络: 更换 - Replace 200GE_IB * 2 with 200GE_IB*8"
+                "CPU: Intel_8468*2",
+                "内存: 64G_4800*16",
+                "存储: NVME_3.84T*4",
+                "GPU: WQDX_A800*8",
+                "VPC网络: 200GE_RoCE*2",
+                "计算网络: 200GE_IB*8"
             ],
         });
 
-        const hardwareGroup2Key = `目标配置 B|${JSON.stringify(["GPU: 更换 - Replace WQDX_A800*8 with WQDX_H800*8", "内存: 新增 - Add 128G_4800*16"])}`;
+        const hardwareGroup2Key = `目标配置 B|${JSON.stringify(["GPU: WQDX_H800*8", "内存: 128G_4800*16"])}`;
         summary.hardwareChanges.set(hardwareGroup2Key, {
             sns: ['9800171603708814', '9800171603708815', '9800171603708816'],
             changes: [
-                "GPU: 更换 - Replace WQDX_A800*8 with WQDX_H800*8",
-                "内存: 新增 - Add 128G_4800*16",
-                "计算网络: 更换 - Replace 200GE_IB*8 with 400GE_IB*8"
+                "GPU: WQDX_H800*8",
+                "内存: 128G_4800*16",
+                "计算网络: 400GE_IB*8"
             ],
         });
 
@@ -367,7 +367,7 @@ function DeliveryPage() {
                                     {Array.from(changeSummary.hardwareChanges.entries()).map(([key, group]) => (
                                         <div key={key} className="p-4 bg-muted/50 rounded-lg space-y-3">
                                             <div>
-                                                <p className="font-semibold text-sm text-foreground mb-2">改配方案:</p>
+                                                <p className="font-semibold text-sm text-foreground mb-2">目标配置:</p>
                                                 <ul className="list-disc list-inside space-y-1 text-sm pl-2">
                                                     {group.changes.map((change, index) => <li key={index}>{change}</li>)}
                                                 </ul>
