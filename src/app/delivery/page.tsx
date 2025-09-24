@@ -56,62 +56,62 @@ const deliveryData = [
   {
     sn: '9800171603708812',
     status: '正常运行',
-    gpu: ['WQDX_GM302*8', 'GM302*8', 'WQDX_GM302*8'],
-    cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8358P*2'],
-    memory: ['WQDX_64G_3200*16', '1024G', '1024G'],
-    storage: ['WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', '7680GB_U.2/NVME*1', '7680GB_U.2/NVME*2'],
-    vpc: ['WQDX_25G_2*1 + WGDX', '25GE_2*1', '25GE_2*1'],
-    compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_IB * 2', '200GE_RoCE *...'],
+    gpu: ['WQDX_GM302*8', 'GM302*8', 'WQDX_H800*8'],
+    cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8468*2'],
+    memory: ['WQDX_64G_3200*16', '1024G', '128G_4800*16'],
+    storage: ['WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', '7680GB_U.2/NVME*1', 'NVME_7.68T*4'],
+    vpc: ['WQDX_25G_2*1 + WGDX', '25GE_2*1', '200GE_RoCE*2'],
+    compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_IB * 2', '400GE_IB*8'],
     storageNet: '无',
-    rack: ['NXDX01', 'NXDX01-New', 'NXDX01']
+    rack: ['NXDX01', 'NXDX01-New', 'GZA01']
   },
   {
     sn: '9800171603708813',
     status: '维护中',
-    gpu: ['N/A', 'N/A', 'N/A'],
-    cpu: ['Intel_4314*2', 'Intel_5318Y*2', 'Intel_5318Y*2'],
-    memory: ['128G', '256G', '512G'],
-    storage: ['SATA_4T*12', 'NVME_1.92T*4', 'NVME_3.84T*8'],
-    vpc: ['10GE_2*1', '25GE_2*1', '100GE_2*1'],
-    compute: ['N/A', 'N/A', 'N/A'],
+    gpu: ['N/A', 'N/A', 'WQDX_H800*8'],
+    cpu: ['Intel_4314*2', 'Intel_5318Y*2', 'Intel_8468*2'],
+    memory: ['128G', '256G', '128G_4800*16'],
+    storage: ['SATA_4T*12', 'NVME_1.92T*4', 'NVME_7.68T*4'],
+    vpc: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
+    compute: ['N/A', 'N/A', '400GE_IB*8'],
     storageNet: '无',
-    rack: ['BJF01', 'BJF01', 'SHB02']
+    rack: ['BJF01', 'BJF01', 'GZA01']
   },
   {
     sn: '9800171603708814',
     status: '正常运行',
     gpu: ['WQDX_GM302*4', 'GM302*8', 'GM302*8'],
-    cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8358P*2'],
-    memory: ['WQDX_32G_3200*16', '64G_3200*16', '64G_3200*16'],
-    storage: ['SATA_480G*2', 'SATA_480G*2 + NVME_3.84T*2', 'SATA_480G*2 + NVME_7.68T*4'],
-    vpc: ['25GE_2*1', '25GE_2*1', '25GE_2*1'],
-    compute: ['100GE_IB*2', '200GE_IB*2', '200GE_IB*4'],
+    cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_5318Y*2'],
+    memory: ['WQDX_32G_3200*16', '64G_3200*16', '512G'],
+    storage: ['SATA_480G*2', 'SATA_480G*2 + NVME_3.84T*2', 'NVME_3.84T*8'],
+    vpc: ['25GE_2*1', '25GE_2*1', '100GE_2*1'],
+    compute: ['100GE_IB*2', '200GE_IB*2', 'N/A'],
     storageNet: '无',
-    rack: ['SZA01', 'SZA01', 'SZA01']
+    rack: ['SZA01', 'SZA01', 'SHB02']
   },
   {
     sn: '9800171603708815',
     status: '已停止',
     gpu: ['N/A', 'N/A', 'N/A'],
-    cpu: ['Intel_4314*2', 'Intel_4314*2', 'Intel_4316*2'],
-    memory: ['128G', '256G', '256G'],
-    storage: ['SATA_4T*6', 'SATA_4T*12', 'SATA_8T*12'],
-    vpc: ['10GE_2*1', '25GE_2*1', '25GE_2*1'],
+    cpu: ['Intel_4314*2', 'Intel_4314*2', 'Intel_5318Y*2'],
+    memory: ['128G', '256G', '512G'],
+    storage: ['SATA_4T*6', 'SATA_4T*12', 'NVME_3.84T*8'],
+    vpc: ['10GE_2*1', '25GE_2*1', '100GE_2*1'],
     compute: ['N/A', 'N/A', 'N/A'],
     storageNet: '无',
-    rack: ['HZA01', 'HZA02', 'HZA02']
+    rack: ['HZA01', 'HZA02', 'SHB02']
   },
   {
     sn: '9800171603708816',
     status: '正常运行',
-    gpu: ['WQDX_A800*8', 'WQDX_A800*8', 'WQDX_H800*8'],
-    cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
-    memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
-    storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
-    vpc: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
-    compute: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
+    gpu: ['WQDX_A800*8', 'WQDX_A800*8', 'N/A'],
+    cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_5318Y*2'],
+    memory: ['64G_4800*16', '64G_4800*16', '512G'],
+    storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_3.84T*8'],
+    vpc: ['200GE_RoCE*2', '200GE_RoCE*2', '100GE_2*1'],
+    compute: ['200GE_IB*8', '200GE_IB*8', 'N/A'],
     storageNet: '200GE_RoCE*2',
-    rack: ['GZA01', 'GZA01', 'GZA01']
+    rack: ['GZA01', 'GZA01', 'SHB02']
   }
 ];
 
@@ -197,8 +197,8 @@ function DeliveryPage() {
                 hardwareChange.changes = [`获取改配建议失败: ${(error as Error).message}`];
             }
 
-            if (item.rack[0] !== item.rack[1]) {
-                relocationChange = { sn: item.sn, from: item.rack[0], to: item.rack[1] };
+            if (item.rack[0] !== item.rack[2]) { // Compare current with target requirement
+                relocationChange = { sn: item.sn, from: item.rack[0], to: item.rack[2] };
             }
 
             return { hardwareChange, relocationChange };
