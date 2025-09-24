@@ -50,7 +50,9 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { getHardwareSuggestion } from '@/ai/flows/hardware-suggestion-flow';
-import type { HardwareSuggestionOutput } from '@/ai/flows/hardware-suggestion-flow';
+import type { HardwareSuggestionOutput, HardwareSuggestionInput } from '@/ai/flows/hardware-suggestion-flow';
+import { ServerHardwareConfig } from '@/lib/types';
+
 
 const deliveryData = [
   {
@@ -115,15 +117,14 @@ const deliveryData = [
   }
 ];
 
-type ChangeSummary = {
-  hardwareChanges: { sn: string; changes: string[] }[];
+type GroupedChangeSummary = {
+  hardwareChanges: Map<string, { sns: string[], changes: string[] }>;
   relocationChanges: { sn: string; from: string; to: string }[];
 };
 
-
 function DeliveryPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [changeSummary, setChangeSummary] = useState<ChangeSummary | null>(null);
+    const [changeSummary, setChangeSummary] = useState<GroupedChangeSummary | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const formatSuggestion = (suggestion: HardwareSuggestionOutput): string[] => {
@@ -149,69 +150,87 @@ function DeliveryPage() {
 
       return changes;
     };
+    
+    const configToString = (config: ServerHardwareConfig) => {
+        return Object.entries(config)
+            .filter(([, value]) => value !== undefined)
+            .map(([key, value]) => `${key}:${value}`)
+            .sort()
+            .join(';');
+    }
+
 
     const handleInitiateWorkOrder = async () => {
         setIsLoading(true);
-        const summary: ChangeSummary = {
-            hardwareChanges: [],
+        const summary: GroupedChangeSummary = {
+            hardwareChanges: new Map(),
             relocationChanges: [],
         };
 
         const promises = deliveryData.map(async (item) => {
             const isGpuServer = item.gpu[0] !== 'N/A';
-            let hardwareChange = { sn: item.sn, changes: [] as string[] };
-            let relocationChange = null;
+            const currentConfig: ServerHardwareConfig = {
+                cpu: item.cpu[0],
+                memory: item.memory[0],
+                storage: item.storage[0],
+                gpu: isGpuServer ? item.gpu[0] : undefined,
+                vpcNetwork: isGpuServer ? item.vpc[0] : undefined,
+                computeNetwork: isGpuServer ? item.compute[0] : undefined,
+                storageNetwork: item.storageNet,
+                nic: !isGpuServer ? item.vpc[0] : undefined,
+            };
+            const targetConfig: ServerHardwareConfig = {
+                cpu: item.cpu[2], // Target is the user requirement (red)
+                memory: item.memory[2],
+                storage: item.storage[2],
+                gpu: isGpuServer ? item.gpu[2] : undefined,
+                vpcNetwork: isGpuServer ? item.vpc[2] : undefined,
+                computeNetwork: isGpuServer ? item.compute[2] : undefined,
+                storageNetwork: item.storageNet, // Assuming storageNet doesn't change or is part of requirement
+                nic: !isGpuServer ? item.vpc[2] : undefined,
+            };
+
+            let hardwareChangeSuggestion: HardwareSuggestionOutput | null = null;
+            let suggestionError: Error | null = null;
 
             try {
-                const suggestion = await getHardwareSuggestion({
+                hardwareChangeSuggestion = await getHardwareSuggestion({
                     serverType: isGpuServer ? 'GPU' : 'CPU',
-                    currentConfig: {
-                        cpu: item.cpu[0],
-                        memory: item.memory[0],
-                        storage: item.storage[0],
-                        gpu: isGpuServer ? item.gpu[0] : undefined,
-                        vpcNetwork: isGpuServer ? item.vpc[0] : undefined,
-                        computeNetwork: isGpuServer ? item.compute[0] : undefined,
-                        storageNetwork: item.storageNet,
-                        nic: !isGpuServer ? item.vpc[0] : undefined,
-                    },
-                    targetConfig: {
-                        cpu: item.cpu[2], // Target is the user requirement (red)
-                        memory: item.memory[2],
-                        storage: item.storage[2],
-                        gpu: isGpuServer ? item.gpu[2] : undefined,
-                        vpcNetwork: isGpuServer ? item.vpc[2] : undefined,
-                        computeNetwork: isGpuServer ? item.compute[2] : undefined,
-                        storageNetwork: item.storageNet, // Assuming storageNet doesn't change or is part of requirement
-                        nic: !isGpuServer ? item.vpc[2] : undefined,
-                    }
+                    currentConfig,
+                    targetConfig
                 });
-
-                const formattedChanges = formatSuggestion(suggestion);
-                if (formattedChanges.length > 0) {
-                    hardwareChange.changes = formattedChanges;
-                }
-
             } catch (error) {
                 console.error(`Failed to get hardware suggestion for SN ${item.sn}:`, error);
-                hardwareChange.changes = [`获取改配建议失败: ${(error as Error).message}`];
+                suggestionError = error as Error;
             }
 
+            let relocationChange = null;
             if (item.rack[0] !== item.rack[2]) { // Compare current with target requirement
                 relocationChange = { sn: item.sn, from: item.rack[0], to: item.rack[2] };
             }
 
-            return { hardwareChange, relocationChange };
+            return { sn: item.sn, targetConfig, hardwareChangeSuggestion, suggestionError, relocationChange };
         });
 
         const results = await Promise.all(promises);
 
         for (const result of results) {
-            if (result.hardwareChange.changes.length > 0) {
-                summary.hardwareChanges.push(result.hardwareChange);
+            const { sn, targetConfig, hardwareChangeSuggestion, suggestionError, relocationChange } = result;
+            
+            const formattedChanges = hardwareChangeSuggestion ? formatSuggestion(hardwareChangeSuggestion) : suggestionError ? [`获取改配建议失败: ${suggestionError.message}`] : [];
+
+            if (formattedChanges.length > 0) {
+                 const targetConfigString = configToString(targetConfig);
+                 const groupKey = `${targetConfigString}|${JSON.stringify(formattedChanges)}`;
+
+                if (!summary.hardwareChanges.has(groupKey)) {
+                    summary.hardwareChanges.set(groupKey, { sns: [], changes: formattedChanges });
+                }
+                summary.hardwareChanges.get(groupKey)!.sns.push(sn);
             }
-            if (result.relocationChange) {
-                summary.relocationChanges.push(result.relocationChange);
+
+            if (relocationChange) {
+                summary.relocationChanges.push(relocationChange);
             }
         }
         
@@ -403,17 +422,25 @@ function DeliveryPage() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="max-h-[60vh] overflow-y-auto pr-4 space-y-6">
-                    {changeSummary && (changeSummary.hardwareChanges.length > 0 || changeSummary.relocationChanges.length > 0) ? (
+                    {changeSummary && (changeSummary.hardwareChanges.size > 0 || changeSummary.relocationChanges.length > 0) ? (
                         <>
-                            {changeSummary.hardwareChanges.length > 0 && (
+                            {changeSummary.hardwareChanges.size > 0 && (
                                 <div className="space-y-4">
                                     <h4 className="font-semibold text-lg flex items-center"><Wrench className="mr-2 h-5 w-5 text-blue-500" />硬件改配</h4>
-                                    {changeSummary.hardwareChanges.map(item => (
-                                        <div key={item.sn} className="p-3 bg-muted/50 rounded-lg">
-                                            <p className="font-semibold text-sm text-foreground mb-2">服务器SN: <span className="font-mono">{item.sn}</span></p>
-                                            <ul className="list-disc list-inside space-y-1 text-sm">
-                                                {item.changes.map((change, index) => <li key={index}>{change}</li>)}
-                                            </ul>
+                                    {Array.from(changeSummary.hardwareChanges.entries()).map(([key, group]) => (
+                                        <div key={key} className="p-4 bg-muted/50 rounded-lg space-y-3">
+                                            <div>
+                                                <p className="font-semibold text-sm text-foreground mb-2">改配方案:</p>
+                                                <ul className="list-disc list-inside space-y-1 text-sm pl-2">
+                                                    {group.changes.map((change, index) => <li key={index}>{change}</li>)}
+                                                </ul>
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-sm text-foreground mb-2">应用到以下服务器SN:</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                  {group.sns.map(sn => <Badge key={sn} variant="secondary" className="font-mono">{sn}</Badge>)}
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
