@@ -452,7 +452,7 @@ function DeliveryPage() {
                                                         </RadioGroup>
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                                     <div className="space-y-2">
                                                         <Label htmlFor={`multi-tor-${to}`}>多机柜多TOR</Label>
                                                         <Select defaultValue="all">
@@ -523,4 +523,5 @@ function DeliveryPage() {
 
 export default DeliveryPage;
 
+    
     
