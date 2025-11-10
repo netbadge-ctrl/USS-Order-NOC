@@ -437,27 +437,23 @@ function DeliveryPage() {
                                                 </div>
                                             </div>
                                             <div className="space-y-6 pt-4 border-t mt-4">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     <div className="flex items-center space-x-4">
-                                                    <Label>是否混布</Label>
-                                                    <RadioGroup defaultValue="no" className="flex">
-                                                        <div className="flex items-center space-x-2">
-                                                        <RadioGroupItem value="no" id={`mixed-no-${to}`} />
-                                                        <Label htmlFor={`mixed-no-${to}`} className="font-normal">否</Label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                        <RadioGroupItem value="yes" id={`mixed-yes-${to}`} />
-                                                        <Label htmlFor={`mixed-yes-${to}`} className="font-normal">是</Label>
-                                                        </div>
-                                                    </RadioGroup>
-                                                    </div>
-                                                    <div className="col-start-4 flex items-center justify-end space-x-2">
-                                                    <Checkbox id={`rdma-${to}`} />
-                                                    <Label htmlFor={`rdma-${to}`} className="font-normal">RDMA网络开启</Label>
+                                                        <Label>是否混布</Label>
+                                                        <RadioGroup defaultValue="no" className="flex">
+                                                            <div className="flex items-center space-x-2">
+                                                            <RadioGroupItem value="no" id={`mixed-no-${to}`} />
+                                                            <Label htmlFor={`mixed-no-${to}`} className="font-normal">否</Label>
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                            <RadioGroupItem value="yes" id={`mixed-yes-${to}`} />
+                                                            <Label htmlFor={`mixed-yes-${to}`} className="font-normal">是</Label>
+                                                            </div>
+                                                        </RadioGroup>
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                                    <div className="space-y-2 lg:col-span-2">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className="space-y-2">
                                                         <Label htmlFor={`multi-tor-${to}`}>多机柜多TOR</Label>
                                                         <Select defaultValue="all">
                                                             <SelectTrigger id={`multi-tor-${to}`}>
@@ -469,27 +465,30 @@ function DeliveryPage() {
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
-                                                    <div className="space-y-2 lg:col-span-2">
-                                                        <Label htmlFor={`network-props-${to}`}>网络属性</Label>
+                                                     <div className="space-y-2">
+                                                        <Label htmlFor={`business-props-${to}`}>业务属性</Label>
                                                         <Select defaultValue="all">
-                                                            <SelectTrigger id={`network-props-${to}`}>
+                                                            <SelectTrigger id={`business-props-${to}`}>
                                                             <SelectValue placeholder="选择" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                            <SelectItem value="all">ALL</SelectItem>
-                                                            <SelectItem value="option1">选项1</SelectItem>
+                                                                <SelectItem value="all">ALL</SelectItem>
+                                                                <SelectItem value="xrllm">XRLLM</SelectItem>
+                                                                <SelectItem value="epc">EPC</SelectItem>
+                                                                <SelectItem value="other">其它</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
-                                                    <div className="space-y-2 lg:col-span-2">
-                                                        <Label htmlFor={`rack-props-${to}`}>机柜业务属性</Label>
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor={`cluster-${to}`}>独立集群</Label>
                                                         <Select defaultValue="all">
-                                                            <SelectTrigger id={`rack-props-${to}`}>
+                                                            <SelectTrigger id={`cluster-${to}`}>
                                                             <SelectValue placeholder="选择" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                            <SelectItem value="all">ALL</SelectItem>
-                                                            <SelectItem value="option1">选项1</SelectItem>
+                                                                <SelectItem value="all">ALL</SelectItem>
+                                                                <SelectItem value="yes">是</SelectItem>
+                                                                <SelectItem value="no">否</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
