@@ -24,7 +24,9 @@ import {
   Wrench,
   Power,
   Bell,
-  LoaderCircle
+  LoaderCircle,
+  Info,
+  XCircle,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -36,6 +38,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -55,6 +63,7 @@ import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import type { UpgradePlan } from '@/lib/types';
 
 
 const deliveryData = [
@@ -152,7 +161,9 @@ type GroupedChangeSummary = {
 function DeliveryPage() {
     const { toast } = useToast()
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isUpgradePlanDialogOpen, setIsUpgradePlanDialogOpen] = useState(false);
     const [changeSummary, setChangeSummary] = useState<GroupedChangeSummary | null>(null);
+    const [upgradePlanData, setUpgradePlanData] = useState<UpgradePlan[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     
     const handleInitiateWorkOrder = async () => {
@@ -198,6 +209,72 @@ function DeliveryPage() {
         setIsLoading(false);
         setIsDialogOpen(true);
     };
+
+    const handleViewUpgradePlan = async () => {
+        setIsLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const plan: UpgradePlan[] = [
+            {
+                sn: '9800171603708813',
+                currentConfig: {
+                    cpu: 'Intel_4314*2',
+                    memory: '128G',
+                    storage: 'SATA_4T*12',
+                    gpu: 'WQDX_GM302*4',
+                },
+                targetConfig: {
+                    cpu: 'Intel_8468*2',
+                    memory: '64G_4800*16',
+                    storage: 'NVME_3.84T*4',
+                    gpu: 'WQDX_A800*8',
+                },
+                changes: {
+                    remove: [
+                        { component: 'CPU', detail: 'Intel_4314*2' },
+                        { component: '内存', detail: '128G' },
+                        { component: '存储', detail: 'SATA_4T*12' },
+                        { component: 'GPU', detail: 'WQDX_GM302*4' },
+                    ],
+                    add: [
+                        { component: 'CPU', detail: 'Intel_8468*2', model: 'P-8468', stock: 'sufficient' },
+                        { component: '内存', detail: '64G_4800*16', model: 'MEM-64-4800', stock: 'insufficient' },
+                        { component: '存储', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: 'sufficient' },
+                        { component: 'GPU', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: 'sufficient' },
+                    ]
+                }
+            },
+            {
+                sn: '9800171603708814',
+                currentConfig: {
+                    cpu: 'WQDX_8358P*2',
+                    memory: 'WQDX_32G_3200*16',
+                    gpu: 'WQDX_GM302*4',
+                },
+                targetConfig: {
+                    cpu: 'Intel_8468*2',
+                    memory: '128G_4800*16',
+                    gpu: 'WQDX_H800*8',
+                },
+                changes: {
+                    remove: [
+                        { component: 'CPU', detail: 'WQDX_8358P*2' },
+                        { component: '内存', detail: 'WQDX_32G_3200*16' },
+                        { component: 'GPU', detail: 'WQDX_GM302*4' },
+                    ],
+                    add: [
+                        { component: 'CPU', detail: 'Intel_8468*2', model: 'P-8468', stock: 'sufficient' },
+                        { component: '内存', detail: '128G_4800*16', model: 'MEM-128-4800', stock: 'sufficient' },
+                        { component: 'GPU', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: 'insufficient' },
+                    ]
+                }
+            }
+        ];
+        
+        setUpgradePlanData(plan);
+        setIsLoading(false);
+        setIsUpgradePlanDialogOpen(true);
+    }
 
     const handleSubmitWorkOrder = () => {
         // Simulate API call
@@ -296,6 +373,10 @@ function DeliveryPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    <Button variant="outline" onClick={handleViewUpgradePlan} disabled={isLoading}>
+                                         {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                                        查看改配方案
+                                    </Button>
                                     <Button variant="outline" onClick={handleInitiateWorkOrder} disabled={isLoading}>
                                         {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
                                         发起NOC工单
@@ -484,7 +565,7 @@ function DeliveryPage() {
                                                         <Select defaultValue="all">
                                                             <SelectTrigger id={`cluster-${to}`}>
                                                             <SelectValue placeholder="选择" />
-                                                            </SelectTrigger>
+                                                            </S_SelectTrigger>
                                                             <SelectContent>
                                                                 <SelectItem value="all">ALL</SelectItem>
                                                                 <SelectItem value="yes">是</SelectItem>
@@ -517,11 +598,90 @@ function DeliveryPage() {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <AlertDialog open={isUpgradePlanDialogOpen} onOpenChange={setIsUpgradePlanDialogOpen}>
+            <AlertDialogContent className="max-w-6xl">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>查看改配方案</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        以下为检测到的需要进行硬件改配的服务器方案详情。
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="max-h-[70vh] overflow-y-auto pr-4">
+                    <Accordion type="single" collapsible className="w-full">
+                        {upgradePlanData.map(plan => (
+                             <AccordionItem value={plan.sn} key={plan.sn}>
+                                <AccordionTrigger>
+                                    <span className="font-mono text-base">{plan.sn}</span>
+                                </AccordionTrigger>
+                                <AccordionContent className="space-y-6">
+                                     <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                                        <div>
+                                            <h4 className="font-semibold mb-2">当前配置</h4>
+                                            <div className="text-sm space-y-1 text-muted-foreground p-4 bg-muted/50 rounded-md">
+                                                {Object.entries(plan.currentConfig).map(([key, value]) => value && <p key={key}><span className="font-medium text-foreground capitalize">{key}:</span> {value}</p>)}
+                                            </div>
+                                        </div>
+                                         <div>
+                                            <h4 className="font-semibold mb-2">目标配置</h4>
+                                            <div className="text-sm space-y-1 text-muted-foreground p-4 bg-muted/50 rounded-md">
+                                                {Object.entries(plan.targetConfig).map(([key, value]) => value && <p key={key}><span className="font-medium text-foreground capitalize">{key}:</span> {value}</p>)}
+                                            </div>
+                                        </div>
+                                     </div>
+                                     <div>
+                                        <h4 className="font-semibold mb-2">变更详情</h4>
+                                        <div className="border rounded-md">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead className="w-1/4">操作</TableHead>
+                                                        <TableHead>配件类型</TableHead>
+                                                        <TableHead>规格详情</TableHead>
+                                                        <TableHead>Model</TableHead>
+                                                        <TableHead className="text-right">库存状态</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {plan.changes.remove.map((item, index) => (
+                                                        <TableRow key={`remove-${index}`} className="bg-red-50/50">
+                                                            <TableCell><Badge variant="destructive">拆下</Badge></TableCell>
+                                                            <TableCell>{item.component}</TableCell>
+                                                            <TableCell>{item.detail}</TableCell>
+                                                            <TableCell>N/A</TableCell>
+                                                            <TableCell className="text-right">N/A</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                    {plan.changes.add.map((item, index) => (
+                                                        <TableRow key={`add-${index}`} className="bg-green-50/50">
+                                                            <TableCell><Badge variant="default" className="bg-green-600">新增</Badge></TableCell>
+                                                            <TableCell>{item.component}</TableCell>
+                                                            <TableCell>{item.detail}</TableCell>
+                                                            <TableCell className="font-mono text-xs">{item.model}</TableCell>
+                                                            <TableCell className="text-right">
+                                                                {item.stock === 'sufficient' ? 
+                                                                    <span className="flex items-center justify-end text-green-600"><CheckCircle className="h-4 w-4 mr-1" />满足</span> :
+                                                                    <span className="flex items-center justify-end text-red-600"><XCircle className="h-4 w-4 mr-1" />不足</span>
+                                                                }
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                     </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                </div>
+                 <AlertDialogFooter>
+                    <AlertDialogCancel>关闭</AlertDialogCancel>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
 
 export default DeliveryPage;
-
-    
-    

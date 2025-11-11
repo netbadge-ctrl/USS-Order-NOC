@@ -88,3 +88,20 @@ export type WorkOrderReport = {
         execution: number; // hours
     };
 };
+
+export type UpgradePlanChangeItem = {
+    component: string;
+    detail: string;
+    model?: string;
+    stock?: 'sufficient' | 'insufficient';
+}
+
+export type UpgradePlan = {
+    sn: string;
+    currentConfig: Partial<ServerHardwareConfig>;
+    targetConfig: Partial<ServerHardwareConfig>;
+    changes: {
+        remove: UpgradePlanChangeItem[];
+        add: UpgradePlanChangeItem[];
+    }
+}
