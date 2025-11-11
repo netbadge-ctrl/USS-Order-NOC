@@ -307,7 +307,7 @@ function DeliveryPage() {
                 <TabsList className="bg-transparent p-0 h-auto gap-6 -mb-px">
                     <TabsTrigger value="requirements" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">需求说明</TabsTrigger>
                     <TabsTrigger value="architecture" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">架构</TabsTrigger>
-                    <TabsTrigger value="bom" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">BOM&采购</TabsTrigger>
+                    <TabsTrigger value="bom" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">BOM&amp;采购</TabsTrigger>
                     <TabsTrigger value="quote" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">询价</TabsTrigger>
                     <TabsTrigger value="delivery" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 font-semibold text-foreground">交付</TabsTrigger>
                     <TabsTrigger value="logs" className="data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 text-muted-foreground font-medium">日志</TabsTrigger>
@@ -565,7 +565,7 @@ function DeliveryPage() {
                                                         <Select defaultValue="all">
                                                             <SelectTrigger id={`cluster-${to}`}>
                                                             <SelectValue placeholder="选择" />
-                                                            </S_SelectTrigger>
+                                                            </SelectTrigger>
                                                             <SelectContent>
                                                                 <SelectItem value="all">ALL</SelectItem>
                                                                 <SelectItem value="yes">是</SelectItem>
@@ -685,3 +685,5 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
+
+    
