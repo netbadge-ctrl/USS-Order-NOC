@@ -86,12 +86,12 @@ const deliveryData = [
     {
         sn: '9800171603708813',
         status: '维护中',
-        gpu: ['WQDX_GM302*4', 'WQDX_A800*8', 'WQDX_A800*8'],
-        cpu: ['Intel_4314*2', 'Intel_5318Y*2', 'Intel_8468*2'],
-        memory: ['128G', '256G', '64G_4800*16'],
-        storage: ['SATA_4T*12', 'NVME_1.92T*4', 'NVME_3.84T*4'],
-        vpcNetwork: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
-        computeNetwork: ['100GE_IB*2', '200GE_IB * 2', '200GE_IB*8'],
+        gpu: ['WQDX_GM302*4', 'WQDX_A800*8', 'WQDX_H800*8'],
+        cpu: ['Intel_4314*2', 'Intel_8468*2', 'Intel_8468*2'],
+        memory: ['128G', '64G_4800*16', '128G_4800*16'],
+        storage: ['SATA_4T*12', 'NVME_3.84T*4', 'NVME_7.68T*4'],
+        vpcNetwork: ['10GE_2*1', '200GE_RoCE*2', '200GE_RoCE*2'],
+        computeNetwork: ['100GE_IB*2', '200GE_IB*8', '400GE_IB*8'],
         storageNetwork: '无',
         rack: ['BJF01', 'GZA01', 'GZA01']
     },
@@ -133,27 +133,27 @@ const deliveryData = [
     },
     {
         sn: '9800171603708817',
-        status: '正常运行',
-        gpu: ['WQDX_A800*8', 'WQDX_H800*8', 'WQDX_H800*8'],
-        cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
-        memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
-        storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
-        vpcNetwork: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
-        computeNetwork: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
-        storageNetwork: '200GE_RoCE*2',
-        rack: ['GZA01', 'GZA01', 'SHB02']
+        status: '维护中',
+        gpu: ['WQDX_GM302*4', 'WQDX_A800*8', 'WQDX_H800*8'],
+        cpu: ['Intel_4314*2', 'Intel_8468*2', 'Intel_8468*2'],
+        memory: ['128G', '64G_4800*16', '128G_4800*16'],
+        storage: ['SATA_4T*12', 'NVME_3.84T*4', 'NVME_7.68T*4'],
+        vpcNetwork: ['10GE_2*1', '200GE_RoCE*2', '200GE_RoCE*2'],
+        computeNetwork: ['100GE_IB*2', '200GE_IB*8', '400GE_IB*8'],
+        storageNetwork: '无',
+        rack: ['BJF01', 'GZA01', 'GZA01']
     },
     {
         sn: '9800171603708818',
-        status: '正常运行',
-        gpu: ['WQDX_A800*8', 'WQDX_H800*8', 'WQDX_H800*8'],
-        cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
-        memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
-        storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
-        vpcNetwork: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
-        computeNetwork: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
-        storageNetwork: '200GE_RoCE*2',
-        rack: ['GZA01', 'GZA01', 'SHB02']
+        status: '维护中',
+        gpu: ['WQDX_GM302*4', 'WQDX_A800*8', 'WQDX_H800*8'],
+        cpu: ['Intel_4314*2', 'Intel_8468*2', 'Intel_8468*2'],
+        memory: ['128G', '64G_4800*16', '128G_4800*16'],
+        storage: ['SATA_4T*12', 'NVME_3.84T*4', 'NVME_7.68T*4'],
+        vpcNetwork: ['10GE_2*1', '200GE_RoCE*2', '200GE_RoCE*2'],
+        computeNetwork: ['100GE_IB*2', '200GE_IB*8', '400GE_IB*8'],
+        storageNetwork: '无',
+        rack: ['BJF01', 'GZA01', 'GZA01']
     }
 ];
 
@@ -299,9 +299,11 @@ function DeliveryPage() {
                 const target = Array.isArray(server[comp]) ? (server[comp] as string[])[1] : undefined;
                 
                 if (current) currentConfigStr.push(`${comp}: ${current}`);
-                if (target) targetConfigStr.push(`${comp}: ${target}`);
-                if (target && current !== target) {
-                    hasHardwareChange = true;
+                if (target) {
+                    targetConfigStr.push(`${comp}: ${target}`);
+                    if (current !== target) {
+                        hasHardwareChange = true;
+                    }
                 }
             });
     
@@ -501,8 +503,8 @@ function DeliveryPage() {
                                                         <TableHead className="w-[15%]">目标配置</TableHead>
                                                         <TableHead className="w-[8%] text-center">操作</TableHead>
                                                         <TableHead>规格</TableHead>
-                                                        <TableHead className="w-[8%]">数量</TableHead>
                                                         <TableHead className="w-[10%]">Model</TableHead>
+                                                        <TableHead className="w-[8%]">数量</TableHead>
                                                         <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
                                                         <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
                                                     </TableRow>
@@ -541,6 +543,18 @@ function DeliveryPage() {
                                                                             value={detailSpec}
                                                                             onValueChange={(value) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'detail', value)}
                                                                             placeholder="搜索或选择规格"
+                                                                            disabled={isRemovable}
+                                                                         />
+                                                                        }
+                                                                    </TableCell>
+                                                                     <TableCell>
+                                                                         {readOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
+                                                                         <SearchableSelect
+                                                                            options={getOptionsForComponent(row.component, 'model')}
+                                                                            value={change.model || ''}
+                                                                            onValueChange={(value) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', value)}
+                                                                            placeholder="搜索或选择Model"
+                                                                            disabled={isRemovable}
                                                                          />
                                                                         }
                                                                     </TableCell>
@@ -553,16 +567,6 @@ function DeliveryPage() {
                                                                             className="h-9 w-16"
                                                                             disabled={isRemovable}
                                                                         /> }
-                                                                    </TableCell>
-                                                                    <TableCell>
-                                                                         {readOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
-                                                                         <SearchableSelect
-                                                                            options={getOptionsForComponent(row.component, 'model')}
-                                                                            value={change.model || ''}
-                                                                            onValueChange={(value) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', value)}
-                                                                            placeholder="搜索或选择Model"
-                                                                         />
-                                                                        }
                                                                     </TableCell>
                                                                     <TableCell className="text-right">
                                                                         {change.stock?.currentLocation ? (
