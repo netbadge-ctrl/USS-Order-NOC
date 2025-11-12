@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -402,7 +403,7 @@ function DeliveryPage() {
 
         rawPlans.forEach(plan => {
             const server = deliveryData.find(d => d.sn === plan.sn);
-            const currentLocation = server ? server.rack[0] : '未知机房';
+            const currentLocation = server ? (Array.isArray(server.rack) ? server.rack[0] : server.rack) : '未知机房';
             
             if (!grouped.has(currentLocation)) {
                 grouped.set(currentLocation, []);
