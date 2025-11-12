@@ -67,6 +67,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { UpgradePlan, UpgradePlanChangeItem, ServerHardwareConfig } from '@/lib/types';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 
 
 const deliveryData = [
@@ -173,6 +174,32 @@ type FormattedUpgradePlan = {
 }
 
 type GroupedUpgradePlans = Map<string, FormattedUpgradePlan[]>;
+
+const specOptions = [
+    { value: 'Intel_8468', label: 'Intel_8468' },
+    { value: '64G_4800', label: '64G_4800' },
+    { value: 'NVME_3.84T', label: 'NVME_3.84T' },
+    { value: 'WQDX_A800', label: 'WQDX_A800' },
+    { value: '200GE_RoCE', label: '200GE_RoCE' },
+    { value: '200GE_IB', label: '200GE_IB' },
+    { value: '128G_4800', label: '128G_4800' },
+    { value: 'NVME_7.68T', label: 'NVME_7.68T' },
+    { value: 'WQDX_H800', label: 'WQDX_H800' },
+    { value: '400GE_IB', label: '400GE_IB' },
+];
+
+const modelOptions = [
+    { value: 'P-8468', label: 'P-8468' },
+    { value: 'MEM-64-4800', label: 'MEM-64-4800' },
+    { value: 'NVME-3.84T-U2', label: 'NVME-3.84T-U2' },
+    { value: 'GPU-A800-80G', label: 'GPU-A800-80G' },
+    { value: 'NIC-200GE-CX6', label: 'NIC-200GE-CX6' },
+    { value: 'NIC-200GE-IB', label: 'NIC-200GE-IB' },
+    { value: 'MEM-128-4800', label: 'MEM-128-4800' },
+    { value: 'NVME-7.68T-U2', label: 'NVME-7.68T-U2' },
+    { value: 'GPU-H800-80G', label: 'GPU-H800-80G' },
+    { value: 'NIC-400GE-IB', label: 'NIC-400GE-IB' },
+];
 
 
 function DeliveryPage() {
@@ -309,26 +336,42 @@ function DeliveryPage() {
         setIsUpgradePlanDialogOpen(true);
     }
     
-    const handlePlanChange = (location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string) => {
+    const handlePlanChange = (location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => {
         setUpgradePlanData(prevData => {
             const newData = new Map(prevData);
             const plans = newData.get(location);
             if (!plans) return prevData;
-
+    
             const newPlans = [...plans];
-            const plan = newPlans[planIndex];
-            const row = plan.rows[rowIndex];
-            const change = row.changes[changeIndex];
-
+            const planToUpdate = { ...newPlans[planIndex] };
+            const newRows = [...planToUpdate.rows];
+            const rowToUpdate = { ...newRows[rowIndex] };
+            const newChanges = [...rowToUpdate.changes];
+            const changeToUpdate = { ...newChanges[changeIndex] };
+    
             if (field === 'quantity') {
-                const detailParts = change.detail.split('*');
+                const detailParts = changeToUpdate.detail.split('*');
                 const newDetail = `${detailParts[0]}*${value}`;
-                (change as any)[field] = value; 
-                 change.detail = newDetail;
+                changeToUpdate.detail = newDetail;
             } else {
-                 (change as any)[field] = value;
+                 (changeToUpdate as any)[field] = value;
             }
-
+            
+            if (field === 'detail') {
+                 const detailParts = (value as string).split('*');
+                 if(detailParts.length > 1) {
+                    (changeToUpdate as any)['quantity'] = detailParts[1];
+                 }
+                 changeToUpdate.detail = value as string;
+            }
+    
+            newChanges[changeIndex] = changeToUpdate;
+            rowToUpdate.changes = newChanges;
+            newRows[rowIndex] = rowToUpdate;
+            planToUpdate.rows = newRows;
+            newPlans[planIndex] = planToUpdate;
+            newData.set(location, newPlans);
+    
             return newData;
         });
     };
@@ -404,12 +447,13 @@ function DeliveryPage() {
                                                                     </TableCell>
                                                                     <TableCell>
                                                                         {readOnly || isRemovable ? <ReadOnlyCell value={detailSpec} /> :
-                                                                        <Input 
-                                                                            value={detailSpec} 
-                                                                            onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'detail', e.target.value)}
-                                                                            className="h-8"
-                                                                            disabled={isRemovable}
-                                                                        /> }
+                                                                         <SearchableSelect
+                                                                            options={specOptions}
+                                                                            value={detailSpec}
+                                                                            onValueChange={(value) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'detail', value)}
+                                                                            placeholder="搜索或选择规格"
+                                                                         />
+                                                                        }
                                                                     </TableCell>
                                                                     <TableCell>
                                                                          {readOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
@@ -417,18 +461,19 @@ function DeliveryPage() {
                                                                             type="number"
                                                                             value={detailQty} 
                                                                             onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
-                                                                            className="h-8 w-16"
+                                                                            className="h-9 w-16"
                                                                             disabled={isRemovable}
                                                                         /> }
                                                                     </TableCell>
                                                                     <TableCell>
                                                                          {readOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
-                                                                        <Input 
-                                                                            value={change.model || ''} 
-                                                                            onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', e.target.value)}
-                                                                            className="h-8"
-                                                                            disabled={isRemovable}
-                                                                        /> }
+                                                                         <SearchableSelect
+                                                                            options={modelOptions}
+                                                                            value={change.model || ''}
+                                                                            onValueChange={(value) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', value)}
+                                                                            placeholder="搜索或选择Model"
+                                                                         />
+                                                                        }
                                                                     </TableCell>
                                                                     <TableCell className="text-right">
                                                                         {change.stock?.currentLocation ? (
