@@ -269,83 +269,20 @@ const getOptionsForComponent = (component: keyof ServerHardwareConfig, type: 'sp
 
 function DeliveryPage() {
     const { toast } = useToast()
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isUpgradePlanDialogOpen, setIsUpgradePlanDialogOpen] = useState(false);
     const [isConfirmingUpgrade, setIsConfirmingUpgrade] = useState(false);
-    const [changeSummary, setChangeSummary] = useState<GroupedChangeSummary | null>(null);
     const [upgradePlanData, setUpgradePlanData] = useState<GroupedUpgradePlans>(new Map());
     const [isLoading, setIsLoading] = useState(false);
     
     const handleInitiateWorkOrder = async () => {
         setIsLoading(true);
+        // Simulate an API call
         await new Promise(resolve => setTimeout(resolve, 500));
-    
-        const groupedChanges: Map<string, {
-            sns: string[],
-            fromLocation: string;
-            toLocation: string;
-            currentConfig: string[],
-            targetConfig: string[],
-            type: 'relocation' | 'hardware' | 'both';
-        }> = new Map();
-    
-        const components: (keyof ServerHardwareConfig)[] = ['gpu', 'cpu', 'memory', 'storage', 'vpcNetwork', 'computeNetwork', 'storageNetwork'];
-    
-        deliveryData.forEach(server => {
-            const currentConfigStr: string[] = [];
-            const targetConfigStr: string[] = [];
-            let hasHardwareChange = false;
-    
-            components.forEach(comp => {
-                const current = Array.isArray(server[comp]) ? (server[comp] as string[])[0] : server[comp] as string;
-                const target = Array.isArray(server[comp]) ? (server[comp] as string[])[1] : undefined;
-                
-                if (current) currentConfigStr.push(`${comp}: ${current}`);
-                if (target) {
-                    targetConfigStr.push(`${comp}: ${target}`);
-                    if (current !== target) {
-                        hasHardwareChange = true;
-                    }
-                }
-            });
-    
-            const fromLocation = Array.isArray(server.rack) ? server.rack[0] : server.rack;
-            const toLocation = Array.isArray(server.rack) ? server.rack[1] : fromLocation;
-            const hasRelocation = fromLocation !== toLocation;
-            
-            if (!hasHardwareChange && !hasRelocation) return;
-
-            const changeType = hasHardwareChange && hasRelocation ? 'both' : (hasHardwareChange ? 'hardware' : 'relocation');
-    
-            const groupKey = JSON.stringify({
-                from: fromLocation,
-                to: toLocation,
-                current: currentConfigStr.sort(),
-                target: targetConfigStr.sort(),
-            });
-    
-            if (!groupedChanges.has(groupKey)) {
-                groupedChanges.set(groupKey, {
-                    sns: [],
-                    fromLocation: fromLocation,
-                    toLocation: toLocation,
-                    currentConfig: currentConfigStr,
-                    targetConfig: targetConfigStr,
-                    type: changeType,
-                });
-            }
-    
-            groupedChanges.get(groupKey)!.sns.push(server.sn);
-        });
-    
-        const summary: GroupedChangeSummary = Array.from(groupedChanges.entries()).map(([key, value]) => ({
-            key,
-            ...value,
-        }));
-    
-        setChangeSummary(summary);
         setIsLoading(false);
-        setIsDialogOpen(true);
+        toast({
+            title: "方案已提交",
+            description: "已将当前已定型服务器提交系统生成改配方案。稍后可点击“查看改配方案”查看或修改改配方案。",
+        });
     };
 
     const handleViewUpgradePlan = async () => {
@@ -551,8 +488,8 @@ function DeliveryPage() {
                                                         <TableHead className="w-[15%]">目标配置</TableHead>
                                                         <TableHead className="w-[8%] text-center">操作</TableHead>
                                                         <TableHead>规格</TableHead>
-                                                        <TableHead className="w-[10%]">Model</TableHead>
                                                         <TableHead className="w-[8%]">数量</TableHead>
+                                                        <TableHead className="w-[10%]">Model</TableHead>
                                                         <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
                                                         <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
                                                     </TableRow>
@@ -596,6 +533,16 @@ function DeliveryPage() {
                                                                         }
                                                                     </TableCell>
                                                                     <TableCell>
+                                                                         {readOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
+                                                                        <Input 
+                                                                            type="number"
+                                                                            value={detailQty} 
+                                                                            onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
+                                                                            className="h-9 w-16"
+                                                                            disabled={isRemovable}
+                                                                        /> }
+                                                                    </TableCell>
+                                                                    <TableCell>
                                                                          {readOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
                                                                          <SearchableSelect
                                                                             options={getOptionsForComponent(row.component, 'model')}
@@ -605,16 +552,6 @@ function DeliveryPage() {
                                                                             disabled={isRemovable}
                                                                          />
                                                                         }
-                                                                    </TableCell>
-                                                                    <TableCell>
-                                                                         {readOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
-                                                                        <Input 
-                                                                            type="number"
-                                                                            value={detailQty} 
-                                                                            onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
-                                                                            className="h-9 w-16"
-                                                                            disabled={isRemovable}
-                                                                        /> }
                                                                     </TableCell>
                                                                     <TableCell className="text-right">
                                                                         {change.stock?.currentLocation ? (
@@ -855,144 +792,7 @@ function DeliveryPage() {
                 </SidebarProvider>
             </div>
         </Tabs>
-        <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <AlertDialogContent className="max-w-4xl">
-                <AlertDialogHeader>
-                    <AlertDialogTitle>确认工单操作</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        系统检测到以下变更，请确认是否继续发起NOC工单。
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="max-h-[60vh] overflow-y-auto pr-4 space-y-6">
-                    {changeSummary && changeSummary.length > 0 ? (
-                        <>
-                            {changeSummary.map((group) => (
-                                <div key={group.key} className="p-4 bg-muted/50 rounded-lg space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="font-semibold text-lg flex items-center">
-                                            {group.type === 'both' && <><Wrench className="mr-2 h-5 w-5 text-blue-500" /><Package className="mr-2 h-5 w-5 text-green-500" /></>}
-                                            {group.type === 'hardware' && <Wrench className="mr-2 h-5 w-5 text-blue-500" />}
-                                            {group.type === 'relocation' && <Package className="mr-2 h-5 w-5 text-green-500" />}
-                                            <span>
-                                                {group.type === 'both' && '硬件改配 & 搬迁'}
-                                                {group.type === 'hardware' && '硬件改配'}
-                                                {group.type === 'relocation' && '服务器搬迁'}
-                                            </span>
-                                        </h4>
-                                    </div>
-                                    
-                                    <div className="space-y-3 text-sm">
-                                        <div>
-                                            <p className="font-semibold text-foreground mb-2">服务器SN:</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {group.sns.map(sn => <Badge key={sn} variant="secondary" className="font-mono">{sn}</Badge>)}
-                                            </div>
-                                        </div>
-                                         <div>
-                                            <p className="font-semibold text-foreground mb-1">位置:</p>
-                                            <p><span className='text-muted-foreground'>从:</span> {group.fromLocation} <ChevronRight className="inline h-4 w-4 mx-1" /> <span className='text-muted-foreground'>到:</span> {group.toLocation}</p>
-                                        </div>
-
-                                        {group.currentConfig.length > 0 && (
-                                            <div>
-                                                <p className="font-semibold text-foreground mb-1">当前配置:</p>
-                                                <ul className="list-disc list-inside space-y-1 text-xs pl-2 text-muted-foreground">
-                                                    {group.currentConfig.map((c, i) => <li key={i}>{c}</li>)}
-                                                </ul>
-                                            </div>
-                                        )}
-                                        {group.targetConfig.length > 0 && (
-                                            <div>
-                                                <p className="font-semibold text-foreground mb-1">目标配置:</p>
-                                                <ul className="list-disc list-inside space-y-1 text-xs pl-2">
-                                                    {group.targetConfig.map((c, i) => <li key={i}>{c}</li>)}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {group.type !== 'hardware' && (
-                                         <div className="space-y-6 pt-4 border-t mt-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="flex items-center space-x-4">
-                                                    <Label>是否混布</Label>
-                                                    <RadioGroup defaultValue="no" className="flex">
-                                                        <div className="flex items-center space-x-2">
-                                                        <RadioGroupItem value="no" id={`mixed-no-${group.key}`} />
-                                                        <Label htmlFor={`mixed-no-${group.key}`} className="font-normal">否</Label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                        <RadioGroupItem value="yes" id={`mixed-yes-${group.key}`} />
-                                                        <Label htmlFor={`mixed-yes-${group.key}`} className="font-normal">是</Label>
-                                                        </div>
-                                                    </RadioGroup>
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                                <div className="space-y-2">
-                                                    <Label htmlFor={`multi-tor-${group.key}`}>多机柜多TOR</Label>
-                                                    <Select defaultValue="all">
-                                                        <SelectTrigger id={`multi-tor-${group.key}`}>
-                                                        <SelectValue placeholder="选择" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                        <SelectItem value="all">ALL</SelectItem>
-                                                        <SelectItem value="option1">选项1</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                    <div className="space-y-2">
-                                                    <Label htmlFor={`business-props-${group.key}`}>业务属性</Label>
-                                                    <Select defaultValue="all">
-                                                        <SelectTrigger id={`business-props-${group.key}`}>
-                                                        <SelectValue placeholder="选择" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="all">ALL</SelectItem>
-                                                            <SelectItem value="xrllm">XRLLM</SelectItem>
-                                                            <SelectItem value="epc">EPC</SelectItem>
-                                                            <SelectItem value="other">其它</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label htmlFor={`cluster-${group.key}`}>独立集群</Label>
-                                                    <Select defaultValue="all">
-                                                        <SelectTrigger id={`cluster-${group.key}`}>
-                                                        <SelectValue placeholder="选择" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="all">ALL</SelectItem>
-                                                            <SelectItem value="yes">是</SelectItem>
-                                                            <SelectItem value="no">否</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor={`description-${group.key}`}>描述</Label>
-                                                <Textarea id={`description-${group.key}`} placeholder="输入描述..." />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center text-center p-8 bg-muted/50 rounded-lg">
-                            <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
-                            <p className="font-semibold">未检测到配置变更。</p>
-                            <p className="text-sm text-muted-foreground">所有服务器的当前配置与目标配置一致。</p>
-                        </div>
-                    )}
-                </div>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>取消</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleSubmitWorkOrder}>确认提交</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-
+        
         <AlertDialog open={isUpgradePlanDialogOpen} onOpenChange={(open) => {
             if (!open) {
                 setIsUpgradePlanDialogOpen(false);
@@ -1051,6 +851,8 @@ function DeliveryPage() {
 
 export default DeliveryPage;
     
+    
+
     
 
     
