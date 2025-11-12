@@ -27,6 +27,8 @@ import {
   LoaderCircle,
   Info,
   XCircle,
+  Minus,
+  Plus,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -63,7 +65,7 @@ import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import type { UpgradePlan } from '@/lib/types';
+import type { UpgradePlan, UpgradePlanChangeItem, ServerHardwareConfig } from '@/lib/types';
 
 
 const deliveryData = [
@@ -158,12 +160,22 @@ type GroupedChangeSummary = {
   relocationChanges: Map<string, { from: string[], sns: string[] }>;
 };
 
+type FormattedUpgradePlan = {
+  sn: string;
+  rows: {
+    component: keyof ServerHardwareConfig;
+    current: string | undefined;
+    target: string | undefined;
+    changes: UpgradePlanChangeItem[];
+  }[];
+}
+
 function DeliveryPage() {
     const { toast } = useToast()
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isUpgradePlanDialogOpen, setIsUpgradePlanDialogOpen] = useState(false);
     const [changeSummary, setChangeSummary] = useState<GroupedChangeSummary | null>(null);
-    const [upgradePlanData, setUpgradePlanData] = useState<UpgradePlan[]>([]);
+    const [upgradePlanData, setUpgradePlanData] = useState<FormattedUpgradePlan[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     
     const handleInitiateWorkOrder = async () => {
@@ -214,64 +226,53 @@ function DeliveryPage() {
         setIsLoading(true);
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        const plan: UpgradePlan[] = [
+        const rawPlans: UpgradePlan[] = [
             {
                 sn: '9800171603708813',
-                currentConfig: {
-                    cpu: 'Intel_4314*2',
-                    memory: '128G',
-                    storage: 'SATA_4T*12',
-                    gpu: 'WQDX_GM302*4',
-                },
-                targetConfig: {
-                    cpu: 'Intel_8468*2',
-                    memory: '64G_4800*16',
-                    storage: 'NVME_3.84T*4',
-                    gpu: 'WQDX_A800*8',
-                },
-                changes: {
-                    remove: [
-                        { component: 'CPU', detail: 'Intel_4314*2' },
-                        { component: '内存', detail: '128G' },
-                        { component: '存储', detail: 'SATA_4T*12' },
-                        { component: 'GPU', detail: 'WQDX_GM302*4' },
-                    ],
-                    add: [
-                        { component: 'CPU', detail: 'Intel_8468*2', model: 'P-8468', stock: 'sufficient' },
-                        { component: '内存', detail: '64G_4800*16', model: 'MEM-64-4800', stock: 'insufficient' },
-                        { component: '存储', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: 'sufficient' },
-                        { component: 'GPU', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: 'sufficient' },
-                    ]
-                }
+                currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', },
+                targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', },
+                changes: [
+                    { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
+                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'memory', action: 'remove', detail: '128G' },
+                    { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: 'insufficient', targetLocation: 'sufficient' } },
+                    { component: 'storage', action: 'remove', detail: 'SATA_4T*12' },
+                    { component: 'storage', action: 'add', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
+                    { component: 'gpu', action: 'add', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                ]
             },
             {
                 sn: '9800171603708814',
-                currentConfig: {
-                    cpu: 'WQDX_8358P*2',
-                    memory: 'WQDX_32G_3200*16',
-                    gpu: 'WQDX_GM302*4',
-                },
-                targetConfig: {
-                    cpu: 'Intel_8468*2',
-                    memory: '128G_4800*16',
-                    gpu: 'WQDX_H800*8',
-                },
-                changes: {
-                    remove: [
-                        { component: 'CPU', detail: 'WQDX_8358P*2' },
-                        { component: '内存', detail: 'WQDX_32G_3200*16' },
-                        { component: 'GPU', detail: 'WQDX_GM302*4' },
-                    ],
-                    add: [
-                        { component: 'CPU', detail: 'Intel_8468*2', model: 'P-8468', stock: 'sufficient' },
-                        { component: '内存', detail: '128G_4800*16', model: 'MEM-128-4800', stock: 'sufficient' },
-                        { component: 'GPU', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: 'insufficient' },
-                    ]
-                }
+                currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', },
+                targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', },
+                changes: [
+                    { component: 'cpu', action: 'remove', detail: 'WQDX_8358P*2' },
+                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'memory', action: 'remove', detail: 'WQDX_32G_3200*16' },
+                    { component: 'memory', action: 'add', detail: '128G_4800*16', model: 'MEM-128-4800', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
+                    { component: 'gpu', action: 'add', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: { currentLocation: 'insufficient', targetLocation: 'insufficient' } },
+                ]
             }
         ];
         
-        setUpgradePlanData(plan);
+        // Format the raw data for easier rendering
+        const formatted = rawPlans.map(plan => {
+            const components: (keyof ServerHardwareConfig)[] = ['cpu', 'gpu', 'memory', 'storage', 'vpcNetwork', 'computeNetwork', 'storageNet'];
+            const rows = components.map(comp => {
+                return {
+                    component: comp,
+                    current: plan.currentConfig[comp],
+                    target: plan.targetConfig[comp],
+                    changes: plan.changes.filter(c => c.component === comp)
+                }
+            }).filter(row => row.current || row.target || row.changes.length > 0);
+
+            return { sn: plan.sn, rows };
+        });
+
+        setUpgradePlanData(formatted);
         setIsLoading(false);
         setIsUpgradePlanDialogOpen(true);
     }
@@ -600,7 +601,7 @@ function DeliveryPage() {
         </AlertDialog>
 
         <AlertDialog open={isUpgradePlanDialogOpen} onOpenChange={setIsUpgradePlanDialogOpen}>
-            <AlertDialogContent className="max-w-6xl">
+            <AlertDialogContent className="max-w-7xl">
                 <AlertDialogHeader>
                     <AlertDialogTitle>查看改配方案</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -615,60 +616,102 @@ function DeliveryPage() {
                                     <span className="font-mono text-base">{plan.sn}</span>
                                 </AccordionTrigger>
                                 <AccordionContent className="space-y-6">
-                                     <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                                        <div>
-                                            <h4 className="font-semibold mb-2">当前配置</h4>
-                                            <div className="text-sm space-y-1 text-muted-foreground p-4 bg-muted/50 rounded-md">
-                                                {Object.entries(plan.currentConfig).map(([key, value]) => value && <p key={key}><span className="font-medium text-foreground capitalize">{key}:</span> {value}</p>)}
-                                            </div>
-                                        </div>
-                                         <div>
-                                            <h4 className="font-semibold mb-2">目标配置</h4>
-                                            <div className="text-sm space-y-1 text-muted-foreground p-4 bg-muted/50 rounded-md">
-                                                {Object.entries(plan.targetConfig).map(([key, value]) => value && <p key={key}><span className="font-medium text-foreground capitalize">{key}:</span> {value}</p>)}
-                                            </div>
-                                        </div>
-                                     </div>
-                                     <div>
-                                        <h4 className="font-semibold mb-2">变更详情</h4>
-                                        <div className="border rounded-md">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead className="w-1/4">操作</TableHead>
-                                                        <TableHead>配件类型</TableHead>
-                                                        <TableHead>规格详情</TableHead>
-                                                        <TableHead>Model</TableHead>
-                                                        <TableHead className="text-right">库存状态</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {plan.changes.remove.map((item, index) => (
-                                                        <TableRow key={`remove-${index}`} className="bg-red-50/50">
-                                                            <TableCell><Badge variant="destructive">拆下</Badge></TableCell>
-                                                            <TableCell>{item.component}</TableCell>
-                                                            <TableCell>{item.detail}</TableCell>
-                                                            <TableCell>N/A</TableCell>
-                                                            <TableCell className="text-right">N/A</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                    {plan.changes.add.map((item, index) => (
-                                                        <TableRow key={`add-${index}`} className="bg-green-50/50">
-                                                            <TableCell><Badge variant="default" className="bg-green-600">新增</Badge></TableCell>
-                                                            <TableCell>{item.component}</TableCell>
-                                                            <TableCell>{item.detail}</TableCell>
-                                                            <TableCell className="font-mono text-xs">{item.model}</TableCell>
-                                                            <TableCell className="text-right">
-                                                                {item.stock === 'sufficient' ? 
-                                                                    <span className="flex items-center justify-end text-green-600"><CheckCircle className="h-4 w-4 mr-1" />满足</span> :
-                                                                    <span className="flex items-center justify-end text-red-600"><XCircle className="h-4 w-4 mr-1" />不足</span>
-                                                                }
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
+                                     <div className="border rounded-md">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-[10%]">配件类型</TableHead>
+                                                    <TableHead className="w-[15%]">当前配置</TableHead>
+                                                    <TableHead className="w-[15%]">目标配置</TableHead>
+                                                    <TableHead className="w-[8%] text-center">操作</TableHead>
+                                                    <TableHead>规格详情</TableHead>
+                                                    <TableHead className="w-[10%]">Model</TableHead>
+                                                    <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
+                                                    <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                               {plan.rows.map(row => {
+                                                    const rowSpan = row.changes.length || 1;
+                                                    const firstChange = row.changes[0];
+
+                                                    return (
+                                                        <React.Fragment key={row.component}>
+                                                            <TableRow>
+                                                                <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
+                                                                <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
+                                                                <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
+                                                                
+                                                                {firstChange ? (
+                                                                     <>
+                                                                        <TableCell className={cn("text-center", firstChange.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
+                                                                            <div className="flex items-center justify-center gap-1">
+                                                                                {firstChange.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
+                                                                                {firstChange.action === 'remove' ? '拆下' : '新增'}
+                                                                            </div>
+                                                                        </TableCell>
+                                                                        <TableCell>{firstChange.detail}</TableCell>
+                                                                        <TableCell className="font-mono text-xs">{firstChange.model || 'N/A'}</TableCell>
+                                                                        <TableCell className="text-right">
+                                                                            {firstChange.stock?.currentLocation ? (
+                                                                                <span className={cn("flex items-center justify-end", firstChange.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                    {firstChange.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                    {firstChange.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                </span>
+                                                                            ) : 'N/A'}
+                                                                        </TableCell>
+                                                                        <TableCell className="text-right">
+                                                                            {firstChange.stock?.targetLocation ? (
+                                                                                <span className={cn("flex items-center justify-end", firstChange.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                    {firstChange.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                    {firstChange.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                </span>
+                                                                            ) : 'N/A'}
+                                                                        </TableCell>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <TableCell className="text-center text-muted-foreground">-</TableCell>
+                                                                        <TableCell>无变更</TableCell>
+                                                                        <TableCell>N/A</TableCell>
+                                                                        <TableCell className="text-right">N/A</TableCell>
+                                                                        <TableCell className="text-right">N/A</TableCell>
+                                                                    </>
+                                                                )}
+                                                            </TableRow>
+                                                            {row.changes.slice(1).map((change, index) => (
+                                                                <TableRow key={index}>
+                                                                    <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
+                                                                        <div className="flex items-center justify-center gap-1">
+                                                                            {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
+                                                                            {change.action === 'remove' ? '拆下' : '新增'}
+                                                                        </div>
+                                                                    </TableCell>
+                                                                    <TableCell>{change.detail}</TableCell>
+                                                                    <TableCell className="font-mono text-xs">{change.model || 'N/A'}</TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        {change.stock?.currentLocation ? (
+                                                                            <span className={cn("flex items-center justify-end", change.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                {change.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                {change.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
+                                                                            </span>
+                                                                        ) : 'N/A'}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        {change.stock?.targetLocation ? (
+                                                                            <span className={cn("flex items-center justify-end", change.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                {change.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                {change.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
+                                                                            </span>
+                                                                        ) : 'N/A'}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </React.Fragment>
+                                                   )
+                                                })}
+                                            </TableBody>
+                                        </Table>
                                      </div>
                                 </AccordionContent>
                             </AccordionItem>

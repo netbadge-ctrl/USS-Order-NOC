@@ -89,19 +89,24 @@ export type WorkOrderReport = {
     };
 };
 
+export type StockStatus = 'sufficient' | 'insufficient';
+
 export type UpgradePlanChangeItem = {
-    component: string;
+    component: keyof ServerHardwareConfig;
+    action: 'add' | 'remove';
     detail: string;
     model?: string;
-    stock?: 'sufficient' | 'insufficient';
+    stock?: {
+        currentLocation: StockStatus;
+        targetLocation: StockStatus;
+    }
 }
 
 export type UpgradePlan = {
     sn: string;
     currentConfig: Partial<ServerHardwareConfig>;
     targetConfig: Partial<ServerHardwareConfig>;
-    changes: {
-        remove: UpgradePlanChangeItem[];
-        add: UpgradePlanChangeItem[];
-    }
+    changes: UpgradePlanChangeItem[];
 }
+
+    
