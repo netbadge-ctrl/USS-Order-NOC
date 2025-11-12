@@ -78,9 +78,9 @@ const deliveryData = [
         cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8468*2'],
         memory: ['WQDX_64G_3200*16', '1024G', '64G_4800*16'],
         storage: ['WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', '7680GB_U.2/NVME*1', 'NVME_3.84T*4'],
-        vpc: ['WQDX_25G_2*1 + WGDX', '25GE_2*1', '200GE_RoCE*2'],
-        compute: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_IB * 2', '200GE_IB*8'],
-        storageNet: '无',
+        vpcNetwork: ['WQDX_25G_2*1 + WGDX', '25GE_2*1', '200GE_RoCE*2'],
+        computeNetwork: ['WQDX_200G_1_IB_PCIE4_CX65...*2', '200GE_IB * 2', '200GE_IB*8'],
+        storageNetwork: '无',
         rack: ['NXDX01', 'GZA01', 'GZA01']
     },
     {
@@ -90,9 +90,9 @@ const deliveryData = [
         cpu: ['Intel_4314*2', 'Intel_5318Y*2', 'Intel_8468*2'],
         memory: ['128G', '256G', '64G_4800*16'],
         storage: ['SATA_4T*12', 'NVME_1.92T*4', 'NVME_3.84T*4'],
-        vpc: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
-        compute: ['100GE_IB*2', '200GE_IB * 2', '200GE_IB*8'],
-        storageNet: '无',
+        vpcNetwork: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
+        computeNetwork: ['100GE_IB*2', '200GE_IB * 2', '200GE_IB*8'],
+        storageNetwork: '无',
         rack: ['BJF01', 'GZA01', 'GZA01']
     },
     {
@@ -102,9 +102,9 @@ const deliveryData = [
         cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8468*2'],
         memory: ['WQDX_32G_3200*16', '64G_3200*16', '128G_4800*16'],
         storage: ['SATA_480G*2', 'SATA_480G*2 + NVME_3.84T*2', 'NVME_7.68T*4'],
-        vpc: ['25GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
-        compute: ['100GE_IB*2', '200GE_IB*2', '400GE_IB*8'],
-        storageNet: '无',
+        vpcNetwork: ['25GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
+        computeNetwork: ['100GE_IB*2', '200GE_IB*2', '400GE_IB*8'],
+        storageNetwork: '无',
         rack: ['SZA01', 'GZA01', 'GZA01']
     },
     {
@@ -114,9 +114,9 @@ const deliveryData = [
         cpu: ['Intel_4314*2', 'Intel_4314*2', 'Intel_8468*2'],
         memory: ['128G', '256G', '128G_4800*16'],
         storage: ['SATA_4T*6', 'SATA_4T*12', 'NVME_7.68T*4'],
-        vpc: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
-        compute: ['100GE_IB*4', '200GE_IB*8', '400GE_IB*8'],
-        storageNet: '无',
+        vpcNetwork: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
+        computeNetwork: ['100GE_IB*4', '200GE_IB*8', '400GE_IB*8'],
+        storageNetwork: '无',
         rack: ['HZA01', 'GZA01', 'GZA01']
     },
     {
@@ -126,9 +126,9 @@ const deliveryData = [
         cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
         memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
         storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
-        vpc: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
-        compute: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
-        storageNet: '200GE_RoCE*2',
+        vpcNetwork: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
+        computeNetwork: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
+        storageNetwork: '200GE_RoCE*2',
         rack: ['GZA01', 'GZA01', 'SHB02']
     },
     {
@@ -138,9 +138,9 @@ const deliveryData = [
         cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
         memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
         storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
-        vpc: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
-        compute: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
-        storageNet: '200GE_RoCE*2',
+        vpcNetwork: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
+        computeNetwork: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
+        storageNetwork: '200GE_RoCE*2',
         rack: ['GZA01', 'GZA01', 'SHB02']
     },
     {
@@ -150,9 +150,9 @@ const deliveryData = [
         cpu: ['Intel_8468*2', 'Intel_8468*2', 'Intel_8468*2'],
         memory: ['64G_4800*16', '64G_4800*16', '128G_4800*16'],
         storage: ['NVME_3.84T*4', 'NVME_3.84T*4', 'NVME_7.68T*4'],
-        vpc: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
-        compute: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
-        storageNet: '200GE_RoCE*2',
+        vpcNetwork: ['200GE_RoCE*2', '200GE_RoCE*2', '200GE_RoCE*2'],
+        computeNetwork: ['200GE_IB*8', '200GE_IB*8', '400GE_IB*8'],
+        storageNetwork: '200GE_RoCE*2',
         rack: ['GZA01', 'GZA01', 'SHB02']
     }
 ];
@@ -175,31 +175,88 @@ type FormattedUpgradePlan = {
 
 type GroupedUpgradePlans = Map<string, FormattedUpgradePlan[]>;
 
-const specOptions = [
-    { value: 'Intel_8468', label: 'Intel_8468' },
-    { value: '64G_4800', label: '64G_4800' },
-    { value: 'NVME_3.84T', label: 'NVME_3.84T' },
-    { value: 'WQDX_A800', label: 'WQDX_A800' },
-    { value: '200GE_RoCE', label: '200GE_RoCE' },
-    { value: '200GE_IB', label: '200GE_IB' },
-    { value: '128G_4800', label: '128G_4800' },
-    { value: 'NVME_7.68T', label: 'NVME_7.68T' },
-    { value: 'WQDX_H800', label: 'WQDX_H800' },
-    { value: '400GE_IB', label: '400GE_IB' },
-];
+const componentSpecificOptions = {
+    cpu: {
+        spec: [
+            { value: 'Intel_8468', label: 'Intel_8468' },
+            { value: 'Intel_5318Y', label: 'Intel_5318Y' },
+            { value: 'WQDX_8358P', label: 'WQDX_8358P' },
+            { value: 'Intel_4314', label: 'Intel_4314' },
+        ],
+        model: [
+            { value: 'P-8468', label: 'P-8468' },
+            { value: 'P-5318Y', label: 'P-5318Y' },
+        ],
+    },
+    memory: {
+        spec: [
+            { value: '64G_4800', label: '64G_4800' },
+            { value: '128G_4800', label: '128G_4800' },
+            { value: '32G_3200', label: '32G_3200' },
+            { value: '64G_3200', label: '64G_3200' },
+        ],
+        model: [
+            { value: 'MEM-64-4800', label: 'MEM-64-4800' },
+            { value: 'MEM-128-4800', label: 'MEM-128-4800' },
+        ],
+    },
+    storage: {
+        spec: [
+            { value: 'NVME_3.84T', label: 'NVME_3.84T' },
+            { value: 'NVME_7.68T', label: 'NVME_7.68T' },
+            { value: 'NVME_1.92T', label: 'NVME_1.92T' },
+            { value: 'SATA_4T', label: 'SATA_4T' },
+        ],
+        model: [
+            { value: 'NVME-3.84T-U2', label: 'NVME-3.84T-U2' },
+            { value: 'NVME-7.68T-U2', label: 'NVME-7.68T-U2' },
+        ],
+    },
+    gpu: {
+        spec: [
+            { value: 'WQDX_A800', label: 'WQDX_A800' },
+            { value: 'WQDX_H800', label: 'WQDX_H800' },
+            { value: 'WQDX_GM302', label: 'WQDX_GM302' },
+        ],
+        model: [
+            { value: 'GPU-A800-80G', label: 'GPU-A800-80G' },
+            { value: 'GPU-H800-80G', label: 'GPU-H800-80G' },
+        ],
+    },
+    vpcNetwork: {
+        spec: [
+            { value: '200GE_RoCE', label: '200GE_RoCE' },
+            { value: '25GE_2', label: '25GE_2' },
+            { value: '10GE_2', label: '10GE_2' },
+        ],
+        model: [{ value: 'NIC-200GE-CX6', label: 'NIC-200GE-CX6' }],
+    },
+    computeNetwork: {
+        spec: [
+            { value: '200GE_IB', label: '200GE_IB' },
+            { value: '400GE_IB', label: '400GE_IB' },
+            { value: '100GE_IB', label: '100GE_IB' },
+        ],
+        model: [
+            { value: 'NIC-200GE-IB', label: 'NIC-200GE-IB' },
+            { value: 'NIC-400GE-IB', label: 'NIC-400GE-IB' },
+        ],
+    },
+    storageNetwork: {
+        spec: [
+            { value: '200GE_RoCE', label: '200GE_RoCE' },
+        ],
+        model: [{ value: 'NIC-200GE-CX6', label: 'NIC-200GE-CX6' }],
+    },
+    nic: {
+        spec: [],
+        model: []
+    }
+};
 
-const modelOptions = [
-    { value: 'P-8468', label: 'P-8468' },
-    { value: 'MEM-64-4800', label: 'MEM-64-4800' },
-    { value: 'NVME-3.84T-U2', label: 'NVME-3.84T-U2' },
-    { value: 'GPU-A800-80G', label: 'GPU-A800-80G' },
-    { value: 'NIC-200GE-CX6', label: 'NIC-200GE-CX6' },
-    { value: 'NIC-200GE-IB', label: 'NIC-200GE-IB' },
-    { value: 'MEM-128-4800', label: 'MEM-128-4800' },
-    { value: 'NVME-7.68T-U2', label: 'NVME-7.68T-U2' },
-    { value: 'GPU-H800-80G', label: 'GPU-H800-80G' },
-    { value: 'NIC-400GE-IB', label: 'NIC-400GE-IB' },
-];
+const getOptionsForComponent = (component: keyof ServerHardwareConfig, type: 'spec' | 'model') => {
+    return componentSpecificOptions[component]?.[type] || [];
+};
 
 
 function DeliveryPage() {
@@ -448,7 +505,7 @@ function DeliveryPage() {
                                                                     <TableCell>
                                                                         {readOnly || isRemovable ? <ReadOnlyCell value={detailSpec} /> :
                                                                          <SearchableSelect
-                                                                            options={specOptions}
+                                                                            options={getOptionsForComponent(row.component, 'spec')}
                                                                             value={detailSpec}
                                                                             onValueChange={(value) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'detail', value)}
                                                                             placeholder="搜索或选择规格"
@@ -468,7 +525,7 @@ function DeliveryPage() {
                                                                     <TableCell>
                                                                          {readOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
                                                                          <SearchableSelect
-                                                                            options={modelOptions}
+                                                                            options={getOptionsForComponent(row.component, 'model')}
                                                                             value={change.model || ''}
                                                                             onValueChange={(value) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', value)}
                                                                             placeholder="搜索或选择Model"
@@ -673,26 +730,26 @@ function DeliveryPage() {
                                                             })}>{item.status}</Badge>
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.gpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
+                                                        {Array.isArray(item.gpu) ? item.gpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>) : <p className="text-xs">{item.gpu}</p>}
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.cpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
+                                                        {Array.isArray(item.cpu) ? item.cpu.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>) : <p className="text-xs">{item.cpu}</p>}
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.memory.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
+                                                        {Array.isArray(item.memory) ? item.memory.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>) : <p className="text-xs">{item.memory}</p>}
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.storage.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
+                                                        {Array.isArray(item.storage) ? item.storage.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>) : <p className="text-xs">{item.storage}</p>}
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.vpc.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
+                                                        {Array.isArray(item.vpcNetwork) ? item.vpcNetwork.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>) : <p className="text-xs">{item.vpcNetwork}</p>}
                                                         </TableCell>
                                                         <TableCell>
-                                                        {item.compute.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
+                                                        {Array.isArray(item.computeNetwork) ? item.computeNetwork.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>) : <p className="text-xs">{item.computeNetwork}</p>}
                                                         </TableCell>
-                                                        <TableCell><p className="text-xs">{item.storageNet}</p></TableCell>
+                                                        <TableCell><p className="text-xs">{item.storageNetwork}</p></TableCell>
                                                         <TableCell>
-                                                            {item.rack.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>)}
+                                                            {Array.isArray(item.rack) ? item.rack.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>) : <p className="text-xs">{item.rack}</p>}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
