@@ -242,30 +242,35 @@ function DeliveryPage() {
                 },
                 changes: [
                     { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
-                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
                     { component: 'memory', action: 'remove', detail: '128G' },
-                    { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: 'insufficient', targetLocation: 'sufficient' } },
+                    { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
                     { component: 'storage', action: 'remove', detail: 'SATA_4T*12' },
-                    { component: 'storage', action: 'add', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'storage', action: 'add', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 30 } } },
                     { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
-                    { component: 'gpu', action: 'add', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'gpu', action: 'add', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 12 } } },
                     { component: 'nic', action: 'remove', detail: '10GE_2*1' },
-                    { component: 'nic', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'nic', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 30 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
                 ]
             },
             {
                 sn: '9800171603708814',
-                currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', nic: '25GE_2*1' },
-                targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', nic: '200GE_RoCE*2'},
+                currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', storage: 'SATA_480G*2', nic: '25GE_2*1' },
+                targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', storage: 'NVME_7.68T*4', nic: '200GE_RoCE*2' },
+                requirements: {
+                    gpu: '必须为最新固件版本',
+                },
                 changes: [
                     { component: 'cpu', action: 'remove', detail: 'WQDX_8358P*2' },
-                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 15 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
                     { component: 'memory', action: 'remove', detail: 'WQDX_32G_3200*16' },
-                    { component: 'memory', action: 'add', detail: '128G_4800*16', model: 'MEM-128-4800', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'memory', action: 'add', detail: '128G_4800*16', model: 'MEM-128-4800', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 60 } } },
+                    { component: 'storage', action: 'remove', detail: 'SATA_480G*2' },
+                    { component: 'storage', action: 'add', detail: 'NVME_7.68T*4', model: 'NVME-7.68T-U2', stock: { currentLocation: { status: 'insufficient', quantity: 1 }, targetLocation: { status: 'sufficient', quantity: 25 } } },
                     { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
-                    { component: 'gpu', action: 'add', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: { currentLocation: 'insufficient', targetLocation: 'insufficient' } },
+                    { component: 'gpu', action: 'add', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'insufficient', quantity: 2 } } },
                     { component: 'nic', action: 'remove', detail: '25GE_2*1' },
-                    { component: 'nic', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
+                    { component: 'nic', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 18 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
                 ]
             }
         ];
@@ -676,8 +681,8 @@ function DeliveryPage() {
                                                             <TableHead className="w-[15%]">目标配置</TableHead>
                                                             <TableHead className="w-[8%] text-center">操作</TableHead>
                                                             <TableHead>规格详情</TableHead>
-                                                            <TableHead className="w-[8%]">数量</TableHead>
                                                             <TableHead className="w-[10%]">Model</TableHead>
+                                                            <TableHead className="w-[8%]">数量</TableHead>
                                                             <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
                                                             <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
                                                         </TableRow>
@@ -717,32 +722,32 @@ function DeliveryPage() {
                                                                         </TableCell>
                                                                         <TableCell>
                                                                             <Input 
+                                                                                value={change.model || 'N/A'} 
+                                                                                onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', e.target.value)}
+                                                                                className="h-8"
+                                                                            />
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            <Input 
                                                                                 type="number"
                                                                                 value={detailQty} 
                                                                                 onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
                                                                                 className="h-8 w-16"
                                                                             />
                                                                         </TableCell>
-                                                                        <TableCell>
-                                                                            <Input 
-                                                                                value={change.model || 'N/A'} 
-                                                                                onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', e.target.value)}
-                                                                                className="h-8"
-                                                                            />
-                                                                        </TableCell>
                                                                         <TableCell className="text-right">
                                                                             {change.stock?.currentLocation ? (
-                                                                                <span className={cn("flex items-center justify-end", change.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                    {change.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                    {change.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                <span className={cn("flex items-center justify-end", change.stock.currentLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                    {change.stock.currentLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                    {change.stock.currentLocation.status === 'sufficient' ? `满足 (${change.stock.currentLocation.quantity})` : `不足 (${change.stock.currentLocation.quantity})`}
                                                                                 </span>
                                                                             ) : 'N/A'}
                                                                         </TableCell>
                                                                         <TableCell className="text-right">
                                                                             {change.stock?.targetLocation ? (
-                                                                                <span className={cn("flex items-center justify-end", change.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                    {change.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                    {change.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                <span className={cn("flex items-center justify-end", change.stock.targetLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                    {change.stock.targetLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                    {change.stock.targetLocation.status === 'sufficient' ? `满足 (${change.stock.targetLocation.quantity})` : `不足 (${change.stock.targetLocation.quantity})`}
                                                                                 </span>
                                                                             ) : 'N/A'}
                                                                         </TableCell>

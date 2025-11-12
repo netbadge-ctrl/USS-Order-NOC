@@ -90,7 +90,10 @@ export type WorkOrderReport = {
     };
 };
 
-export type StockStatus = 'sufficient' | 'insufficient';
+export type StockStatus = {
+    status: 'sufficient' | 'insufficient';
+    quantity: number;
+}
 
 export type UpgradePlanChangeItem = {
     component: keyof ServerHardwareConfig;
