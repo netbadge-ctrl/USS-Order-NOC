@@ -469,8 +469,8 @@ function DeliveryPage() {
                                                         <TableHead className="w-[15%]">目标配置</TableHead>
                                                         <TableHead className="w-[8%] text-center">操作</TableHead>
                                                         <TableHead>规格</TableHead>
-                                                        <TableHead className="w-[8%]">数量</TableHead>
                                                         <TableHead className="w-[10%]">Model</TableHead>
+                                                        <TableHead className="w-[8%]">数量</TableHead>
                                                         <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
                                                         <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
                                                     </TableRow>
@@ -513,16 +513,6 @@ function DeliveryPage() {
                                                                         }
                                                                     </TableCell>
                                                                     <TableCell>
-                                                                         {readOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
-                                                                        <Input 
-                                                                            type="number"
-                                                                            value={detailQty} 
-                                                                            onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
-                                                                            className="h-9 w-16"
-                                                                            disabled={isRemovable}
-                                                                        /> }
-                                                                    </TableCell>
-                                                                    <TableCell>
                                                                          {readOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
                                                                          <SearchableSelect
                                                                             options={getOptionsForComponent(row.component, 'model')}
@@ -531,6 +521,16 @@ function DeliveryPage() {
                                                                             placeholder="搜索或选择Model"
                                                                          />
                                                                         }
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                         {readOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
+                                                                        <Input 
+                                                                            type="number"
+                                                                            value={detailQty} 
+                                                                            onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
+                                                                            className="h-9 w-16"
+                                                                            disabled={isRemovable}
+                                                                        /> }
                                                                     </TableCell>
                                                                     <TableCell className="text-right">
                                                                         {change.stock?.currentLocation ? (
@@ -684,7 +684,7 @@ function DeliveryPage() {
                                     </Button>
                                     <Button variant="outline" onClick={handleInitiateWorkOrder} disabled={isLoading}>
                                         {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                                        发起NOC工单
+                                        生成改配方案
                                     </Button>
                                     <Button variant="outline">导出清单</Button>
                                 </div>
@@ -954,5 +954,5 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
-
+    
     
