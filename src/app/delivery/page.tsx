@@ -288,6 +288,30 @@ function DeliveryPage() {
         setIsLoading(false);
         setIsUpgradePlanDialogOpen(true);
     }
+    
+    const handlePlanChange = (location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string) => {
+        setUpgradePlanData(prevData => {
+            const newData = new Map(prevData);
+            const plans = newData.get(location);
+            if (!plans) return prevData;
+
+            const newPlans = [...plans];
+            const plan = newPlans[planIndex];
+            const row = plan.rows[rowIndex];
+            const change = row.changes[changeIndex];
+
+            if (field === 'quantity') {
+                const detailParts = change.detail.split('*');
+                const newDetail = `${detailParts[0]}*${value}`;
+                (change as any)[field] = value; 
+                 change.detail = newDetail;
+            } else {
+                 (change as any)[field] = value;
+            }
+
+            return newData;
+        });
+    };
 
     const handleSubmitWorkOrder = () => {
         // Simulate API call
@@ -621,13 +645,13 @@ function DeliveryPage() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4">
-                    {Array.from(upgradePlanData.entries()).map(([location, plans]) => (
+                    {Array.from(upgradePlanData.entries()).map(([location, plans], locIndex) => (
                         <div key={location}>
                             <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-background py-2">
                                 服务器当前所在机房: <Badge variant="secondary">{location}</Badge>
                             </h3>
                             <Accordion type="single" collapsible className="w-full">
-                                {plans.map(plan => (
+                                {plans.map((plan, planIndex) => (
                                      <AccordionItem value={plan.sn} key={plan.sn}>
                                         <AccordionTrigger>
                                             <span className="font-mono text-base">{plan.sn}</span>
@@ -642,15 +666,20 @@ function DeliveryPage() {
                                                             <TableHead className="w-[15%]">目标配置</TableHead>
                                                             <TableHead className="w-[8%] text-center">操作</TableHead>
                                                             <TableHead>规格详情</TableHead>
+                                                            <TableHead className="w-[8%]">数量</TableHead>
                                                             <TableHead className="w-[10%]">Model</TableHead>
                                                             <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
                                                             <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
-                                                       {plan.rows.map(row => {
+                                                       {plan.rows.map((row, rowIndex) => {
                                                             const rowSpan = row.changes.length || 1;
                                                             const firstChange = row.changes[0];
+                                                            
+                                                            const detailParts = firstChange?.detail.split('*') || [];
+                                                            const detailSpec = detailParts[0] || firstChange?.detail || '';
+                                                            const detailQty = detailParts[1] || '1';
 
                                                             return (
                                                                 <React.Fragment key={row.component}>
@@ -661,15 +690,35 @@ function DeliveryPage() {
                                                                         
                                                                         {firstChange ? (
                                                                              <>
-                                                                                <TableCell className={cn("text-center", firstChange.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
+                                                                                <TableCell className={cn("text-center align-top pt-4", firstChange.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
                                                                                     <div className="flex items-center justify-center gap-1">
                                                                                         {firstChange.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
                                                                                         {firstChange.action === 'remove' ? '拆下' : '新增'}
                                                                                     </div>
                                                                                 </TableCell>
-                                                                                <TableCell>{firstChange.detail}</TableCell>
-                                                                                <TableCell className="font-mono text-xs">{firstChange.model || 'N/A'}</TableCell>
-                                                                                <TableCell className="text-right">
+                                                                                <TableCell>
+                                                                                     <Input 
+                                                                                        value={detailSpec} 
+                                                                                        onChange={(e) => handlePlanChange(location, planIndex, rowIndex, 0, 'detail', e.target.value)}
+                                                                                        className="h-8"
+                                                                                    />
+                                                                                </TableCell>
+                                                                                 <TableCell>
+                                                                                    <Input 
+                                                                                        type="number"
+                                                                                        value={detailQty} 
+                                                                                        onChange={(e) => handlePlanChange(location, planIndex, rowIndex, 0, 'quantity', e.target.value)}
+                                                                                        className="h-8 w-16"
+                                                                                    />
+                                                                                </TableCell>
+                                                                                <TableCell>
+                                                                                     <Input 
+                                                                                        value={firstChange.model || 'N/A'} 
+                                                                                        onChange={(e) => handlePlanChange(location, planIndex, rowIndex, 0, 'model', e.target.value)}
+                                                                                        className="h-8"
+                                                                                     />
+                                                                                </TableCell>
+                                                                                <TableCell className="text-right align-top pt-4">
                                                                                     {firstChange.stock?.currentLocation ? (
                                                                                         <span className={cn("flex items-center justify-end", firstChange.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
                                                                                             {firstChange.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
@@ -677,7 +726,7 @@ function DeliveryPage() {
                                                                                         </span>
                                                                                     ) : 'N/A'}
                                                                                 </TableCell>
-                                                                                <TableCell className="text-right">
+                                                                                <TableCell className="text-right align-top pt-4">
                                                                                     {firstChange.stock?.targetLocation ? (
                                                                                         <span className={cn("flex items-center justify-end", firstChange.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
                                                                                             {firstChange.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
@@ -688,42 +737,69 @@ function DeliveryPage() {
                                                                             </>
                                                                         ) : (
                                                                             <>
-                                                                                <TableCell className="text-center text-muted-foreground">-</TableCell>
-                                                                                <TableCell>无变更</TableCell>
-                                                                                <TableCell>N/A</TableCell>
-                                                                                <TableCell className="text-right">N/A</TableCell>
-                                                                                <TableCell className="text-right">N/A</TableCell>
+                                                                                <TableCell className="text-center text-muted-foreground align-top pt-4">-</TableCell>
+                                                                                <TableCell className="align-top pt-4">无变更</TableCell>
+                                                                                <TableCell className="align-top pt-4">N/A</TableCell>
+                                                                                <TableCell className="align-top pt-4">N/A</TableCell>
+                                                                                <TableCell className="text-right align-top pt-4">N/A</TableCell>
+                                                                                <TableCell className="text-right align-top pt-4">N/A</TableCell>
                                                                             </>
                                                                         )}
                                                                     </TableRow>
-                                                                    {row.changes.slice(1).map((change, index) => (
-                                                                        <TableRow key={index}>
-                                                                            <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
-                                                                                <div className="flex items-center justify-center gap-1">
-                                                                                    {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
-                                                                                    {change.action === 'remove' ? '拆下' : '新增'}
-                                                                                </div>
-                                                                            </TableCell>
-                                                                            <TableCell>{change.detail}</TableCell>
-                                                                            <TableCell className="font-mono text-xs">{change.model || 'N/A'}</TableCell>
-                                                                            <TableCell className="text-right">
-                                                                                {change.stock?.currentLocation ? (
-                                                                                    <span className={cn("flex items-center justify-end", change.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                        {change.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                        {change.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
-                                                                                    </span>
-                                                                                ) : 'N/A'}
-                                                                            </TableCell>
-                                                                            <TableCell className="text-right">
-                                                                                {change.stock?.targetLocation ? (
-                                                                                    <span className={cn("flex items-center justify-end", change.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                        {change.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                        {change.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
-                                                                                    </span>
-                                                                                ) : 'N/A'}
-                                                                            </TableCell>
-                                                                        </TableRow>
-                                                                    ))}
+                                                                    {row.changes.slice(1).map((change, changeIndex) => {
+                                                                        const subDetailParts = change.detail.split('*') || [];
+                                                                        const subDetailSpec = subDetailParts[0] || change.detail || '';
+                                                                        const subDetailQty = subDetailParts[1] || '1';
+                                                                        
+                                                                        return (
+                                                                            <TableRow key={changeIndex}>
+                                                                                <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
+                                                                                    <div className="flex items-center justify-center gap-1">
+                                                                                        {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
+                                                                                        {change.action === 'remove' ? '拆下' : '新增'}
+                                                                                    </div>
+                                                                                </TableCell>
+                                                                                <TableCell>
+                                                                                    <Input 
+                                                                                        value={subDetailSpec} 
+                                                                                        onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex + 1, 'detail', e.target.value)}
+                                                                                        className="h-8"
+                                                                                    />
+                                                                                </TableCell>
+                                                                                <TableCell>
+                                                                                    <Input 
+                                                                                        type="number"
+                                                                                        value={subDetailQty} 
+                                                                                        onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex + 1, 'quantity', e.target.value)}
+                                                                                        className="h-8 w-16"
+                                                                                    />
+                                                                                </TableCell>
+                                                                                <TableCell>
+                                                                                    <Input 
+                                                                                        value={change.model || 'N/A'} 
+                                                                                        onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex + 1, 'model', e.target.value)}
+                                                                                        className="h-8"
+                                                                                     />
+                                                                                </TableCell>
+                                                                                <TableCell className="text-right">
+                                                                                    {change.stock?.currentLocation ? (
+                                                                                        <span className={cn("flex items-center justify-end", change.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                            {change.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                            {change.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                        </span>
+                                                                                    ) : 'N/A'}
+                                                                                </TableCell>
+                                                                                <TableCell className="text-right">
+                                                                                    {change.stock?.targetLocation ? (
+                                                                                        <span className={cn("flex items-center justify-end", change.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                            {change.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                            {change.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                        </span>
+                                                                                    ) : 'N/A'}
+                                                                                </TableCell>
+                                                                            </TableRow>
+                                                                        )
+                                                                    })}
                                                                 </React.Fragment>
                                                            )
                                                         })}
@@ -748,4 +824,5 @@ function DeliveryPage() {
 
 export default DeliveryPage;
 
+    
     
