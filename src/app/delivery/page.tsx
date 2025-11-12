@@ -273,16 +273,13 @@ function DeliveryPage() {
     const [isConfirmingUpgrade, setIsConfirmingUpgrade] = useState(false);
     const [upgradePlanData, setUpgradePlanData] = useState<GroupedUpgradePlans>(new Map());
     const [isLoading, setIsLoading] = useState(false);
+    const [showGenerationAlert, setShowGenerationAlert] = useState(false);
     
     const handleInitiateWorkOrder = async () => {
         setIsLoading(true);
-        // Simulate an API call
         await new Promise(resolve => setTimeout(resolve, 500));
         setIsLoading(false);
-        toast({
-            title: "方案已提交",
-            description: "已将当前已定型服务器提交系统生成改配方案。稍后可点击“查看改配方案”查看或修改改配方案。",
-        });
+        setShowGenerationAlert(true);
     };
 
     const handleViewUpgradePlan = async () => {
@@ -705,7 +702,7 @@ function DeliveryPage() {
                                          {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
                                         查看改配方案
                                     </Button>
-                                    <Button variant="outline" onClick={handleInitiateWorkOrder} disabled={isLoading}>
+                                    <Button variant="default" onClick={handleInitiateWorkOrder} disabled={isLoading}>
                                         {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
                                         生成改配方案
                                     </Button>
@@ -843,6 +840,19 @@ function DeliveryPage() {
                         </AlertDialogFooter>
                     </>
                 )}
+            </AlertDialogContent>
+        </AlertDialog>
+        <AlertDialog open={showGenerationAlert} onOpenChange={setShowGenerationAlert}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>方案已提交</AlertDialogTitle>
+                <AlertDialogDescription>
+                    已将当前已定型服务器提交系统生成改配方案。稍后可点击“查看改配方案”查看或修改改配方案。
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setShowGenerationAlert(false)}>确定</AlertDialogAction>
+                </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     </div>
