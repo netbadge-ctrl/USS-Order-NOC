@@ -234,8 +234,8 @@ function DeliveryPage() {
         const rawPlans: UpgradePlan[] = [
             {
                 sn: '9800171603708813',
-                currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', nic: '10GE_2*1' },
-                targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', nic: '200GE_RoCE*2' },
+                currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
+                targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
                 requirements: {
                     memory: 'SPEED: 4800, 容量: 64G',
                     storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2'
@@ -249,14 +249,16 @@ function DeliveryPage() {
                     { component: 'storage', action: 'add', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 30 } } },
                     { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
                     { component: 'gpu', action: 'add', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 12 } } },
-                    { component: 'nic', action: 'remove', detail: '10GE_2*1' },
-                    { component: 'nic', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 30 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
+                    { component: 'vpcNetwork', action: 'remove', detail: '10GE_2*1' },
+                    { component: 'vpcNetwork', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 30 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
+                    { component: 'computeNetwork', action: 'remove', detail: '100GE_IB*2' },
+                    { component: 'computeNetwork', action: 'add', detail: '200GE_IB*8', model: 'NIC-200GE-IB', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 40 } } },
                 ]
             },
             {
                 sn: '9800171603708814',
-                currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', storage: 'SATA_480G*2', nic: '25GE_2*1' },
-                targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', storage: 'NVME_7.68T*4', nic: '200GE_RoCE*2' },
+                currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', storage: 'SATA_480G*2', vpcNetwork: '25GE_2*1', computeNetwork: '100GE_IB*2' },
+                targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', storage: 'NVME_7.68T*4', vpcNetwork: '200GE_RoCE*2', computeNetwork: '400GE_IB*8' },
                 requirements: {
                     gpu: '必须为最新固件版本',
                 },
@@ -269,8 +271,10 @@ function DeliveryPage() {
                     { component: 'storage', action: 'add', detail: 'NVME_7.68T*4', model: 'NVME-7.68T-U2', stock: { currentLocation: { status: 'insufficient', quantity: 1 }, targetLocation: { status: 'sufficient', quantity: 25 } } },
                     { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
                     { component: 'gpu', action: 'add', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'insufficient', quantity: 2 } } },
-                    { component: 'nic', action: 'remove', detail: '25GE_2*1' },
-                    { component: 'nic', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 18 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
+                    { component: 'vpcNetwork', action: 'remove', detail: '25GE_2*1' },
+                    { component: 'vpcNetwork', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 18 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
+                    { component: 'computeNetwork', action: 'remove', detail: '100GE_IB*2' },
+                    { component: 'computeNetwork', action: 'add', detail: '400GE_IB*8', model: 'NIC-400GE-IB', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 20 } } },
                 ]
             }
         ];
@@ -285,7 +289,7 @@ function DeliveryPage() {
                 grouped.set(currentLocation, []);
             }
 
-            const components: (keyof ServerHardwareConfig)[] = ['cpu', 'gpu', 'memory', 'storage', 'nic', 'vpcNetwork', 'computeNetwork', 'storageNet'];
+            const components: (keyof ServerHardwareConfig)[] = ['cpu', 'gpu', 'memory', 'storage', 'vpcNetwork', 'computeNetwork', 'storageNetwork', 'nic'];
             const rows = components.map(comp => {
                 return {
                     component: comp,
@@ -681,8 +685,8 @@ function DeliveryPage() {
                                                             <TableHead className="w-[15%]">目标配置</TableHead>
                                                             <TableHead className="w-[8%] text-center">操作</TableHead>
                                                             <TableHead>规格详情</TableHead>
-                                                            <TableHead className="w-[10%]">Model</TableHead>
                                                             <TableHead className="w-[8%]">数量</TableHead>
+                                                            <TableHead className="w-[10%]">Model</TableHead>
                                                             <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
                                                             <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
                                                         </TableRow>
@@ -718,13 +722,7 @@ function DeliveryPage() {
                                                                                 value={detailSpec} 
                                                                                 onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'detail', e.target.value)}
                                                                                 className="h-8"
-                                                                            />
-                                                                        </TableCell>
-                                                                        <TableCell>
-                                                                            <Input 
-                                                                                value={change.model || 'N/A'} 
-                                                                                onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', e.target.value)}
-                                                                                className="h-8"
+                                                                                disabled={change.action === 'remove'}
                                                                             />
                                                                         </TableCell>
                                                                         <TableCell>
@@ -733,13 +731,22 @@ function DeliveryPage() {
                                                                                 value={detailQty} 
                                                                                 onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
                                                                                 className="h-8 w-16"
+                                                                                disabled={change.action === 'remove'}
+                                                                            />
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            <Input 
+                                                                                value={change.model || 'N/A'} 
+                                                                                onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', e.target.value)}
+                                                                                className="h-8"
+                                                                                disabled={change.action === 'remove'}
                                                                             />
                                                                         </TableCell>
                                                                         <TableCell className="text-right">
                                                                             {change.stock?.currentLocation ? (
                                                                                 <span className={cn("flex items-center justify-end", change.stock.currentLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
                                                                                     {change.stock.currentLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                    {change.stock.currentLocation.status === 'sufficient' ? `满足 (${change.stock.currentLocation.quantity})` : `不足 (${change.stock.currentLocation.quantity})`}
+                                                                                    ({change.stock.currentLocation.quantity}) {change.stock.currentLocation.status === 'sufficient' ? `满足` : `不足`}
                                                                                 </span>
                                                                             ) : 'N/A'}
                                                                         </TableCell>
@@ -747,7 +754,7 @@ function DeliveryPage() {
                                                                             {change.stock?.targetLocation ? (
                                                                                 <span className={cn("flex items-center justify-end", change.stock.targetLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
                                                                                     {change.stock.targetLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                    {change.stock.targetLocation.status === 'sufficient' ? `满足 (${change.stock.targetLocation.quantity})` : `不足 (${change.stock.targetLocation.quantity})`}
+                                                                                    ({change.stock.targetLocation.quantity}) {change.stock.targetLocation.status === 'sufficient' ? `满足` : `不足`}
                                                                                 </span>
                                                                             ) : 'N/A'}
                                                                         </TableCell>
@@ -801,5 +808,3 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
-
-    

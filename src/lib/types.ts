@@ -114,5 +114,3 @@ export type UpgradePlan = {
     changes: UpgradePlanChangeItem[];
     requirements?: Partial<Record<keyof ServerHardwareConfig, string>>;
 }
-
-    
