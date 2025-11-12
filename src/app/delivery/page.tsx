@@ -179,6 +179,7 @@ function DeliveryPage() {
     const { toast } = useToast()
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isUpgradePlanDialogOpen, setIsUpgradePlanDialogOpen] = useState(false);
+    const [isConfirmingUpgrade, setIsConfirmingUpgrade] = useState(false);
     const [changeSummary, setChangeSummary] = useState<GroupedChangeSummary | null>(null);
     const [upgradePlanData, setUpgradePlanData] = useState<GroupedUpgradePlans>(new Map());
     const [isLoading, setIsLoading] = useState(false);
@@ -341,6 +342,152 @@ function DeliveryPage() {
             variant: "default",
         })
     }
+
+    const renderUpgradePlanTable = (readOnly = false) => {
+        const ReadOnlyCell = ({ value }: { value: string | number | undefined }) => <span className="px-3 py-2 text-sm">{value || 'N/A'}</span>;
+
+        return (
+             <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4">
+                {Array.from(upgradePlanData.entries()).map(([location, plans]) => (
+                    <div key={location}>
+                        <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-background py-2">
+                            服务器当前所在机房: <Badge variant="secondary">{location}</Badge>
+                        </h3>
+                        <Accordion type="single" collapsible className="w-full">
+                            {plans.map((plan, planIndex) => (
+                                 <AccordionItem value={plan.sn} key={plan.sn}>
+                                    <AccordionTrigger>
+                                        <span className="font-mono text-base">{plan.sn}</span>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="space-y-6">
+                                         <div className="border rounded-md">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead className="w-[10%]">配件类型</TableHead>
+                                                        <TableHead className="w-[15%]">当前配置</TableHead>
+                                                        <TableHead className="w-[15%]">目标配置</TableHead>
+                                                        <TableHead className="w-[8%] text-center">操作</TableHead>
+                                                        <TableHead>规格详情</TableHead>
+                                                        <TableHead className="w-[8%]">数量</TableHead>
+                                                        <TableHead className="w-[10%]">Model</TableHead>
+                                                        <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
+                                                        <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                   {plan.rows.map((row, rowIndex) => {
+                                                        const hasRequirements = !!row.requirements;
+                                                        const baseRowSpan = row.changes.length || 1;
+                                                        const rowSpan = hasRequirements ? baseRowSpan + 1 : baseRowSpan;
+
+                                                        const changeRows = row.changes.map((change, changeIndex) => {
+                                                            const detailParts = change.detail.split('*') || [];
+                                                            const detailSpec = detailParts[0] || change.detail || '';
+                                                            const detailQty = detailParts[1] || '1';
+                                                            const isRemovable = change.action === 'remove';
+
+                                                            return (
+                                                                <TableRow key={`${row.component}-${changeIndex}`}>
+                                                                    {changeIndex === 0 && (
+                                                                        <>
+                                                                            <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
+                                                                            <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
+                                                                            <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
+                                                                        </>
+                                                                    )}
+                                                                    <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
+                                                                        <div className="flex items-center justify-center gap-1">
+                                                                            {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
+                                                                            {change.action === 'remove' ? '拆下' : '新增'}
+                                                                        </div>
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        {readOnly ? <ReadOnlyCell value={detailSpec} /> :
+                                                                        <Input 
+                                                                            value={detailSpec} 
+                                                                            onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'detail', e.target.value)}
+                                                                            className="h-8"
+                                                                            disabled={isRemovable}
+                                                                        /> }
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                         {readOnly ? <ReadOnlyCell value={detailQty} /> :
+                                                                        <Input 
+                                                                            type="number"
+                                                                            value={detailQty} 
+                                                                            onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
+                                                                            className="h-8 w-16"
+                                                                            disabled={isRemovable}
+                                                                        /> }
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                         {readOnly ? <ReadOnlyCell value={change.model} /> :
+                                                                        <Input 
+                                                                            value={change.model || ''} 
+                                                                            onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', e.target.value)}
+                                                                            className="h-8"
+                                                                            disabled={isRemovable}
+                                                                        /> }
+                                                                    </TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        {change.stock?.currentLocation ? (
+                                                                            <span className={cn("flex items-center justify-end", change.stock.currentLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                {change.stock.currentLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                ({change.stock.currentLocation.quantity}) {change.stock.currentLocation.status === 'sufficient' ? `满足` : `不足`}
+                                                                            </span>
+                                                                        ) : 'N/A'}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        {change.stock?.targetLocation ? (
+                                                                            <span className={cn("flex items-center justify-end", change.stock.targetLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                {change.stock.targetLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                ({change.stock.targetLocation.quantity}) {change.stock.targetLocation.status === 'sufficient' ? `满足` : `不足`}
+                                                                            </span>
+                                                                        ) : 'N/A'}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        });
+
+                                                        if (row.changes.length === 0) {
+                                                            changeRows.push(
+                                                                <TableRow key={`${row.component}-nochange`}>
+                                                                    <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
+                                                                    <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
+                                                                    <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
+                                                                    <TableCell colSpan={6} className="text-center text-muted-foreground">无变更</TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        }
+
+                                                        const requirementsRow = hasRequirements ? (
+                                                            <TableRow key={`${row.component}-reqs`}>
+                                                                <TableCell colSpan={6} className="text-xs text-muted-foreground py-1 px-4 bg-gray-50">
+                                                                    <span className="font-semibold text-gray-600">性能要求: </span>{row.requirements}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ) : null;
+                                                        
+                                                        return (
+                                                            <React.Fragment key={row.component}>
+                                                                {changeRows}
+                                                                {requirementsRow}
+                                                            </React.Fragment>
+                                                        );
+                                                    })}
+                                                </TableBody>
+                                            </Table>
+                                         </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                    </div>
+                ))}
+            </div>
+        )
+    };
 
 
   return (
@@ -655,152 +802,49 @@ function DeliveryPage() {
             </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog open={isUpgradePlanDialogOpen} onOpenChange={setIsUpgradePlanDialogOpen}>
+        <AlertDialog open={isUpgradePlanDialogOpen} onOpenChange={(open) => {
+            if (!open) {
+                setIsUpgradePlanDialogOpen(false);
+                setIsConfirmingUpgrade(false);
+            } else {
+                setIsUpgradePlanDialogOpen(true);
+            }
+        }}>
             <AlertDialogContent className="max-w-7xl">
-                <AlertDialogHeader>
-                    <AlertDialogTitle>查看改配方案</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        以下为检测到的需要进行硬件改配的服务器方案详情。
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4">
-                    {Array.from(upgradePlanData.entries()).map(([location, plans], locIndex) => (
-                        <div key={location}>
-                            <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-background py-2">
-                                服务器当前所在机房: <Badge variant="secondary">{location}</Badge>
-                            </h3>
-                            <Accordion type="single" collapsible className="w-full">
-                                {plans.map((plan, planIndex) => (
-                                     <AccordionItem value={plan.sn} key={plan.sn}>
-                                        <AccordionTrigger>
-                                            <span className="font-mono text-base">{plan.sn}</span>
-                                        </AccordionTrigger>
-                                        <AccordionContent className="space-y-6">
-                                             <div className="border rounded-md">
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead className="w-[10%]">配件类型</TableHead>
-                                                            <TableHead className="w-[15%]">当前配置</TableHead>
-                                                            <TableHead className="w-[15%]">目标配置</TableHead>
-                                                            <TableHead className="w-[8%] text-center">操作</TableHead>
-                                                            <TableHead>规格详情</TableHead>
-                                                            <TableHead className="w-[8%]">数量</TableHead>
-                                                            <TableHead className="w-[10%]">Model</TableHead>
-                                                            <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
-                                                            <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                       {plan.rows.map((row, rowIndex) => {
-                                                            const hasRequirements = !!row.requirements;
-                                                            const baseRowSpan = row.changes.length || 1;
-                                                            const rowSpan = hasRequirements ? baseRowSpan + 1 : baseRowSpan;
-
-                                                            const changeRows = row.changes.map((change, changeIndex) => {
-                                                                const detailParts = change.detail.split('*') || [];
-                                                                const detailSpec = detailParts[0] || change.detail || '';
-                                                                const detailQty = detailParts[1] || '1';
-
-                                                                return (
-                                                                    <TableRow key={`${row.component}-${changeIndex}`}>
-                                                                        {changeIndex === 0 && (
-                                                                            <>
-                                                                                <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
-                                                                                <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
-                                                                                <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
-                                                                            </>
-                                                                        )}
-                                                                        <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
-                                                                            <div className="flex items-center justify-center gap-1">
-                                                                                {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
-                                                                                {change.action === 'remove' ? '拆下' : '新增'}
-                                                                            </div>
-                                                                        </TableCell>
-                                                                        <TableCell>
-                                                                            <Input 
-                                                                                value={detailSpec} 
-                                                                                onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'detail', e.target.value)}
-                                                                                className="h-8"
-                                                                                disabled={change.action === 'remove'}
-                                                                            />
-                                                                        </TableCell>
-                                                                        <TableCell>
-                                                                            <Input 
-                                                                                type="number"
-                                                                                value={detailQty} 
-                                                                                onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
-                                                                                className="h-8 w-16"
-                                                                                disabled={change.action === 'remove'}
-                                                                            />
-                                                                        </TableCell>
-                                                                        <TableCell>
-                                                                            <Input 
-                                                                                value={change.model || 'N/A'} 
-                                                                                onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', e.target.value)}
-                                                                                className="h-8"
-                                                                                disabled={change.action === 'remove'}
-                                                                            />
-                                                                        </TableCell>
-                                                                        <TableCell className="text-right">
-                                                                            {change.stock?.currentLocation ? (
-                                                                                <span className={cn("flex items-center justify-end", change.stock.currentLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                    {change.stock.currentLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                    ({change.stock.currentLocation.quantity}) {change.stock.currentLocation.status === 'sufficient' ? `满足` : `不足`}
-                                                                                </span>
-                                                                            ) : 'N/A'}
-                                                                        </TableCell>
-                                                                        <TableCell className="text-right">
-                                                                            {change.stock?.targetLocation ? (
-                                                                                <span className={cn("flex items-center justify-end", change.stock.targetLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                    {change.stock.targetLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                    ({change.stock.targetLocation.quantity}) {change.stock.targetLocation.status === 'sufficient' ? `满足` : `不足`}
-                                                                                </span>
-                                                                            ) : 'N/A'}
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                );
-                                                            });
-
-                                                            if (row.changes.length === 0) {
-                                                                changeRows.push(
-                                                                    <TableRow key={`${row.component}-nochange`}>
-                                                                        <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
-                                                                        <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
-                                                                        <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
-                                                                        <TableCell colSpan={6} className="text-center text-muted-foreground">无变更</TableCell>
-                                                                    </TableRow>
-                                                                );
-                                                            }
-
-                                                            const requirementsRow = hasRequirements ? (
-                                                                <TableRow key={`${row.component}-reqs`}>
-                                                                    <TableCell colSpan={6} className="text-xs text-muted-foreground py-1 px-4 bg-gray-50">
-                                                                        <span className="font-semibold text-gray-600">性能要求: </span>{row.requirements}
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            ) : null;
-                                                            
-                                                            return (
-                                                                <React.Fragment key={row.component}>
-                                                                    {changeRows}
-                                                                    {requirementsRow}
-                                                                </React.Fragment>
-                                                            );
-                                                        })}
-                                                    </TableBody>
-                                                </Table>
-                                             </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ))}
-                            </Accordion>
-                        </div>
-                    ))}
-                </div>
-                 <AlertDialogFooter>
-                    <AlertDialogCancel>关闭</AlertDialogCancel>
-                </AlertDialogFooter>
+                {isConfirmingUpgrade ? (
+                     <>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>确认改配方案</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                请仔细核对以下最终改配方案。确认后将生成NOC工单。
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        {renderUpgradePlanTable(true)}
+                        <AlertDialogFooter>
+                            <Button variant="outline" onClick={() => setIsConfirmingUpgrade(false)}>返回修改</Button>
+                            <Button onClick={() => {
+                                setIsConfirmingUpgrade(false);
+                                setIsUpgradePlanDialogOpen(false);
+                                handleSubmitWorkOrder();
+                            }}>确认并提交工单</Button>
+                        </AlertDialogFooter>
+                    </>
+                ) : (
+                    <>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>查看改配方案</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                以下为检测到的需要进行硬件改配的服务器方案详情。您可以直接修改规格、Model和数量。
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        {renderUpgradePlanTable()}
+                        <AlertDialogFooter>
+                            <Button variant="outline" onClick={() => setIsUpgradePlanDialogOpen(false)}>取消编辑</Button>
+                            <Button variant="secondary" onClick={() => toast({ title: "草稿已保存", description: "您的修改已暂存。" })}>暂存</Button>
+                            <Button onClick={() => setIsConfirmingUpgrade(true)}>提交</Button>
+                        </AlertDialogFooter>
+                    </>
+                )}
             </AlertDialogContent>
         </AlertDialog>
     </div>
@@ -808,3 +852,4 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
+
