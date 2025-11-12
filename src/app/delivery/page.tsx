@@ -624,7 +624,7 @@ function DeliveryPage() {
                     {Array.from(upgradePlanData.entries()).map(([location, plans]) => (
                         <div key={location}>
                             <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-background py-2">
-                                机房: <Badge variant="secondary">{location}</Badge>
+                                服务器当前所在机房: <Badge variant="secondary">{location}</Badge>
                             </h3>
                             <Accordion type="single" collapsible className="w-full">
                                 {plans.map(plan => (
