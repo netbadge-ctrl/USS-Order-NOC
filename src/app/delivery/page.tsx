@@ -255,8 +255,8 @@ function DeliveryPage() {
             },
             {
                 sn: '9800171603708814',
-                currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', },
-                targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', },
+                currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', nic: '25GE_2*1' },
+                targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', nic: '200GE_RoCE*2'},
                 changes: [
                     { component: 'cpu', action: 'remove', detail: 'WQDX_8358P*2' },
                     { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
@@ -264,6 +264,8 @@ function DeliveryPage() {
                     { component: 'memory', action: 'add', detail: '128G_4800*16', model: 'MEM-128-4800', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
                     { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
                     { component: 'gpu', action: 'add', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: { currentLocation: 'insufficient', targetLocation: 'insufficient' } },
+                    { component: 'nic', action: 'remove', detail: '25GE_2*1' },
+                    { component: 'nic', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: 'sufficient', targetLocation: 'sufficient' } },
                 ]
             }
         ];
@@ -682,145 +684,97 @@ function DeliveryPage() {
                                                     </TableHeader>
                                                     <TableBody>
                                                        {plan.rows.map((row, rowIndex) => {
-                                                            const rowSpan = row.changes.length || 1;
-                                                            
-                                                            return (
-                                                                <React.Fragment key={row.component}>
-                                                                    <TableRow>
+                                                            const hasRequirements = !!row.requirements;
+                                                            const baseRowSpan = row.changes.length || 1;
+                                                            const rowSpan = hasRequirements ? baseRowSpan + 1 : baseRowSpan;
+
+                                                            const changeRows = row.changes.map((change, changeIndex) => {
+                                                                const detailParts = change.detail.split('*') || [];
+                                                                const detailSpec = detailParts[0] || change.detail || '';
+                                                                const detailQty = detailParts[1] || '1';
+
+                                                                return (
+                                                                    <TableRow key={`${row.component}-${changeIndex}`}>
+                                                                        {changeIndex === 0 && (
+                                                                            <>
+                                                                                <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
+                                                                                <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
+                                                                                <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
+                                                                            </>
+                                                                        )}
+                                                                        <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
+                                                                            <div className="flex items-center justify-center gap-1">
+                                                                                {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
+                                                                                {change.action === 'remove' ? '拆下' : '新增'}
+                                                                            </div>
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            <Input 
+                                                                                value={detailSpec} 
+                                                                                onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'detail', e.target.value)}
+                                                                                className="h-8"
+                                                                            />
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            <Input 
+                                                                                type="number"
+                                                                                value={detailQty} 
+                                                                                onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
+                                                                                className="h-8 w-16"
+                                                                            />
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            <Input 
+                                                                                value={change.model || 'N/A'} 
+                                                                                onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', e.target.value)}
+                                                                                className="h-8"
+                                                                            />
+                                                                        </TableCell>
+                                                                        <TableCell className="text-right">
+                                                                            {change.stock?.currentLocation ? (
+                                                                                <span className={cn("flex items-center justify-end", change.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                    {change.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                    {change.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                </span>
+                                                                            ) : 'N/A'}
+                                                                        </TableCell>
+                                                                        <TableCell className="text-right">
+                                                                            {change.stock?.targetLocation ? (
+                                                                                <span className={cn("flex items-center justify-end", change.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                    {change.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                    {change.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                </span>
+                                                                            ) : 'N/A'}
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                );
+                                                            });
+
+                                                            if (row.changes.length === 0) {
+                                                                changeRows.push(
+                                                                    <TableRow key={`${row.component}-nochange`}>
                                                                         <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
                                                                         <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
                                                                         <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
-                                                                        
-                                                                        {row.changes.length > 0 ? (
-                                                                             <>
-                                                                                {row.changes.slice(0, 1).map((change, changeIndex) => {
-                                                                                    const detailParts = change.detail.split('*') || [];
-                                                                                    const detailSpec = detailParts[0] || change.detail || '';
-                                                                                    const detailQty = detailParts[1] || '1';
-
-                                                                                    return (
-                                                                                        <React.Fragment key={changeIndex}>
-                                                                                            <TableCell className={cn("text-center align-top pt-4", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
-                                                                                                <div className="flex items-center justify-center gap-1">
-                                                                                                    {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
-                                                                                                    {change.action === 'remove' ? '拆下' : '新增'}
-                                                                                                </div>
-                                                                                            </TableCell>
-                                                                                            <TableCell>
-                                                                                                <Input 
-                                                                                                    value={detailSpec} 
-                                                                                                    onChange={(e) => handlePlanChange(location, planIndex, rowIndex, 0, 'detail', e.target.value)}
-                                                                                                    className="h-8"
-                                                                                                />
-                                                                                            </TableCell>
-                                                                                            <TableCell>
-                                                                                                <Input 
-                                                                                                    type="number"
-                                                                                                    value={detailQty} 
-                                                                                                    onChange={(e) => handlePlanChange(location, planIndex, rowIndex, 0, 'quantity', e.target.value)}
-                                                                                                    className="h-8 w-16"
-                                                                                                />
-                                                                                            </TableCell>
-                                                                                            <TableCell>
-                                                                                                <Input 
-                                                                                                    value={change.model || 'N/A'} 
-                                                                                                    onChange={(e) => handlePlanChange(location, planIndex, rowIndex, 0, 'model', e.target.value)}
-                                                                                                    className="h-8"
-                                                                                                />
-                                                                                            </TableCell>
-                                                                                            <TableCell className="text-right align-top pt-4">
-                                                                                                {change.stock?.currentLocation ? (
-                                                                                                    <span className={cn("flex items-center justify-end", change.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                                        {change.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                                        {change.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
-                                                                                                    </span>
-                                                                                                ) : 'N/A'}
-                                                                                            </TableCell>
-                                                                                            <TableCell className="text-right align-top pt-4">
-                                                                                                {change.stock?.targetLocation ? (
-                                                                                                    <span className={cn("flex items-center justify-end", change.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                                        {change.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                                        {change.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
-                                                                                                    </span>
-                                                                                                ) : 'N/A'}
-                                                                                            </TableCell>
-                                                                                        </React.Fragment>
-                                                                                    )
-                                                                                })}
-                                                                            </>
-                                                                        ) : (
-                                                                            <>
-                                                                                <TableCell colSpan={6} className="text-center text-muted-foreground align-top pt-4">无变更</TableCell>
-                                                                            </>
-                                                                        )}
+                                                                        <TableCell colSpan={6} className="text-center text-muted-foreground">无变更</TableCell>
                                                                     </TableRow>
+                                                                );
+                                                            }
 
-                                                                    {row.requirements && (
-                                                                        <TableRow>
-                                                                            <TableCell colSpan={3}></TableCell>
-                                                                            <TableCell colSpan={6} className="text-xs text-muted-foreground py-1 px-4 bg-gray-50">
-                                                                                <span className="font-semibold text-gray-600">性能要求: </span>{row.requirements}
-                                                                            </TableCell>
-                                                                        </TableRow>
-                                                                    )}
-
-                                                                    {row.changes.slice(1).map((change, changeIndex) => {
-                                                                        const subDetailParts = change.detail.split('*') || [];
-                                                                        const subDetailSpec = subDetailParts[0] || change.detail || '';
-                                                                        const subDetailQty = subDetailParts[1] || '1';
-                                                                        
-                                                                        return (
-                                                                            <TableRow key={changeIndex}>
-                                                                                 <TableCell colSpan={3}></TableCell>
-                                                                                <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
-                                                                                    <div className="flex items-center justify-center gap-1">
-                                                                                        {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
-                                                                                        {change.action === 'remove' ? '拆下' : '新增'}
-                                                                                    </div>
-                                                                                </TableCell>
-                                                                                <TableCell>
-                                                                                    <Input 
-                                                                                        value={subDetailSpec} 
-                                                                                        onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex + 1, 'detail', e.target.value)}
-                                                                                        className="h-8"
-                                                                                    />
-                                                                                </TableCell>
-                                                                                <TableCell>
-                                                                                    <Input 
-                                                                                        type="number"
-                                                                                        value={subDetailQty} 
-                                                                                        onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex + 1, 'quantity', e.target.value)}
-                                                                                        className="h-8 w-16"
-                                                                                    />
-                                                                                </TableCell>
-                                                                                <TableCell>
-                                                                                    <Input 
-                                                                                        value={change.model || 'N/A'} 
-                                                                                        onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex + 1, 'model', e.target.value)}
-                                                                                        className="h-8"
-                                                                                     />
-                                                                                </TableCell>
-                                                                                <TableCell className="text-right">
-                                                                                    {change.stock?.currentLocation ? (
-                                                                                        <span className={cn("flex items-center justify-end", change.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                            {change.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                            {change.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
-                                                                                        </span>
-                                                                                    ) : 'N/A'}
-                                                                                </TableCell>
-                                                                                <TableCell className="text-right">
-                                                                                    {change.stock?.targetLocation ? (
-                                                                                        <span className={cn("flex items-center justify-end", change.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                            {change.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                            {change.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
-                                                                                        </span>
-                                                                                    ) : 'N/A'}
-                                                                                </TableCell>
-                                                                            </TableRow>
-                                                                        )
-                                                                    })}
+                                                            const requirementsRow = hasRequirements ? (
+                                                                <TableRow key={`${row.component}-reqs`}>
+                                                                    <TableCell colSpan={6} className="text-xs text-muted-foreground py-1 px-4 bg-gray-50">
+                                                                        <span className="font-semibold text-gray-600">性能要求: </span>{row.requirements}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ) : null;
+                                                            
+                                                            return (
+                                                                <React.Fragment key={row.component}>
+                                                                    {changeRows}
+                                                                    {requirementsRow}
                                                                 </React.Fragment>
-                                                           )
+                                                            );
                                                         })}
                                                     </TableBody>
                                                 </Table>
