@@ -171,12 +171,15 @@ type FormattedUpgradePlan = {
   }[];
 }
 
+type GroupedUpgradePlans = Map<string, FormattedUpgradePlan[]>;
+
+
 function DeliveryPage() {
     const { toast } = useToast()
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isUpgradePlanDialogOpen, setIsUpgradePlanDialogOpen] = useState(false);
     const [changeSummary, setChangeSummary] = useState<GroupedChangeSummary | null>(null);
-    const [upgradePlanData, setUpgradePlanData] = useState<FormattedUpgradePlan[]>([]);
+    const [upgradePlanData, setUpgradePlanData] = useState<GroupedUpgradePlans>(new Map());
     const [isLoading, setIsLoading] = useState(false);
     
     const handleInitiateWorkOrder = async () => {
@@ -258,8 +261,16 @@ function DeliveryPage() {
             }
         ];
         
-        // Format the raw data for easier rendering
-        const formatted = rawPlans.map(plan => {
+        const grouped = new Map<string, FormattedUpgradePlan[]>();
+
+        rawPlans.forEach(plan => {
+            const server = deliveryData.find(d => d.sn === plan.sn);
+            const currentLocation = server ? server.rack[0] : '未知机房';
+            
+            if (!grouped.has(currentLocation)) {
+                grouped.set(currentLocation, []);
+            }
+
             const components: (keyof ServerHardwareConfig)[] = ['cpu', 'gpu', 'memory', 'storage', 'vpcNetwork', 'computeNetwork', 'storageNet'];
             const rows = components.map(comp => {
                 return {
@@ -270,10 +281,10 @@ function DeliveryPage() {
                 }
             }).filter(row => row.current || row.target || row.changes.length > 0);
 
-            return { sn: plan.sn, rows };
+            grouped.get(currentLocation)!.push({ sn: plan.sn, rows });
         });
 
-        setUpgradePlanData(formatted);
+        setUpgradePlanData(grouped);
         setIsLoading(false);
         setIsUpgradePlanDialogOpen(true);
     }
@@ -609,115 +620,122 @@ function DeliveryPage() {
                         以下为检测到的需要进行硬件改配的服务器方案详情。
                     </AlertDialogDescription>
                 </AlertDialogHeader>
-                <div className="max-h-[70vh] overflow-y-auto pr-4">
-                    <Accordion type="single" collapsible className="w-full">
-                        {upgradePlanData.map(plan => (
-                             <AccordionItem value={plan.sn} key={plan.sn}>
-                                <AccordionTrigger>
-                                    <span className="font-mono text-base">{plan.sn}</span>
-                                </AccordionTrigger>
-                                <AccordionContent className="space-y-6">
-                                     <div className="border rounded-md">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className="w-[10%]">配件类型</TableHead>
-                                                    <TableHead className="w-[15%]">当前配置</TableHead>
-                                                    <TableHead className="w-[15%]">目标配置</TableHead>
-                                                    <TableHead className="w-[8%] text-center">操作</TableHead>
-                                                    <TableHead>规格详情</TableHead>
-                                                    <TableHead className="w-[10%]">Model</TableHead>
-                                                    <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
-                                                    <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                               {plan.rows.map(row => {
-                                                    const rowSpan = row.changes.length || 1;
-                                                    const firstChange = row.changes[0];
+                <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4">
+                    {Array.from(upgradePlanData.entries()).map(([location, plans]) => (
+                        <div key={location}>
+                            <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-background py-2">
+                                机房: <Badge variant="secondary">{location}</Badge>
+                            </h3>
+                            <Accordion type="single" collapsible className="w-full">
+                                {plans.map(plan => (
+                                     <AccordionItem value={plan.sn} key={plan.sn}>
+                                        <AccordionTrigger>
+                                            <span className="font-mono text-base">{plan.sn}</span>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="space-y-6">
+                                             <div className="border rounded-md">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead className="w-[10%]">配件类型</TableHead>
+                                                            <TableHead className="w-[15%]">当前配置</TableHead>
+                                                            <TableHead className="w-[15%]">目标配置</TableHead>
+                                                            <TableHead className="w-[8%] text-center">操作</TableHead>
+                                                            <TableHead>规格详情</TableHead>
+                                                            <TableHead className="w-[10%]">Model</TableHead>
+                                                            <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
+                                                            <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                       {plan.rows.map(row => {
+                                                            const rowSpan = row.changes.length || 1;
+                                                            const firstChange = row.changes[0];
 
-                                                    return (
-                                                        <React.Fragment key={row.component}>
-                                                            <TableRow>
-                                                                <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
-                                                                <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
-                                                                <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
-                                                                
-                                                                {firstChange ? (
-                                                                     <>
-                                                                        <TableCell className={cn("text-center", firstChange.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
-                                                                            <div className="flex items-center justify-center gap-1">
-                                                                                {firstChange.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
-                                                                                {firstChange.action === 'remove' ? '拆下' : '新增'}
-                                                                            </div>
-                                                                        </TableCell>
-                                                                        <TableCell>{firstChange.detail}</TableCell>
-                                                                        <TableCell className="font-mono text-xs">{firstChange.model || 'N/A'}</TableCell>
-                                                                        <TableCell className="text-right">
-                                                                            {firstChange.stock?.currentLocation ? (
-                                                                                <span className={cn("flex items-center justify-end", firstChange.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                    {firstChange.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                    {firstChange.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
-                                                                                </span>
-                                                                            ) : 'N/A'}
-                                                                        </TableCell>
-                                                                        <TableCell className="text-right">
-                                                                            {firstChange.stock?.targetLocation ? (
-                                                                                <span className={cn("flex items-center justify-end", firstChange.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                    {firstChange.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                    {firstChange.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
-                                                                                </span>
-                                                                            ) : 'N/A'}
-                                                                        </TableCell>
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <TableCell className="text-center text-muted-foreground">-</TableCell>
-                                                                        <TableCell>无变更</TableCell>
-                                                                        <TableCell>N/A</TableCell>
-                                                                        <TableCell className="text-right">N/A</TableCell>
-                                                                        <TableCell className="text-right">N/A</TableCell>
-                                                                    </>
-                                                                )}
-                                                            </TableRow>
-                                                            {row.changes.slice(1).map((change, index) => (
-                                                                <TableRow key={index}>
-                                                                    <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
-                                                                        <div className="flex items-center justify-center gap-1">
-                                                                            {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
-                                                                            {change.action === 'remove' ? '拆下' : '新增'}
-                                                                        </div>
-                                                                    </TableCell>
-                                                                    <TableCell>{change.detail}</TableCell>
-                                                                    <TableCell className="font-mono text-xs">{change.model || 'N/A'}</TableCell>
-                                                                    <TableCell className="text-right">
-                                                                        {change.stock?.currentLocation ? (
-                                                                            <span className={cn("flex items-center justify-end", change.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                {change.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                {change.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
-                                                                            </span>
-                                                                        ) : 'N/A'}
-                                                                    </TableCell>
-                                                                    <TableCell className="text-right">
-                                                                        {change.stock?.targetLocation ? (
-                                                                            <span className={cn("flex items-center justify-end", change.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                                {change.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                                {change.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
-                                                                            </span>
-                                                                        ) : 'N/A'}
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            ))}
-                                                        </React.Fragment>
-                                                   )
-                                                })}
-                                            </TableBody>
-                                        </Table>
-                                     </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
+                                                            return (
+                                                                <React.Fragment key={row.component}>
+                                                                    <TableRow>
+                                                                        <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
+                                                                        <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
+                                                                        <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
+                                                                        
+                                                                        {firstChange ? (
+                                                                             <>
+                                                                                <TableCell className={cn("text-center", firstChange.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
+                                                                                    <div className="flex items-center justify-center gap-1">
+                                                                                        {firstChange.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
+                                                                                        {firstChange.action === 'remove' ? '拆下' : '新增'}
+                                                                                    </div>
+                                                                                </TableCell>
+                                                                                <TableCell>{firstChange.detail}</TableCell>
+                                                                                <TableCell className="font-mono text-xs">{firstChange.model || 'N/A'}</TableCell>
+                                                                                <TableCell className="text-right">
+                                                                                    {firstChange.stock?.currentLocation ? (
+                                                                                        <span className={cn("flex items-center justify-end", firstChange.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                            {firstChange.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                            {firstChange.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                        </span>
+                                                                                    ) : 'N/A'}
+                                                                                </TableCell>
+                                                                                <TableCell className="text-right">
+                                                                                    {firstChange.stock?.targetLocation ? (
+                                                                                        <span className={cn("flex items-center justify-end", firstChange.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                            {firstChange.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                            {firstChange.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                        </span>
+                                                                                    ) : 'N/A'}
+                                                                                </TableCell>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <TableCell className="text-center text-muted-foreground">-</TableCell>
+                                                                                <TableCell>无变更</TableCell>
+                                                                                <TableCell>N/A</TableCell>
+                                                                                <TableCell className="text-right">N/A</TableCell>
+                                                                                <TableCell className="text-right">N/A</TableCell>
+                                                                            </>
+                                                                        )}
+                                                                    </TableRow>
+                                                                    {row.changes.slice(1).map((change, index) => (
+                                                                        <TableRow key={index}>
+                                                                            <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
+                                                                                <div className="flex items-center justify-center gap-1">
+                                                                                    {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
+                                                                                    {change.action === 'remove' ? '拆下' : '新增'}
+                                                                                </div>
+                                                                            </TableCell>
+                                                                            <TableCell>{change.detail}</TableCell>
+                                                                            <TableCell className="font-mono text-xs">{change.model || 'N/A'}</TableCell>
+                                                                            <TableCell className="text-right">
+                                                                                {change.stock?.currentLocation ? (
+                                                                                    <span className={cn("flex items-center justify-end", change.stock.currentLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                        {change.stock.currentLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                        {change.stock.currentLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                    </span>
+                                                                                ) : 'N/A'}
+                                                                            </TableCell>
+                                                                            <TableCell className="text-right">
+                                                                                {change.stock?.targetLocation ? (
+                                                                                    <span className={cn("flex items-center justify-end", change.stock.targetLocation === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                                        {change.stock.targetLocation === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                                        {change.stock.targetLocation === 'sufficient' ? '满足' : '不足'}
+                                                                                    </span>
+                                                                                ) : 'N/A'}
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    ))}
+                                                                </React.Fragment>
+                                                           )
+                                                        })}
+                                                    </TableBody>
+                                                </Table>
+                                             </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        </div>
+                    ))}
                 </div>
                  <AlertDialogFooter>
                     <AlertDialogCancel>关闭</AlertDialogCancel>
@@ -729,3 +747,5 @@ function DeliveryPage() {
 }
 
 export default DeliveryPage;
+
+    
