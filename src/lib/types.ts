@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from "lucide-react";
 
 export type ServerHardwareConfig = {
@@ -99,7 +100,8 @@ export type UpgradePlanChangeItem = {
     stock?: {
         currentLocation: StockStatus;
         targetLocation: StockStatus;
-    }
+    };
+    requirements?: string;
 }
 
 export type UpgradePlan = {
@@ -107,6 +109,7 @@ export type UpgradePlan = {
     currentConfig: Partial<ServerHardwareConfig>;
     targetConfig: Partial<ServerHardwareConfig>;
     changes: UpgradePlanChangeItem[];
+    requirements?: Partial<Record<keyof ServerHardwareConfig, string>>;
 }
 
     
