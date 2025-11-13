@@ -31,6 +31,7 @@ import {
   Minus,
   Plus,
   X,
+  FileX,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -179,6 +180,7 @@ type GroupedUpgradePlans = Map<string, FormattedUpgradePlan[]>;
 type UpgradePlanBatch = {
     data: GroupedUpgradePlans;
     createdAt: Date;
+    status?: 'active' | 'expired';
 }
 
 
@@ -281,7 +283,7 @@ function DeliveryPage() {
 
         const mockPlansForNewBatch: UpgradePlan[] = [
              {
-                sn: `980017160370881${3 + upgradePlanBatches.length}`, // Ensure unique SNs for demo
+                sn: `980017160370881${6 + upgradePlanBatches.length}`, // Ensure unique SNs for demo
                 currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
                 targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
                 requirements: { memory: 'SPEED: 4800, 容量: 64G' },
@@ -295,6 +297,7 @@ function DeliveryPage() {
         const newBatch: UpgradePlanBatch = {
             data: processUpgradePlans(mockPlansForNewBatch),
             createdAt: new Date(),
+            status: 'active',
         };
 
         setUpgradePlanBatches(prevBatches => [...prevBatches, newBatch]);
@@ -336,7 +339,7 @@ function DeliveryPage() {
         // On first view, generate a default batch if none exist
         if (upgradePlanBatches.length === 0) {
             await new Promise(resolve => setTimeout(resolve, 500));
-            const rawPlans: UpgradePlan[] = [
+            const rawPlans1: UpgradePlan[] = [
                 {
                     sn: '9800171603708813',
                     currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
@@ -350,41 +353,45 @@ function DeliveryPage() {
                         { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
                         { component: 'memory', action: 'remove', detail: '128G' },
                         { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
-                        { component: 'storage', action: 'remove', detail: 'SATA_4T*12' },
-                        { component: 'storage', action: 'add', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 30 } } },
-                        { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
-                        { component: 'gpu', action: 'add', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 12 } } },
-                        { component: 'vpcNetwork', action: 'remove', detail: '10GE_2*1' },
-                        { component: 'vpcNetwork', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 30 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
-                        { component: 'computeNetwork', action: 'remove', detail: '100GE_IB*2' },
-                        { component: 'computeNetwork', action: 'add', detail: '200GE_IB*8', model: 'NIC-200GE-IB', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 40 } } },
-                    ]
-                },
-                {
-                    sn: '9800171603708817',
-                    currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
-                    targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                    requirements: {
-                        memory: 'SPEED: 4800, 容量: 64G',
-                        storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2'
-                    },
-                    changes: [
-                        { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
                     ]
                 },
                 {
                     sn: '9800171603708814',
                     currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', storage: 'SATA_480G*2', vpcNetwork: '25GE_2*1', computeNetwork: '100GE_IB*2' },
                     targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', storage: 'NVME_7.68T*4', vpcNetwork: '200GE_RoCE*2', computeNetwork: '400GE_IB*8' },
-                    requirements: {
-                        gpu: '必须为最新固件版本',
-                    },
+                    requirements: { gpu: '必须为最新固件版本' },
                     changes: [
                         { component: 'gpu', action: 'add', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'insufficient', quantity: 2 } } },
                     ]
                 }
             ];
-             setUpgradePlanBatches([{ data: processUpgradePlans(rawPlans), createdAt: new Date() }]);
+
+            const rawPlans2: UpgradePlan[] = [
+                 {
+                    sn: '9800171603708815',
+                    currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*6', gpu: 'WQDX_A800*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*4' },
+                    targetConfig: { cpu: 'Intel_4314*2', memory: '256G', storage: 'SATA_4T*12', gpu: 'WQDX_H800*8', vpcNetwork: '25GE_2*1', computeNetwork: '200GE_IB*8' },
+                    changes: [
+                        { component: 'memory', action: 'add', detail: '128G' },
+                    ]
+                }
+            ];
+             const rawPlans3: UpgradePlan[] = [
+                 {
+                    sn: '9800171603708817',
+                    currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
+                    targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
+                    changes: [
+                        { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
+                    ]
+                }
+            ];
+
+             const batch1: UpgradePlanBatch = { data: processUpgradePlans(rawPlans1), createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), status: 'active' };
+             const batch2: UpgradePlanBatch = { data: processUpgradePlans(rawPlans2), createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000), status: 'expired' };
+             const batch3: UpgradePlanBatch = { data: processUpgradePlans(rawPlans3), createdAt: new Date(), status: 'active' };
+
+             setUpgradePlanBatches([batch1, batch2, batch3]);
         }
         
         setIsLoading(false);
@@ -451,6 +458,16 @@ function DeliveryPage() {
 
         if (!upgradePlanBatch) return <p>没有找到方案批次。</p>
         
+        if (upgradePlanBatch.status === 'expired') {
+            return (
+                <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-muted-foreground">
+                    <FileX className="h-16 w-16 mb-4" />
+                    <h3 className="text-xl font-semibold">方案已失效</h3>
+                    <p>此方案批次已过期或被取消。</p>
+                </div>
+            )
+        }
+
         const upgradePlanData = upgradePlanBatch.data;
         const locations = Array.from(upgradePlanData.keys());
 
@@ -851,7 +868,7 @@ function DeliveryPage() {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         {upgradePlanBatches.length > 0 ? (
-                        <Tabs defaultValue="batch-0" className="w-full">
+                        <Tabs defaultValue={`batch-${upgradePlanBatches.length-1}`} className="w-full">
                             <TabsList>
                                 {upgradePlanBatches.map((batch, batchIndex) => (
                                     <TabsTrigger key={`batch-${batchIndex}`} value={`batch-${batchIndex}`}>
@@ -869,7 +886,7 @@ function DeliveryPage() {
                         <AlertDialogFooter>
                             <Button variant="outline" onClick={() => setIsUpgradePlanDialogOpen(false)}>取消编辑</Button>
                             <Button variant="secondary" onClick={() => toast({ title: "草稿已保存", description: "您的修改已暂存。" })}>暂存</Button>
-                            <Button onClick={() => setIsConfirmingUpgrade(true)} disabled={upgradePlanBatches.length === 0}>提交</Button>
+                            <Button onClick={() => setIsConfirmingUpgrade(true)} disabled={upgradePlanBatches.filter(b => b.status !== 'expired').length === 0}>提交</Button>
                         </AlertDialogFooter>
                     </>
                 )}
@@ -906,3 +923,5 @@ export default DeliveryPage;
 
     
     
+
+      
