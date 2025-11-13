@@ -461,14 +461,22 @@ function DeliveryPage() {
 
     const renderUpgradePlanTable = (readOnly = false) => {
         const ReadOnlyCell = ({ value }: { value: string | number | undefined }) => <span className="px-3 py-2 text-sm">{value || 'N/A'}</span>;
+        
+        const locations = Array.from(upgradePlanData.keys());
+
+        if (locations.length === 0) {
+            return <p>没有可显示的改配方案。</p>
+        }
 
         return (
-             <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4">
+            <Tabs defaultValue={locations[0]} className="w-full">
+                <TabsList>
+                    {locations.map(location => (
+                        <TabsTrigger key={location} value={location}>机房: {location}</TabsTrigger>
+                    ))}
+                </TabsList>
                 {Array.from(upgradePlanData.entries()).map(([location, plans]) => (
-                    <div key={location}>
-                        <h3 className="text-lg font-semibold mb-2 sticky top-0 bg-background py-2">
-                            服务器当前所在机房: <Badge variant="secondary">{location}</Badge>
-                        </h3>
+                    <TabsContent key={location} value={location} className="max-h-[65vh] overflow-y-auto pr-4 mt-4">
                         <Accordion type="single" collapsible className="w-full">
                             {plans.map((plan, planIndex) => (
                                  <AccordionItem value={plan.sn} key={plan.sn}>
@@ -605,9 +613,9 @@ function DeliveryPage() {
                                 </AccordionItem>
                             ))}
                         </Accordion>
-                    </div>
+                     </TabsContent>
                 ))}
-            </div>
+            </Tabs>
         )
     };
 
@@ -861,6 +869,8 @@ function DeliveryPage() {
 
 export default DeliveryPage;
     
+    
+
     
 
     
