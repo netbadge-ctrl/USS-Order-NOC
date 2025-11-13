@@ -460,13 +460,19 @@ function DeliveryPage() {
 
         return (
             <Tabs defaultValue={locations[0]} className="w-full">
-                <TabsList>
+                <TabsList className="mb-4 bg-transparent p-0 justify-start h-auto gap-2">
                     {locations.map(location => (
-                        <TabsTrigger key={location} value={location}>机房: {location}</TabsTrigger>
+                        <TabsTrigger 
+                            key={location} 
+                            value={location} 
+                            className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-none rounded-md border"
+                        >
+                          机房: {location}
+                        </TabsTrigger>
                     ))}
                 </TabsList>
                 {Array.from(upgradePlanData.entries()).map(([location, plans]) => (
-                    <TabsContent key={location} value={location} className="max-h-[65vh] overflow-y-auto pr-4 mt-4">
+                    <TabsContent key={location} value={location} className="max-h-[65vh] overflow-y-auto pr-4 mt-0">
                         <div className="space-y-6">
                             {plans.map((plan, planIndex) => (
                                 <div key={plan.sn}>
@@ -894,4 +900,5 @@ export default DeliveryPage;
 
     
 
+    
     
