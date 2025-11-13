@@ -501,7 +501,7 @@ function DeliveryPage() {
 
         const mockPlansForNewBatch: UpgradePlan[] = [
              {
-                sn: `980017160370881${6 + upgradePlanBatches.length}`, // Ensure unique SNs for demo
+                sn: `980017160370881${8 + upgradePlanBatches.length}`, // Ensure unique SNs for demo
                 currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
                 targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
                 requirements: { memory: 'SPEED: 4800, 容量: 64G' },
@@ -627,7 +627,7 @@ function DeliveryPage() {
              const rawPlans3: UpgradePlan[] = [
                  {
                     sn: '9800171603708812',
-                    currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
+                    currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_64G_3200*16', storage: 'WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', gpu: 'WQDX_GM302*8', vpcNetwork: 'WQDX_25G_2*1 + WGDX', computeNetwork: 'WQDX_200G_1_IB_PCIE4_CX65...*2' },
                     targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
                     changes: [
                         { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
@@ -1001,6 +1001,8 @@ export default DeliveryPage;
     
 
       
+
+    
 
     
 
