@@ -275,6 +275,10 @@ interface UpgradePlanBatchViewProps {
 }
 
 function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChange }: UpgradePlanBatchViewProps) {
+    const upgradePlanData = batch.data;
+    const locations = Array.from(upgradePlanData.keys());
+    const [activeLocation, setActiveLocation] = useState(locations[0]);
+    
     if (batch.status === 'expired') {
         return (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-muted-foreground">
@@ -285,9 +289,6 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
         );
     }
 
-    const upgradePlanData = batch.data;
-    const locations = Array.from(upgradePlanData.keys());
-    const [activeLocation, setActiveLocation] = useState(locations[0]);
 
     if (locations.length === 0) {
         return <p>没有可显示的改配方案。</p>;
@@ -363,8 +364,7 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
                                         <TableBody>
                                         {plan.rows.map((row, rowIndex) => {
                                                 const hasRequirements = !!row.requirements;
-                                                const baseRowSpan = row.changes.length || 1;
-                                                const rowSpan = hasRequirements ? baseRowSpan + 1 : baseRowSpan;
+                                                const rowSpan = row.changes.length || 1;
 
                                                 const changeRows = row.changes.map((change, changeIndex) => {
                                                     const detailParts = change.detail.split('*') || [];
@@ -378,7 +378,15 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
                                                                 <>
                                                                     <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
                                                                     <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
-                                                                    <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
+                                                                    <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">
+                                                                        <div>{row.target || '无'}</div>
+                                                                        {hasRequirements && (
+                                                                            <div className="flex items-center gap-1.5 text-xs text-blue-600 mt-1.5">
+                                                                                <Info size={14} />
+                                                                                <span>{row.requirements}</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </TableCell>
                                                                 </>
                                                             )}
                                                             <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
@@ -443,27 +451,26 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
                                                     changeRows.push(
                                                         <React.Fragment key={`${row.component}-nochange`}>
                                                             <TableRow>
-                                                                <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
-                                                                <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
-                                                                <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.target || '无'}</TableCell>
+                                                                <TableCell className="font-medium capitalize">{row.component}</TableCell>
+                                                                <TableCell className="text-muted-foreground">{row.current || '无'}</TableCell>
+                                                                <TableCell className="text-muted-foreground">
+                                                                    <div>{row.target || '无'}</div>
+                                                                    {hasRequirements && (
+                                                                        <div className="flex items-center gap-1.5 text-xs text-blue-600 mt-1.5">
+                                                                            <Info size={14} />
+                                                                            <span>{row.requirements}</span>
+                                                                        </div>
+                                                                    )}
+                                                                </TableCell>
                                                                 <TableCell colSpan={7} className="text-center text-muted-foreground">无变更</TableCell>
                                                             </TableRow>
                                                         </React.Fragment>
                                                     );
                                                 }
 
-                                                const requirementsRow = hasRequirements ? (
-                                                    <TableRow key={`${row.component}-reqs`}>
-                                                        <TableCell colSpan={7} className="text-xs text-muted-foreground py-1 px-4 bg-gray-50">
-                                                            <span className="font-semibold text-gray-600">性能要求: </span>{row.requirements}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ) : null;
-                                                
                                                 return (
                                                     <React.Fragment key={row.component}>
                                                         {changeRows}
-                                                        {requirementsRow}
                                                     </React.Fragment>
                                                 );
                                             })}
@@ -994,5 +1001,7 @@ export default DeliveryPage;
     
 
       
+
+    
 
     
