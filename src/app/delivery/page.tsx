@@ -176,7 +176,10 @@ type FormattedUpgradePlan = {
 }
 
 type GroupedUpgradePlans = Map<string, FormattedUpgradePlan[]>;
-type UpgradePlanBatch = GroupedUpgradePlans;
+type UpgradePlanBatch = {
+    data: GroupedUpgradePlans;
+    createdAt: Date;
+}
 
 
 const componentSpecificOptions = {
@@ -289,7 +292,10 @@ function DeliveryPage() {
             }
         ];
         
-        const newBatch = processUpgradePlans(mockPlansForNewBatch);
+        const newBatch: UpgradePlanBatch = {
+            data: processUpgradePlans(mockPlansForNewBatch),
+            createdAt: new Date(),
+        };
 
         setUpgradePlanBatches(prevBatches => [...prevBatches, newBatch]);
         
@@ -297,7 +303,7 @@ function DeliveryPage() {
         setShowGenerationAlert(true);
     };
 
-    const processUpgradePlans = (rawPlans: UpgradePlan[]): UpgradePlanBatch => {
+    const processUpgradePlans = (rawPlans: UpgradePlan[]): GroupedUpgradePlans => {
         const grouped = new Map<string, FormattedUpgradePlan[]>();
 
         rawPlans.forEach(plan => {
@@ -378,7 +384,7 @@ function DeliveryPage() {
                     ]
                 }
             ];
-             setUpgradePlanBatches([processUpgradePlans(rawPlans)]);
+             setUpgradePlanBatches([{ data: processUpgradePlans(rawPlans), createdAt: new Date() }]);
         }
         
         setIsLoading(false);
@@ -388,8 +394,9 @@ function DeliveryPage() {
     const handlePlanChange = (batchIndex: number, location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => {
         setUpgradePlanBatches(prevBatches => {
             const newBatches = [...prevBatches];
-            const batchToUpdate = new Map(newBatches[batchIndex]);
-            const plans = batchToUpdate.get(location);
+            const batchToUpdate = { ...newBatches[batchIndex] };
+            const newBatchData = new Map(batchToUpdate.data);
+            const plans = newBatchData.get(location);
             if (!plans) return prevBatches;
     
             const newPlans = [...plans];
@@ -420,7 +427,8 @@ function DeliveryPage() {
             newRows[rowIndex] = rowToUpdate;
             planToUpdate.rows = newRows;
             newPlans[planIndex] = planToUpdate;
-            batchToUpdate.set(location, newPlans);
+            newBatchData.set(location, newPlans);
+            batchToUpdate.data = newBatchData;
             newBatches[batchIndex] = batchToUpdate;
     
             return newBatches;
@@ -439,10 +447,11 @@ function DeliveryPage() {
 
     const renderUpgradePlanTable = (batchIndex: number, readOnly = false) => {
         const ReadOnlyCell = ({ value }: { value: string | number | undefined }) => <span className="px-3 py-2 text-sm">{value || 'N/A'}</span>;
-        const upgradePlanData = upgradePlanBatches[batchIndex];
+        const upgradePlanBatch = upgradePlanBatches[batchIndex];
 
-        if (!upgradePlanData) return <p>没有找到方案批次。</p>
+        if (!upgradePlanBatch) return <p>没有找到方案批次。</p>
         
+        const upgradePlanData = upgradePlanBatch.data;
         const locations = Array.from(upgradePlanData.keys());
 
         if (locations.length === 0) {
@@ -801,8 +810,10 @@ function DeliveryPage() {
                         </AlertDialogHeader>
                         <Tabs defaultValue="batch-0" className="w-full">
                             <TabsList>
-                                {upgradePlanBatches.map((_, batchIndex) => (
-                                    <TabsTrigger key={`confirm-batch-${batchIndex}`} value={`batch-${batchIndex}`}>方案批次 #{batchIndex + 1}</TabsTrigger>
+                                {upgradePlanBatches.map((batch, batchIndex) => (
+                                    <TabsTrigger key={`confirm-batch-${batchIndex}`} value={`batch-${batchIndex}`}>
+                                        方案批次 #{batchIndex + 1} ({batch.createdAt.toLocaleString()})
+                                    </TabsTrigger>
                                 ))}
                             </TabsList>
                              {upgradePlanBatches.map((batch, batchIndex) => (
@@ -832,8 +843,10 @@ function DeliveryPage() {
                         {upgradePlanBatches.length > 0 ? (
                         <Tabs defaultValue="batch-0" className="w-full">
                             <TabsList>
-                                {upgradePlanBatches.map((_, batchIndex) => (
-                                    <TabsTrigger key={`batch-${batchIndex}`} value={`batch-${batchIndex}`}>方案批次 #{batchIndex + 1}</TabsTrigger>
+                                {upgradePlanBatches.map((batch, batchIndex) => (
+                                    <TabsTrigger key={`batch-${batchIndex}`} value={`batch-${batchIndex}`}>
+                                        方案批次 #{batchIndex + 1} ({batch.createdAt.toLocaleString()})
+                                    </TabsTrigger>
                                 ))}
                             </TabsList>
                              {upgradePlanBatches.map((batch, batchIndex) => (
