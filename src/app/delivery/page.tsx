@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -43,12 +42,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -182,6 +176,8 @@ type FormattedUpgradePlan = {
 }
 
 type GroupedUpgradePlans = Map<string, FormattedUpgradePlan[]>;
+type UpgradePlanBatch = GroupedUpgradePlans;
+
 
 const componentSpecificOptions = {
     cpu: {
@@ -271,115 +267,37 @@ function DeliveryPage() {
     const { toast } = useToast()
     const [isUpgradePlanDialogOpen, setIsUpgradePlanDialogOpen] = useState(false);
     const [isConfirmingUpgrade, setIsConfirmingUpgrade] = useState(false);
-    const [upgradePlanData, setUpgradePlanData] = useState<GroupedUpgradePlans>(new Map());
+    const [upgradePlanBatches, setUpgradePlanBatches] = useState<UpgradePlanBatch[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showGenerationAlert, setShowGenerationAlert] = useState(false);
     
     const handleInitiateWorkOrder = async () => {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setIsLoading(false);
-        setShowGenerationAlert(true);
-    };
+        // Simulate generating a new batch of plans
+        await new Promise(resolve => setTimeout(resolve, 500)); 
 
-    const handleViewUpgradePlan = async () => {
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const rawPlans: UpgradePlan[] = [
-            {
-                sn: '9800171603708813',
+        const mockPlansForNewBatch: UpgradePlan[] = [
+             {
+                sn: `980017160370881${3 + upgradePlanBatches.length}`, // Ensure unique SNs for demo
                 currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
                 targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                requirements: {
-                    memory: 'SPEED: 4800, 容量: 64G',
-                    storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2'
-                },
+                requirements: { memory: 'SPEED: 4800, 容量: 64G' },
                 changes: [
                     { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
                     { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                    { component: 'memory', action: 'remove', detail: '128G' },
-                    { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
-                    { component: 'storage', action: 'remove', detail: 'SATA_4T*12' },
-                    { component: 'storage', action: 'add', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 30 } } },
-                    { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
-                    { component: 'gpu', action: 'add', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 12 } } },
-                    { component: 'vpcNetwork', action: 'remove', detail: '10GE_2*1' },
-                    { component: 'vpcNetwork', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 30 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
-                    { component: 'computeNetwork', action: 'remove', detail: '100GE_IB*2' },
-                    { component: 'computeNetwork', action: 'add', detail: '200GE_IB*8', model: 'NIC-200GE-IB', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 40 } } },
-                ]
-            },
-            {
-                sn: '9800171603708817',
-                currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
-                targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                requirements: {
-                    memory: 'SPEED: 4800, 容量: 64G',
-                    storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2'
-                },
-                changes: [
-                    { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
-                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                    { component: 'memory', action: 'remove', detail: '128G' },
-                    { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
-                    { component: 'storage', action: 'remove', detail: 'SATA_4T*12' },
-                    { component: 'storage', action: 'add', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 30 } } },
-                    { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
-                    { component: 'gpu', action: 'add', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 12 } } },
-                    { component: 'vpcNetwork', action: 'remove', detail: '10GE_2*1' },
-                    { component: 'vpcNetwork', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 30 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
-                    { component: 'computeNetwork', action: 'remove', detail: '100GE_IB*2' },
-                    { component: 'computeNetwork', action: 'add', detail: '200GE_IB*8', model: 'NIC-200GE-IB', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 40 } } },
-                ]
-            },
-            {
-                sn: '9800171603708818',
-                currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
-                targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                requirements: {
-                    memory: 'SPEED: 4800, 容量: 64G',
-                    storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2'
-                },
-                changes: [
-                    { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
-                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                    { component: 'memory', action: 'remove', detail: '128G' },
-                    { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
-                    { component: 'storage', action: 'remove', detail: 'SATA_4T*12' },
-                    { component: 'storage', action: 'add', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 30 } } },
-                    { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
-                    { component: 'gpu', action: 'add', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 12 } } },
-                    { component: 'vpcNetwork', action: 'remove', detail: '10GE_2*1' },
-                    { component: 'vpcNetwork', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 30 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
-                    { component: 'computeNetwork', action: 'remove', detail: '100GE_IB*2' },
-                    { component: 'computeNetwork', action: 'add', detail: '200GE_IB*8', model: 'NIC-200GE-IB', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 40 } } },
-                ]
-            },
-            {
-                sn: '9800171603708814',
-                currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', storage: 'SATA_480G*2', vpcNetwork: '25GE_2*1', computeNetwork: '100GE_IB*2' },
-                targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', storage: 'NVME_7.68T*4', vpcNetwork: '200GE_RoCE*2', computeNetwork: '400GE_IB*8' },
-                requirements: {
-                    gpu: '必须为最新固件版本',
-                },
-                changes: [
-                    { component: 'cpu', action: 'remove', detail: 'WQDX_8358P*2' },
-                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 15 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                    { component: 'memory', action: 'remove', detail: 'WQDX_32G_3200*16' },
-                    { component: 'memory', action: 'add', detail: '128G_4800*16', model: 'MEM-128-4800', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 60 } } },
-                    { component: 'storage', action: 'remove', detail: 'SATA_480G*2' },
-                    { component: 'storage', action: 'add', detail: 'NVME_7.68T*4', model: 'NVME-7.68T-U2', stock: { currentLocation: { status: 'insufficient', quantity: 1 }, targetLocation: { status: 'sufficient', quantity: 25 } } },
-                    { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
-                    { component: 'gpu', action: 'add', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'insufficient', quantity: 2 } } },
-                    { component: 'vpcNetwork', action: 'remove', detail: '25GE_2*1' },
-                    { component: 'vpcNetwork', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 18 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
-                    { component: 'computeNetwork', action: 'remove', detail: '100GE_IB*2' },
-                    { component: 'computeNetwork', action: 'add', detail: '400GE_IB*8', model: 'NIC-400GE-IB', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 20 } } },
                 ]
             }
         ];
         
+        const newBatch = processUpgradePlans(mockPlansForNewBatch);
+
+        setUpgradePlanBatches(prevBatches => [...prevBatches, newBatch]);
+        
+        setIsLoading(false);
+        setShowGenerationAlert(true);
+    };
+
+    const processUpgradePlans = (rawPlans: UpgradePlan[]): UpgradePlanBatch => {
         const grouped = new Map<string, FormattedUpgradePlan[]>();
 
         rawPlans.forEach(plan => {
@@ -403,17 +321,76 @@ function DeliveryPage() {
 
             grouped.get(currentLocation)!.push({ sn: plan.sn, rows });
         });
+        return grouped;
+    }
 
-        setUpgradePlanData(grouped);
+
+    const handleViewUpgradePlan = async () => {
+        setIsLoading(true);
+        // On first view, generate a default batch if none exist
+        if (upgradePlanBatches.length === 0) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const rawPlans: UpgradePlan[] = [
+                {
+                    sn: '9800171603708813',
+                    currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
+                    targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
+                    requirements: {
+                        memory: 'SPEED: 4800, 容量: 64G',
+                        storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2'
+                    },
+                    changes: [
+                        { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
+                        { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
+                        { component: 'memory', action: 'remove', detail: '128G' },
+                        { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
+                        { component: 'storage', action: 'remove', detail: 'SATA_4T*12' },
+                        { component: 'storage', action: 'add', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 30 } } },
+                        { component: 'gpu', action: 'remove', detail: 'WQDX_GM302*4' },
+                        { component: 'gpu', action: 'add', detail: 'WQDX_A800*8', model: 'GPU-A800-80G', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 12 } } },
+                        { component: 'vpcNetwork', action: 'remove', detail: '10GE_2*1' },
+                        { component: 'vpcNetwork', action: 'add', detail: '200GE_RoCE*2', model: 'NIC-200GE-CX6', stock: { currentLocation: { status: 'sufficient', quantity: 30 }, targetLocation: { status: 'sufficient', quantity: 80 } } },
+                        { component: 'computeNetwork', action: 'remove', detail: '100GE_IB*2' },
+                        { component: 'computeNetwork', action: 'add', detail: '200GE_IB*8', model: 'NIC-200GE-IB', stock: { currentLocation: { status: 'sufficient', quantity: 10 }, targetLocation: { status: 'sufficient', quantity: 40 } } },
+                    ]
+                },
+                {
+                    sn: '9800171603708817',
+                    currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
+                    targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
+                    requirements: {
+                        memory: 'SPEED: 4800, 容量: 64G',
+                        storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2'
+                    },
+                    changes: [
+                        { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
+                    ]
+                },
+                {
+                    sn: '9800171603708814',
+                    currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', storage: 'SATA_480G*2', vpcNetwork: '25GE_2*1', computeNetwork: '100GE_IB*2' },
+                    targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', storage: 'NVME_7.68T*4', vpcNetwork: '200GE_RoCE*2', computeNetwork: '400GE_IB*8' },
+                    requirements: {
+                        gpu: '必须为最新固件版本',
+                    },
+                    changes: [
+                        { component: 'gpu', action: 'add', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'insufficient', quantity: 2 } } },
+                    ]
+                }
+            ];
+             setUpgradePlanBatches([processUpgradePlans(rawPlans)]);
+        }
+        
         setIsLoading(false);
         setIsUpgradePlanDialogOpen(true);
     }
     
-    const handlePlanChange = (location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => {
-        setUpgradePlanData(prevData => {
-            const newData = new Map(prevData);
-            const plans = newData.get(location);
-            if (!plans) return prevData;
+    const handlePlanChange = (batchIndex: number, location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => {
+        setUpgradePlanBatches(prevBatches => {
+            const newBatches = [...prevBatches];
+            const batchToUpdate = new Map(newBatches[batchIndex]);
+            const plans = batchToUpdate.get(location);
+            if (!plans) return prevBatches;
     
             const newPlans = [...plans];
             const planToUpdate = { ...newPlans[planIndex] };
@@ -443,9 +420,10 @@ function DeliveryPage() {
             newRows[rowIndex] = rowToUpdate;
             planToUpdate.rows = newRows;
             newPlans[planIndex] = planToUpdate;
-            newData.set(location, newPlans);
+            batchToUpdate.set(location, newPlans);
+            newBatches[batchIndex] = batchToUpdate;
     
-            return newData;
+            return newBatches;
         });
     };
 
@@ -459,8 +437,11 @@ function DeliveryPage() {
         })
     }
 
-    const renderUpgradePlanTable = (readOnly = false) => {
+    const renderUpgradePlanTable = (batchIndex: number, readOnly = false) => {
         const ReadOnlyCell = ({ value }: { value: string | number | undefined }) => <span className="px-3 py-2 text-sm">{value || 'N/A'}</span>;
+        const upgradePlanData = upgradePlanBatches[batchIndex];
+
+        if (!upgradePlanData) return <p>没有找到方案批次。</p>
         
         const locations = Array.from(upgradePlanData.keys());
 
@@ -490,8 +471,8 @@ function DeliveryPage() {
                                                     <TableHead className="w-[15%]">目标配置</TableHead>
                                                     <TableHead className="w-[8%] text-center">操作</TableHead>
                                                     <TableHead>规格</TableHead>
+                                                    <TableHead className="w-[10%]">数量</TableHead>
                                                     <TableHead className="w-[10%]">Model</TableHead>
-                                                    <TableHead className="w-[8%]">数量</TableHead>
                                                     <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
                                                     <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
                                                 </TableRow>
@@ -528,19 +509,8 @@ function DeliveryPage() {
                                                                      <SearchableSelect
                                                                         options={getOptionsForComponent(row.component, 'spec')}
                                                                         value={detailSpec}
-                                                                        onValueChange={(value) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'detail', value)}
+                                                                        onValueChange={(value) => handlePlanChange(batchIndex, location, planIndex, rowIndex, changeIndex, 'detail', value)}
                                                                         placeholder="搜索或选择规格"
-                                                                        disabled={isRemovable}
-                                                                     />
-                                                                    }
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                     {readOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
-                                                                     <SearchableSelect
-                                                                        options={getOptionsForComponent(row.component, 'model')}
-                                                                        value={change.model || ''}
-                                                                        onValueChange={(value) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'model', value)}
-                                                                        placeholder="搜索或选择Model"
                                                                         disabled={isRemovable}
                                                                      />
                                                                     }
@@ -550,10 +520,21 @@ function DeliveryPage() {
                                                                     <Input 
                                                                         type="number"
                                                                         value={detailQty} 
-                                                                        onChange={(e) => handlePlanChange(location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
+                                                                        onChange={(e) => handlePlanChange(batchIndex, location, planIndex, rowIndex, changeIndex, 'quantity', e.target.value)}
                                                                         className="h-9 w-16"
                                                                         disabled={isRemovable}
                                                                     /> }
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                     {readOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
+                                                                     <SearchableSelect
+                                                                        options={getOptionsForComponent(row.component, 'model')}
+                                                                        value={change.model || ''}
+                                                                        onValueChange={(value) => handlePlanChange(batchIndex, location, planIndex, rowIndex, changeIndex, 'model', value)}
+                                                                        placeholder="搜索或选择Model"
+                                                                        disabled={isRemovable}
+                                                                     />
+                                                                    }
                                                                 </TableCell>
                                                                 <TableCell className="text-right">
                                                                     {change.stock?.currentLocation ? (
@@ -818,7 +799,19 @@ function DeliveryPage() {
                                 请仔细核对以下最终改配方案。确认后将生成NOC工单。
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        {renderUpgradePlanTable(true)}
+                        <Tabs defaultValue="batch-0" className="w-full">
+                            <TabsList>
+                                {upgradePlanBatches.map((_, batchIndex) => (
+                                    <TabsTrigger key={`confirm-batch-${batchIndex}`} value={`batch-${batchIndex}`}>方案批次 #{batchIndex + 1}</TabsTrigger>
+                                ))}
+                            </TabsList>
+                             {upgradePlanBatches.map((batch, batchIndex) => (
+                                <TabsContent key={`confirm-batch-content-${batchIndex}`} value={`batch-${batchIndex}`}>
+                                    {renderUpgradePlanTable(batchIndex, true)}
+                                </TabsContent>
+                            ))}
+                        </Tabs>
+
                         <AlertDialogFooter>
                             <Button variant="outline" onClick={() => setIsConfirmingUpgrade(false)}>返回修改</Button>
                             <Button onClick={() => {
@@ -836,11 +829,24 @@ function DeliveryPage() {
                                 以下为检测到的需要进行硬件改配的服务器方案详情。您可以直接修改规格、Model和数量。
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        {renderUpgradePlanTable()}
+                        {upgradePlanBatches.length > 0 ? (
+                        <Tabs defaultValue="batch-0" className="w-full">
+                            <TabsList>
+                                {upgradePlanBatches.map((_, batchIndex) => (
+                                    <TabsTrigger key={`batch-${batchIndex}`} value={`batch-${batchIndex}`}>方案批次 #{batchIndex + 1}</TabsTrigger>
+                                ))}
+                            </TabsList>
+                             {upgradePlanBatches.map((batch, batchIndex) => (
+                                <TabsContent key={`batch-content-${batchIndex}`} value={`batch-${batchIndex}`}>
+                                    {renderUpgradePlanTable(batchIndex)}
+                                </TabsContent>
+                            ))}
+                        </Tabs>
+                        ) : <p className="text-sm text-muted-foreground py-8 text-center">暂无改配方案。请先点击“生成改配方案”。</p>}
                         <AlertDialogFooter>
                             <Button variant="outline" onClick={() => setIsUpgradePlanDialogOpen(false)}>取消编辑</Button>
                             <Button variant="secondary" onClick={() => toast({ title: "草稿已保存", description: "您的修改已暂存。" })}>暂存</Button>
-                            <Button onClick={() => setIsConfirmingUpgrade(true)}>提交</Button>
+                            <Button onClick={() => setIsConfirmingUpgrade(true)} disabled={upgradePlanBatches.length === 0}>提交</Button>
                         </AlertDialogFooter>
                     </>
                 )}
@@ -851,7 +857,7 @@ function DeliveryPage() {
                 <AlertDialogHeader>
                 <AlertDialogTitle>方案已提交</AlertDialogTitle>
                 <AlertDialogDescription>
-                    已将当前已定型服务器提交系统生成改配方案。稍后可点击“查看改配方案”查看或修改改配方案。
+                    已将当前已定型服务器生提交系统成改配方案。稍后可点击“查看改配方案”查看或修改改配方案。
                 </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -865,6 +871,8 @@ function DeliveryPage() {
 
 export default DeliveryPage;
     
+    
+
     
 
     
