@@ -168,10 +168,12 @@ type FormattedUpgradePlan = {
 }
 
 type GroupedUpgradePlans = Map<string, FormattedUpgradePlan[]>;
+type UpgradePlanBatchStatus = 'generating' | 'pending_confirmation' | 'executed' | 'expired';
+
 type UpgradePlanBatch = {
     data: GroupedUpgradePlans;
     createdAt: Date;
-    status?: 'active' | 'expired';
+    status: UpgradePlanBatchStatus;
 }
 
 type GenerationPreview = {
@@ -261,6 +263,14 @@ const componentSpecificOptions = {
 const getOptionsForComponent = (component: keyof ServerHardwareConfig, type: 'spec' | 'model') => {
     return componentSpecificOptions[component]?.[type] || [];
 };
+
+const statusConfig: Record<UpgradePlanBatchStatus, { label: string; className: string }> = {
+    generating: { label: '生成中', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+    pending_confirmation: { label: '待确认', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+    executed: { label: '已执行', className: 'bg-green-100 text-green-800 border-green-200' },
+    expired: { label: '已失效', className: 'bg-gray-100 text-gray-800 border-gray-200' },
+};
+
 
 interface UpgradePlanBatchViewProps {
     batch: UpgradePlanBatch;
@@ -487,6 +497,7 @@ function DeliveryPage() {
     const [isConfirmingUpgrade, setIsConfirmingUpgrade] = useState(false);
     const [upgradePlanBatches, setUpgradePlanBatches] = useState<UpgradePlanBatch[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [activeBatchTab, setActiveBatchTab] = useState<string>('');
     
     const [isConfirmingGeneration, setIsConfirmingGeneration] = useState(false);
     const [generationPreview, setGenerationPreview] = useState<GenerationPreview>({ newSns: [], existingSns: [] });
@@ -549,7 +560,7 @@ function DeliveryPage() {
             };
         });
 
-        const newBatch: UpgradePlanBatch = { data: processUpgradePlans(newPlans), createdAt: new Date(), status: 'active' };
+        const newBatch: UpgradePlanBatch = { data: processUpgradePlans(newPlans), createdAt: new Date(), status: 'pending_confirmation' };
         
         setUpgradePlanBatches(prev => [...prev, newBatch]);
 
@@ -595,62 +606,66 @@ function DeliveryPage() {
         if (upgradePlanBatches.length === 0) {
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            // Batch 1 (Expired)
-            const rawPlans1: UpgradePlan[] = [
-                {
-                    sn: '9800171603708815',
-                    currentConfig: { cpu: 'Intel_4314*2' },
-                    targetConfig: { cpu: 'Intel_8468*2' },
+            const batch1: UpgradePlanBatch = {
+                data: processUpgradePlans([{
+                    sn: '9800171603708815', currentConfig: { cpu: 'Intel_4314*2' }, targetConfig: { cpu: 'Intel_8468*2' },
                     changes: [{ component: 'cpu', action: 'replace', detail: 'Replace Intel_4314*2 with Intel_8468*2' }]
-                }
-            ];
-            const batch1: UpgradePlanBatch = { data: processUpgradePlans(rawPlans1), createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), status: 'expired' };
+                }]),
+                createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+                status: 'expired'
+            };
 
-            // Batch 2 (Active, multiple servers)
-            const rawPlans2: UpgradePlan[] = [
-                {
-                    sn: '9800171603708813',
-                    currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
-                    targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                    requirements: {
-                        memory: 'SPEED: 4800, 容量: 64G',
-                        storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2'
+            const batch2: UpgradePlanBatch = {
+                data: processUpgradePlans([
+                    {
+                        sn: '9800171603708813',
+                        currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
+                        targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
+                        requirements: { memory: 'SPEED: 4800, 容量: 64G', storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2' },
+                        changes: [
+                            { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
+                            { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
+                            { component: 'memory', action: 'remove', detail: '128G' },
+                            { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
+                        ]
                     },
-                    changes: [
-                        { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
-                        { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                        { component: 'memory', action: 'remove', detail: '128G' },
-                        { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
-                    ]
-                },
-                 {
-                    sn: '9800171603708817', // Same rack as 8813 for grouping
-                    currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
-                    targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                    requirements: { memory: 'SPEED: 4800, 容量: 64G' },
-                    changes: [
-                        { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
-                        { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                    ]
-                }
-            ];
-            const batch2: UpgradePlanBatch = { data: processUpgradePlans(rawPlans2), createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), status: 'active' };
+                    {
+                        sn: '9800171603708817',
+                        currentConfig: { cpu: 'Intel_4314*2', memory: '128G' },
+                        targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16' },
+                        requirements: { memory: 'SPEED: 4800, 容量: 64G' },
+                        changes: [
+                            { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
+                            { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
+                        ]
+                    }
+                ]),
+                createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                status: 'pending_confirmation'
+            };
             
-            // Batch 3 (Active, single server)
-             const rawPlans3: UpgradePlan[] = [
-                {
+            const batch3: UpgradePlanBatch = {
+                data: processUpgradePlans([{
                     sn: '9800171603708814',
                     currentConfig: { storage: 'SATA_480G*2' },
                     targetConfig: { storage: 'SATA_480G*2 + NVME_3.84T*2' },
-                    changes: [
-                         { component: 'storage', action: 'add', detail: 'NVME_3.84T*2', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 10 } } },
-                    ]
-                }
-            ];
-            const batch3: UpgradePlanBatch = { data: processUpgradePlans(rawPlans3), createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000), status: 'active' };
+                    changes: [{ component: 'storage', action: 'add', detail: 'NVME_3.84T*2', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 10 } } }]
+                }]),
+                createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
+                status: 'executed'
+            };
 
-
-            setUpgradePlanBatches([batch1, batch2, batch3]);
+            const newBatches = [batch1, batch2, batch3];
+            setUpgradePlanBatches(newBatches);
+            const latestActiveBatchIndex = newBatches.length - 1;
+            if (latestActiveBatchIndex >= 0) {
+                 setActiveBatchTab(`batch-${latestActiveBatchIndex}`);
+            }
+        } else {
+             const latestActiveBatchIndex = upgradePlanBatches.length - 1;
+             if (latestActiveBatchIndex >= 0) {
+                 setActiveBatchTab(`batch-${latestActiveBatchIndex}`);
+            }
         }
         
         setIsLoading(false);
@@ -710,6 +725,9 @@ function DeliveryPage() {
             variant: "default",
         })
     }
+
+    const activeBatchIndex = activeBatchTab ? parseInt(activeBatchTab.split('-')[1]) : -1;
+    const activeBatch = activeBatchIndex !== -1 ? upgradePlanBatches[activeBatchIndex] : null;
 
   return (
     <div className="w-full flex flex-col flex-1">
@@ -913,11 +931,14 @@ function DeliveryPage() {
                                 请仔细核对以下最终改配方案。确认后将生成NOC工单。
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <Tabs defaultValue="batch-0" className="w-full">
-                            <TabsList>
+                        <Tabs defaultValue={activeBatchTab} onValueChange={setActiveBatchTab} className="w-full">
+                           <TabsList>
                                 {upgradePlanBatches.map((batch, batchIndex) => (
-                                    <TabsTrigger key={`confirm-batch-${batchIndex}`} value={`batch-${batchIndex}`}>
-                                        方案批次 #{batchIndex + 1} ({batch.createdAt.toLocaleString()})
+                                    <TabsTrigger key={`confirm-batch-${batchIndex}`} value={`batch-${batchIndex}`} className="gap-2">
+                                        <span>方案批次 #{batchIndex + 1}</span>
+                                        <Badge className={cn("font-normal", statusConfig[batch.status].className)}>
+                                            {statusConfig[batch.status].label}
+                                        </Badge>
                                     </TabsTrigger>
                                 ))}
                             </TabsList>
@@ -951,11 +972,14 @@ function DeliveryPage() {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         {upgradePlanBatches.length > 0 ? (
-                        <Tabs defaultValue={`batch-${upgradePlanBatches.length-1}`} className="w-full">
+                        <Tabs defaultValue={activeBatchTab} onValueChange={setActiveBatchTab} className="w-full">
                             <TabsList>
                                 {upgradePlanBatches.map((batch, batchIndex) => (
-                                    <TabsTrigger key={`batch-${batchIndex}`} value={`batch-${batchIndex}`}>
-                                        方案批次 #{batchIndex + 1} ({batch.createdAt.toLocaleString()})
+                                    <TabsTrigger key={`batch-${batchIndex}`} value={`batch-${batchIndex}`} className="gap-2">
+                                        <span>方案批次 #{batchIndex + 1}</span>
+                                        <Badge className={cn("font-normal", statusConfig[batch.status].className)}>
+                                            {statusConfig[batch.status].label}
+                                        </Badge>
                                     </TabsTrigger>
                                 ))}
                             </TabsList>
@@ -965,16 +989,20 @@ function DeliveryPage() {
                                         batch={batch}
                                         batchIndex={batchIndex}
                                         onPlanChange={handlePlanChange}
+                                        readOnly={batch.status === 'executed' || batch.status === 'expired'}
                                     />
                                 </TabsContent>
                             ))}
                         </Tabs>
                         ) : <p className="text-sm text-muted-foreground py-8 text-center">暂无改配方案。请先点击“生成改配方案”。</p>}
-                        <AlertDialogFooter>
-                            <Button variant="outline" onClick={() => setIsUpgradePlanDialogOpen(false)}>取消编辑</Button>
-                            <Button variant="secondary" onClick={() => toast({ title: "草稿已保存", description: "您的修改已暂存。" })}>暂存</Button>
-                            <Button onClick={() => setIsConfirmingUpgrade(true)} disabled={upgradePlanBatches.filter(b => b.status !== 'expired').length === 0}>提交</Button>
-                        </AlertDialogFooter>
+                        
+                        {activeBatch && activeBatch.status !== 'expired' && (
+                            <AlertDialogFooter>
+                                <Button variant="outline" onClick={() => setIsUpgradePlanDialogOpen(false)}>取消编辑</Button>
+                                <Button variant="secondary" onClick={() => toast({ title: "草稿已保存", description: "您的修改已暂存。" })}>暂存</Button>
+                                <Button onClick={() => setIsConfirmingUpgrade(true)} disabled={upgradePlanBatches.filter(b => b.status !== 'expired').length === 0}>提交</Button>
+                            </AlertDialogFooter>
+                        )}
                     </>
                 )}
             </AlertDialogContent>
@@ -1091,4 +1119,5 @@ export default DeliveryPage;
 
 
     
+
 
