@@ -495,6 +495,7 @@ function DeliveryPage() {
     const handleInitiateWorkOrder = async () => {
         const existingSnsInPlans = new Map<string, number>();
         upgradePlanBatches.forEach((batch, batchIndex) => {
+            if (batch.status === 'expired') return;
             for (const plans of batch.data.values()) {
                 plans.forEach(plan => {
                     existingSnsInPlans.set(plan.sn, batchIndex + 1);
@@ -591,7 +592,7 @@ function DeliveryPage() {
 
     const handleViewUpgradePlan = async () => {
         setIsLoading(true);
-        // On first view, generate a default batch if none exist
+        // On first view, generate a default batch if none exist to simulate existing plans
         if (upgradePlanBatches.length === 0) {
             await new Promise(resolve => setTimeout(resolve, 500));
             const rawPlans1: UpgradePlan[] = [
@@ -611,7 +612,7 @@ function DeliveryPage() {
                     ]
                 },
                  {
-                    sn: '9800171603708817', // Same as 8813
+                    sn: '9800171603708817', // Same rack as 8813 for grouping
                     currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
                     targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
                     requirements: {
@@ -968,7 +969,7 @@ function DeliveryPage() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto p-1">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             <FileCheck2 className="h-5 w-5 text-green-600" />
@@ -976,7 +977,7 @@ function DeliveryPage() {
                         </div>
                         <ScrollArea className="h-60 w-full rounded-md border p-2 bg-green-50/50">
                             {generationPreview.newSns.length > 0 ? (
-                                <div className="p-2 text-sm font-mono">
+                                <div className="p-2 text-sm font-mono space-y-1">
                                     {generationPreview.newSns.map(sn => <div key={sn}>{sn}</div>)}
                                 </div>
                             ) : (
@@ -1004,6 +1005,14 @@ function DeliveryPage() {
                                 <div className="p-2 text-sm text-muted-foreground text-center h-full flex items-center justify-center">没有已存在于其它方案的服务器。</div>
                             )}
                         </ScrollArea>
+                        {generationPreview.existingSns.length > 0 && (
+                            <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900">
+                                <Info className="h-4 w-4 !text-amber-600" />
+                                <AlertDescription>
+                                    如需对这些SN重新生成改配方案，请先在“查看改配方案”中找到并取消原有方案。
+                                </AlertDescription>
+                            </Alert>
+                        )}
                     </div>
                 </div>
 
