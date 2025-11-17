@@ -154,17 +154,6 @@ const deliveryData = [
     }
 ];
 
-type GroupedChangeSummary = {
-  key: string;
-  sns: string[];
-  fromLocation: string;
-  toLocation: string;
-  currentConfig: string[];
-  targetConfig: string[];
-  type: 'relocation' | 'hardware' | 'both';
-}[];
-
-
 type FormattedUpgradePlan = {
   sn: string;
   rows: {
@@ -182,7 +171,6 @@ type UpgradePlanBatch = {
     createdAt: Date;
     status?: 'active' | 'expired';
 }
-
 
 const componentSpecificOptions = {
     cpu: {
@@ -288,7 +276,6 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
             </div>
         );
     }
-
 
     if (locations.length === 0) {
         return <p>没有可显示的改配方案。</p>;
@@ -492,36 +479,62 @@ function DeliveryPage() {
     const [isConfirmingUpgrade, setIsConfirmingUpgrade] = useState(false);
     const [upgradePlanBatches, setUpgradePlanBatches] = useState<UpgradePlanBatch[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [showGenerationAlert, setShowGenerationAlert] = useState(false);
+    const [isGenerationResultDialogOpen, setIsGenerationResultDialogOpen] = useState(false);
+    const [generationResult, setGenerationResult] = useState<{ newSns: string[], existingSns: { sn: string, batchIndex: number }[] } | null>(null);
     
     const handleInitiateWorkOrder = async () => {
         setIsLoading(true);
-        // Simulate generating a new batch of plans
         await new Promise(resolve => setTimeout(resolve, 500)); 
 
-        const mockPlansForNewBatch: UpgradePlan[] = [
-             {
-                sn: `980017160370881${8 + upgradePlanBatches.length}`, // Ensure unique SNs for demo
-                currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
-                targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                requirements: { memory: 'SPEED: 4800, 容量: 64G' },
-                changes: [
-                    { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
-                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                ]
-            }
-        ];
-        
-        const newBatch: UpgradePlanBatch = {
-            data: processUpgradePlans(mockPlansForNewBatch),
-            createdAt: new Date(),
-            status: 'active',
-        };
+        const allSnsInBatches = new Set(
+            upgradePlanBatches.flatMap(batch => 
+                Array.from(batch.data.values()).flatMap(plans => plans.map(p => p.sn))
+            )
+        );
 
-        setUpgradePlanBatches(prevBatches => [...prevBatches, newBatch]);
+        // For this demo, we'll check against the static `deliveryData` as "all available servers"
+        // In a real app, this would come from a server selection component.
+        const finalizedSns = deliveryData.map(d => d.sn); 
         
+        const newSnsForPlan = finalizedSns.filter(sn => !allSnsInBatches.has(sn));
+        const existingSnsInOtherPlans = finalizedSns
+          .filter(sn => allSnsInBatches.has(sn))
+          .map(sn => {
+                const batchIndex = upgradePlanBatches.findIndex(batch => 
+                    Array.from(batch.data.values()).some(plans => plans.some(p => p.sn === sn))
+                );
+                return { sn, batchIndex };
+          });
+
+
+        if (newSnsForPlan.length > 0) {
+            const mockPlansForNewBatch: UpgradePlan[] = newSnsForPlan.map((sn, index) => {
+                const server = deliveryData.find(d => d.sn === sn);
+                // Create some mock upgrade data
+                return {
+                    sn: sn,
+                    currentConfig: { cpu: server?.cpu[0], memory: server?.memory[0], storage: server?.storage[0], gpu: server?.gpu[0], vpcNetwork: server?.vpcNetwork[0], computeNetwork: server?.computeNetwork[0] },
+                    targetConfig: { cpu: server?.cpu[1], memory: server?.memory[1], storage: server?.storage[1], gpu: server?.gpu[1], vpcNetwork: server?.vpcNetwork[1], computeNetwork: server?.computeNetwork[1] },
+                    requirements: { memory: 'SPEED: 4800' },
+                    changes: [
+                        { component: 'cpu', action: 'remove', detail: server?.cpu[0] || '' },
+                        { component: 'cpu', action: 'add', detail: server?.cpu[1] || '', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
+                    ]
+                };
+            });
+            
+            const newBatch: UpgradePlanBatch = {
+                data: processUpgradePlans(mockPlansForNewBatch),
+                createdAt: new Date(),
+                status: 'active',
+            };
+
+            setUpgradePlanBatches(prevBatches => [...prevBatches, newBatch]);
+        }
+
+        setGenerationResult({ newSns: newSnsForPlan, existingSns: existingSnsInOtherPlans });
+        setIsGenerationResultDialogOpen(true);
         setIsLoading(false);
-        setShowGenerationAlert(true);
     };
 
     const processUpgradePlans = (rawPlans: UpgradePlan[]): GroupedUpgradePlans => {
@@ -968,16 +981,46 @@ function DeliveryPage() {
                 )}
             </AlertDialogContent>
         </AlertDialog>
-        <AlertDialog open={showGenerationAlert} onOpenChange={setShowGenerationAlert}>
+        <AlertDialog open={isGenerationResultDialogOpen} onOpenChange={setIsGenerationResultDialogOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                <AlertDialogTitle>方案已提交</AlertDialogTitle>
-                <AlertDialogDescription>
-                    已将当前已定型服务器生提交系统成改配方案。稍后可点击“查看改配方案”查看或修改改配方案。
-                </AlertDialogDescription>
+                    <AlertDialogTitle>改配方案生成结果</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        系统已处理您的请求。
+                    </AlertDialogDescription>
                 </AlertDialogHeader>
+                <div className="text-sm space-y-4">
+                    {generationResult && generationResult.newSns.length > 0 && (
+                        <div>
+                            <h4 className="font-semibold text-green-600 mb-2">成功生成新方案的SN清单:</h4>
+                            <div className="max-h-24 overflow-y-auto rounded-md bg-muted p-2">
+                                <ul className="list-disc list-inside">
+                                    {generationResult.newSns.map(sn => <li key={sn} className="font-mono">{sn}</li>)}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+                     {generationResult && generationResult.existingSns.length > 0 && (
+                        <div>
+                            <h4 className="font-semibold text-amber-600 mb-2">已存在于其他方案的SN:</h4>
+                             <div className="max-h-24 overflow-y-auto rounded-md bg-muted p-2">
+                                <ul className="list-disc list-inside">
+                                    {generationResult.existingSns.map(({sn, batchIndex}) => (
+                                        <li key={sn} className="font-mono">{sn} (在方案批次 #{batchIndex + 1} 中)</li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                如需为这些SN重新生成方案，请先在“查看改配方案”中找到对应批次并取消或删除该方案。
+                            </p>
+                        </div>
+                    )}
+                     {generationResult && generationResult.newSns.length === 0 && generationResult.existingSns.length === 0 && (
+                        <p>没有找到可用于生成新方案的已定型服务器。</p>
+                     )}
+                </div>
                 <AlertDialogFooter>
-                <AlertDialogAction onClick={() => setShowGenerationAlert(false)}>确定</AlertDialogAction>
+                    <AlertDialogAction onClick={() => setIsGenerationResultDialogOpen(false)}>确定</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
@@ -1001,6 +1044,8 @@ export default DeliveryPage;
     
 
       
+
+    
 
     
 
