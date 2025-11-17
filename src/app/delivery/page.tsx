@@ -970,7 +970,7 @@ function DeliveryPage() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto p-1">
+                <div className="grid grid-cols-1 gap-6 max-h-[60vh] overflow-y-auto p-1">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             <FileCheck2 className="h-5 w-5 text-green-600" />
@@ -1067,3 +1067,4 @@ export default DeliveryPage;
     
 
     
+
