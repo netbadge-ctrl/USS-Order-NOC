@@ -268,7 +268,7 @@ const statusConfig: Record<UpgradePlanBatchStatus, { label: string; className: s
     generating: { label: '生成中', className: 'bg-blue-100 text-blue-800 border-blue-200' },
     pending_confirmation: { label: '待确认', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
     executed: { label: '已生效', className: 'bg-green-100 text-green-800 border-green-200' },
-    expired: { label: '已失效', className: 'bg-gray-100 text-gray-800 border-gray-200' },
+    expired: { label: '已作废', className: 'bg-gray-100 text-gray-800 border-gray-200' },
 };
 
 
@@ -295,7 +295,7 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange }: UpgradePlanBa
         return (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-muted-foreground">
                 <FileX className="h-16 w-16 mb-4" />
-                <h3 className="text-xl font-semibold">方案已失效</h3>
+                <h3 className="text-xl font-semibold">方案已作废</h3>
                 <p>此方案批次已过期或被取消。</p>
             </div>
         );
@@ -741,7 +741,7 @@ function DeliveryPage() {
         });
         toast({
             title: "方案已作废",
-            description: `方案批次 #${batchIndex + 1} 已被设置为失效。`,
+            description: `方案批次 #${batchIndex + 1} 已被设置为已作废。`,
         });
     };
 
