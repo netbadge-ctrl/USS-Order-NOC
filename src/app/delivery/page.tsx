@@ -516,7 +516,19 @@ function DeliveryPage() {
     };
 
     const handleConfirmGeneration = () => {
-        if (!generationPreview || generationPreview.newSns.length === 0) {
+        if (!generationPreview) return;
+
+        let newSnsForPlan: string[] = [];
+
+        if (upgradePlanBatches.length === 0) {
+            // If no batches exist, all servers are new
+            newSnsForPlan = deliveryData.map(d => d.sn);
+        } else {
+            // Otherwise, only use the newSns from the preview
+            newSnsForPlan = generationPreview.newSns;
+        }
+
+        if (newSnsForPlan.length === 0) {
             toast({
                 title: "没有可生成的方案",
                 description: "所有已定型服务器均已存在于现有方案中。",
@@ -526,12 +538,11 @@ function DeliveryPage() {
             return;
         }
 
-        const newSnsForPlan = generationPreview.newSns;
-
         const mockPlansForNewBatch: UpgradePlan[] = newSnsForPlan.map((sn) => {
             const server = deliveryData.find(d => d.sn === sn);
+            const newSn = `980017160370881${6 + (upgradePlanBatches.length || 0)}`;
             return {
-                sn: sn,
+                sn: server?.sn || newSn,
                 currentConfig: { cpu: server?.cpu[0], memory: server?.memory[0], storage: server?.storage[0], gpu: server?.gpu[0], vpcNetwork: server?.vpcNetwork[0], computeNetwork: server?.computeNetwork[0] },
                 targetConfig: { cpu: server?.cpu[1], memory: server?.memory[1], storage: server?.storage[1], gpu: server?.gpu[1], vpcNetwork: server?.vpcNetwork[1], computeNetwork: server?.computeNetwork[1] },
                 requirements: { memory: 'SPEED: 4800' },
@@ -1041,7 +1052,7 @@ function DeliveryPage() {
                             </p>
                         </div>
                     )}
-                     {(!generationPreview || generationPreview.newSns.length === 0) && (
+                     {(!generationPreview || (generationPreview.newSns.length === 0 && generationPreview.existingSns.length > 0)) && (
                         <div className="md:col-span-2">
                             <p>所有已定型服务器均已存在于现有方案中，无法生成新方案。</p>
                         </div>
@@ -1068,11 +1079,11 @@ export default DeliveryPage;
     
 
     
-
-    
     
 
       
+
+    
 
     
 
