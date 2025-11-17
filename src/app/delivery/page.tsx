@@ -172,6 +172,12 @@ type UpgradePlanBatch = {
     status?: 'active' | 'expired';
 }
 
+type GenerationPreview = { 
+    newSns: string[]; 
+    existingSns: { sn: string; batchIndex: number }[];
+    total: number;
+} | null;
+
 const componentSpecificOptions = {
     cpu: {
         spec: [
@@ -479,8 +485,8 @@ function DeliveryPage() {
     const [isConfirmingUpgrade, setIsConfirmingUpgrade] = useState(false);
     const [upgradePlanBatches, setUpgradePlanBatches] = useState<UpgradePlanBatch[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [isGenerationResultDialogOpen, setIsGenerationResultDialogOpen] = useState(false);
-    const [generationResult, setGenerationResult] = useState<{ newSns: string[], existingSns: { sn: string, batchIndex: number }[] } | null>(null);
+    const [isConfirmingGeneration, setIsConfirmingGeneration] = useState(false);
+    const [generationPreview, setGenerationPreview] = useState<GenerationPreview>(null);
     
     const handleInitiateWorkOrder = async () => {
         setIsLoading(true);
@@ -492,12 +498,10 @@ function DeliveryPage() {
             )
         );
 
-        // For this demo, we'll check against the static `deliveryData` as "all available servers"
-        // In a real app, this would come from a server selection component.
         const finalizedSns = deliveryData.map(d => d.sn); 
         
-        const newSnsForPlan = finalizedSns.filter(sn => !allSnsInBatches.has(sn));
-        const existingSnsInOtherPlans = finalizedSns
+        const newSns = finalizedSns.filter(sn => !allSnsInBatches.has(sn));
+        const existingSns = finalizedSns
           .filter(sn => allSnsInBatches.has(sn))
           .map(sn => {
                 const batchIndex = upgradePlanBatches.findIndex(batch => 
@@ -506,36 +510,56 @@ function DeliveryPage() {
                 return { sn, batchIndex };
           });
 
-
-        if (newSnsForPlan.length > 0) {
-            const mockPlansForNewBatch: UpgradePlan[] = newSnsForPlan.map((sn, index) => {
-                const server = deliveryData.find(d => d.sn === sn);
-                // Create some mock upgrade data
-                return {
-                    sn: sn,
-                    currentConfig: { cpu: server?.cpu[0], memory: server?.memory[0], storage: server?.storage[0], gpu: server?.gpu[0], vpcNetwork: server?.vpcNetwork[0], computeNetwork: server?.computeNetwork[0] },
-                    targetConfig: { cpu: server?.cpu[1], memory: server?.memory[1], storage: server?.storage[1], gpu: server?.gpu[1], vpcNetwork: server?.vpcNetwork[1], computeNetwork: server?.computeNetwork[1] },
-                    requirements: { memory: 'SPEED: 4800' },
-                    changes: [
-                        { component: 'cpu', action: 'remove', detail: server?.cpu[0] || '' },
-                        { component: 'cpu', action: 'add', detail: server?.cpu[1] || '', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                    ]
-                };
-            });
-            
-            const newBatch: UpgradePlanBatch = {
-                data: processUpgradePlans(mockPlansForNewBatch),
-                createdAt: new Date(),
-                status: 'active',
-            };
-
-            setUpgradePlanBatches(prevBatches => [...prevBatches, newBatch]);
-        }
-
-        setGenerationResult({ newSns: newSnsForPlan, existingSns: existingSnsInOtherPlans });
-        setIsGenerationResultDialogOpen(true);
+        setGenerationPreview({ newSns, existingSns, total: finalizedSns.length });
+        setIsConfirmingGeneration(true);
         setIsLoading(false);
     };
+
+    const handleConfirmGeneration = () => {
+        if (!generationPreview || generationPreview.newSns.length === 0) {
+            toast({
+                title: "没有可生成的方案",
+                description: "所有已定型服务器均已存在于现有方案中。",
+                variant: "default",
+            });
+            setIsConfirmingGeneration(false);
+            return;
+        }
+
+        const newSnsForPlan = generationPreview.newSns;
+
+        const mockPlansForNewBatch: UpgradePlan[] = newSnsForPlan.map((sn) => {
+            const server = deliveryData.find(d => d.sn === sn);
+            return {
+                sn: sn,
+                currentConfig: { cpu: server?.cpu[0], memory: server?.memory[0], storage: server?.storage[0], gpu: server?.gpu[0], vpcNetwork: server?.vpcNetwork[0], computeNetwork: server?.computeNetwork[0] },
+                targetConfig: { cpu: server?.cpu[1], memory: server?.memory[1], storage: server?.storage[1], gpu: server?.gpu[1], vpcNetwork: server?.vpcNetwork[1], computeNetwork: server?.computeNetwork[1] },
+                requirements: { memory: 'SPEED: 4800' },
+                changes: [
+                    { component: 'cpu', action: 'remove', detail: server?.cpu[0] || '' },
+                    { component: 'cpu', action: 'add', detail: server?.cpu[1] || '', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
+                ]
+            };
+        });
+        
+        const newBatch: UpgradePlanBatch = {
+            data: processUpgradePlans(mockPlansForNewBatch),
+            createdAt: new Date(),
+            status: 'active',
+        };
+
+        setUpgradePlanBatches(prevBatches => [...prevBatches, newBatch]);
+        
+        toast({
+            title: "改配方案已生成",
+            description: `已为 ${newSnsForPlan.length} 台服务器生成新的改配方案。`,
+            variant: "default",
+        });
+
+        setIsConfirmingGeneration(false);
+        setGenerationPreview(null);
+    };
+
 
     const processUpgradePlans = (rawPlans: UpgradePlan[]): GroupedUpgradePlans => {
         const grouped = new Map<string, FormattedUpgradePlan[]>();
@@ -981,46 +1005,51 @@ function DeliveryPage() {
                 )}
             </AlertDialogContent>
         </AlertDialog>
-        <AlertDialog open={isGenerationResultDialogOpen} onOpenChange={setIsGenerationResultDialogOpen}>
+        <AlertDialog open={isConfirmingGeneration} onOpenChange={setIsConfirmingGeneration}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>改配方案生成结果</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        系统已处理您的请求。
-                    </AlertDialogDescription>
+                    <AlertDialogTitle>确认生成改配方案</AlertDialogTitle>
+                     {generationPreview && (
+                        <AlertDialogDescription>
+                            系统将在 {generationPreview.total} 台已定型服务器中进行分析。
+                        </AlertDialogDescription>
+                     )}
                 </AlertDialogHeader>
                 <div className="text-sm space-y-4">
-                    {generationResult && generationResult.newSns.length > 0 && (
+                    {generationPreview && generationPreview.newSns.length > 0 && (
                         <div>
-                            <h4 className="font-semibold text-green-600 mb-2">成功生成新方案的SN清单:</h4>
+                            <h4 className="font-semibold text-green-600 mb-2">本次将为以下SN生成新的改配方案:</h4>
                             <div className="max-h-24 overflow-y-auto rounded-md bg-muted p-2">
                                 <ul className="list-disc list-inside">
-                                    {generationResult.newSns.map(sn => <li key={sn} className="font-mono">{sn}</li>)}
+                                    {generationPreview.newSns.map(sn => <li key={sn} className="font-mono">{sn}</li>)}
                                 </ul>
                             </div>
                         </div>
                     )}
-                     {generationResult && generationResult.existingSns.length > 0 && (
+                     {generationPreview && generationPreview.existingSns.length > 0 && (
                         <div>
-                            <h4 className="font-semibold text-amber-600 mb-2">已存在于其他方案的SN:</h4>
+                            <h4 className="font-semibold text-amber-600 mb-2">以下SN已存在于现有方案中:</h4>
                              <div className="max-h-24 overflow-y-auto rounded-md bg-muted p-2">
                                 <ul className="list-disc list-inside">
-                                    {generationResult.existingSns.map(({sn, batchIndex}) => (
+                                    {generationPreview.existingSns.map(({sn, batchIndex}) => (
                                         <li key={sn} className="font-mono">{sn} (在方案批次 #{batchIndex + 1} 中)</li>
                                     ))}
                                 </ul>
                             </div>
                             <p className="text-xs text-muted-foreground mt-2">
-                                如需为这些SN重新生成方案，请先在“查看改配方案”中找到对应批次并取消或删除该方案。
+                                如需为这些SN重新生成方案，请先在“查看改配方案”中找到对应批次并处理该方案。
                             </p>
                         </div>
                     )}
-                     {generationResult && generationResult.newSns.length === 0 && generationResult.existingSns.length === 0 && (
-                        <p>没有找到可用于生成新方案的已定型服务器。</p>
+                     {generationPreview && generationPreview.newSns.length === 0 && (
+                        <p>所有已定型服务器均已存在于现有方案中，无法生成新方案。</p>
                      )}
                 </div>
                 <AlertDialogFooter>
-                    <AlertDialogAction onClick={() => setIsGenerationResultDialogOpen(false)}>确定</AlertDialogAction>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmGeneration} disabled={!generationPreview || generationPreview.newSns.length === 0}>
+                        确认生成
+                    </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
@@ -1044,6 +1073,8 @@ export default DeliveryPage;
     
 
       
+
+    
 
     
 
