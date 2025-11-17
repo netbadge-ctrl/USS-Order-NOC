@@ -269,10 +269,17 @@ interface UpgradePlanBatchViewProps {
 }
 
 function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChange }: UpgradePlanBatchViewProps) {
+    const [activeLocation, setActiveLocation] = useState<string | null>(null);
+
     const upgradePlanData = batch.data;
     const locations = Array.from(upgradePlanData.keys());
-    const [activeLocation, setActiveLocation] = useState(locations[0]);
-    
+
+    React.useEffect(() => {
+        if (locations.length > 0 && !activeLocation) {
+            setActiveLocation(locations[0]);
+        }
+    }, [locations, activeLocation]);
+
     if (batch.status === 'expired') {
         return (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-muted-foreground">
@@ -282,7 +289,7 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
             </div>
         );
     }
-
+    
     if (locations.length === 0) {
         return <p>没有可显示的改配方案。</p>;
     }
@@ -314,7 +321,7 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
     }
 
 
-    const plansForLocation = upgradePlanData.get(activeLocation) || [];
+    const plansForLocation = activeLocation ? upgradePlanData.get(activeLocation) || [] : [];
     const summarizedPlans = summarizeChanges(plansForLocation);
     const ReadOnlyCell = ({ value }: { value: string | number | undefined }) => <span className="px-3 py-2 text-sm">{value || 'N/A'}</span>;
 
@@ -501,6 +508,7 @@ function DeliveryPage() {
         const finalizedSns = deliveryData.map(d => d.sn); 
         
         const newSns = finalizedSns.filter(sn => !allSnsInBatches.has(sn));
+        
         const existingSns = finalizedSns
           .filter(sn => allSnsInBatches.has(sn))
           .map(sn => {
@@ -527,9 +535,10 @@ function DeliveryPage() {
                 variant: "default",
             });
             setIsConfirmingGeneration(false);
+            setGenerationPreview(null);
             return;
         }
-
+        
         const mockPlansForNewBatch: UpgradePlan[] = newSnsForPlan.map((sn) => {
             const server = deliveryData.find(d => d.sn === sn);
             return {
@@ -1043,7 +1052,7 @@ function DeliveryPage() {
                             </p>
                         </div>
                     )}
-                     {(!generationPreview || (generationPreview.newSns.length === 0 && generationPreview.existingSns.length > 0)) && (
+                     {(!generationPreview || (generationPreview.newSns.length === 0 && generationPreview.existingSns.length === 0)) && (
                         <div className="md:col-span-2">
                             <p>所有已定型服务器均已存在于现有方案中，无法生成新方案。</p>
                         </div>
@@ -1071,6 +1080,8 @@ export default DeliveryPage;
     
 
       
+
+    
 
     
 
