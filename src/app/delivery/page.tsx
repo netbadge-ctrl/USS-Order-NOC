@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -593,10 +592,22 @@ function DeliveryPage() {
 
     const handleViewUpgradePlan = async () => {
         setIsLoading(true);
-        // On first view, generate a default batch if none exist to simulate existing plans
         if (upgradePlanBatches.length === 0) {
             await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Batch 1 (Expired)
             const rawPlans1: UpgradePlan[] = [
+                {
+                    sn: '9800171603708815',
+                    currentConfig: { cpu: 'Intel_4314*2' },
+                    targetConfig: { cpu: 'Intel_8468*2' },
+                    changes: [{ component: 'cpu', action: 'replace', detail: 'Replace Intel_4314*2 with Intel_8468*2' }]
+                }
+            ];
+            const batch1: UpgradePlanBatch = { data: processUpgradePlans(rawPlans1), createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), status: 'expired' };
+
+            // Batch 2 (Active, multiple servers)
+            const rawPlans2: UpgradePlan[] = [
                 {
                     sn: '9800171603708813',
                     currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
@@ -616,22 +627,30 @@ function DeliveryPage() {
                     sn: '9800171603708817', // Same rack as 8813 for grouping
                     currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
                     targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                    requirements: {
-                        memory: 'SPEED: 4800, 容量: 64G',
-                        storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2'
-                    },
+                    requirements: { memory: 'SPEED: 4800, 容量: 64G' },
                     changes: [
                         { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
                         { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                        { component: 'memory', action: 'remove', detail: '128G' },
-                        { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
                     ]
                 }
             ];
+            const batch2: UpgradePlanBatch = { data: processUpgradePlans(rawPlans2), createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), status: 'active' };
             
-            const batch1: UpgradePlanBatch = { data: processUpgradePlans(rawPlans1), createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), status: 'active' };
+            // Batch 3 (Active, single server)
+             const rawPlans3: UpgradePlan[] = [
+                {
+                    sn: '9800171603708814',
+                    currentConfig: { storage: 'SATA_480G*2' },
+                    targetConfig: { storage: 'SATA_480G*2 + NVME_3.84T*2' },
+                    changes: [
+                         { component: 'storage', action: 'add', detail: 'NVME_3.84T*2', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 10 } } },
+                    ]
+                }
+            ];
+            const batch3: UpgradePlanBatch = { data: processUpgradePlans(rawPlans3), createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000), status: 'active' };
 
-            setUpgradePlanBatches([batch1]);
+
+            setUpgradePlanBatches([batch1, batch2, batch3]);
         }
         
         setIsLoading(false);
@@ -1072,3 +1091,4 @@ export default DeliveryPage;
 
 
     
+
