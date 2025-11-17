@@ -493,7 +493,7 @@ function DeliveryPage() {
     const [generationPreview, setGenerationPreview] = useState<GenerationPreview>({ newSns: [], existingSns: [] });
 
 
-    const handleInitiateWorkOrder = async () => {
+    const handleInitiateWorkOrder = () => {
         const existingSnsInPlans = new Map<string, number>();
         upgradePlanBatches.forEach((batch, batchIndex) => {
             if (batch.status === 'expired') return;
