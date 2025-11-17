@@ -455,12 +455,6 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
                                                                 <TableCell className="text-muted-foreground">{row.current || '无'}</TableCell>
                                                                 <TableCell className="text-muted-foreground">
                                                                     <div>{row.target || '无'}</div>
-                                                                    {hasRequirements && (
-                                                                        <div className="flex items-center gap-1.5 text-xs text-blue-600 mt-1.5">
-                                                                            <Info size={14} />
-                                                                            <span>{row.requirements}</span>
-                                                                        </div>
-                                                                    )}
                                                                 </TableCell>
                                                                 <TableCell colSpan={7} className="text-center text-muted-foreground">无变更</TableCell>
                                                             </TableRow>
@@ -650,44 +644,12 @@ function DeliveryPage() {
                         { component: 'memory', action: 'remove', detail: '128G' },
                         { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
                     ]
-                },
-                {
-                    sn: '9800171603708814',
-                    currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_32G_3200*16', gpu: 'WQDX_GM302*4', storage: 'SATA_480G*2', vpcNetwork: '25GE_2*1', computeNetwork: '100GE_IB*2' },
-                    targetConfig: { cpu: 'Intel_8468*2', memory: '128G_4800*16', gpu: 'WQDX_H800*8', storage: 'NVME_7.68T*4', vpcNetwork: '200GE_RoCE*2', computeNetwork: '400GE_IB*8' },
-                    requirements: { gpu: '必须为最新固件版本' },
-                    changes: [
-                        { component: 'gpu', action: 'add', detail: 'WQDX_H800*8', model: 'GPU-H800-80G', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'insufficient', quantity: 2 } } },
-                    ]
                 }
             ];
+            
+            const batch1: UpgradePlanBatch = { data: processUpgradePlans(rawPlans1), createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), status: 'active' };
 
-            const rawPlans2: UpgradePlan[] = [
-                 {
-                    sn: '9800171603708815',
-                    currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*6', gpu: 'WQDX_A800*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*4' },
-                    targetConfig: { cpu: 'Intel_4314*2', memory: '256G', storage: 'SATA_4T*12', gpu: 'WQDX_H800*8', vpcNetwork: '25GE_2*1', computeNetwork: '200GE_IB*8' },
-                    changes: [
-                        { component: 'memory', action: 'add', detail: '128G' },
-                    ]
-                }
-            ];
-             const rawPlans3: UpgradePlan[] = [
-                 {
-                    sn: '9800171603708812',
-                    currentConfig: { cpu: 'WQDX_8358P*2', memory: 'WQDX_64G_3200*16', storage: 'WQDX_SATA_ARED*2 + WGDX_NVME2.5_7.68T*2', gpu: 'WQDX_GM302*8', vpcNetwork: 'WQDX_25G_2*1 + WGDX', computeNetwork: 'WQDX_200G_1_IB_PCIE4_CX65...*2' },
-                    targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                    changes: [
-                        { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                    ]
-                }
-            ];
-
-             const batch1: UpgradePlanBatch = { data: processUpgradePlans(rawPlans1), createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), status: 'active' };
-             const batch2: UpgradePlanBatch = { data: processUpgradePlans(rawPlans2), createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000), status: 'expired' };
-             const batch3: UpgradePlanBatch = { data: processUpgradePlans(rawPlans3), createdAt: new Date(), status: 'active' };
-
-             setUpgradePlanBatches([batch1, batch2, batch3]);
+            setUpgradePlanBatches([batch1]);
         }
         
         setIsLoading(false);
