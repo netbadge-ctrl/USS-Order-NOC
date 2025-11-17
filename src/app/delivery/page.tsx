@@ -518,15 +518,7 @@ function DeliveryPage() {
     const handleConfirmGeneration = () => {
         if (!generationPreview) return;
 
-        let newSnsForPlan: string[] = [];
-
-        if (upgradePlanBatches.length === 0) {
-            // If no batches exist, all servers are new
-            newSnsForPlan = deliveryData.map(d => d.sn);
-        } else {
-            // Otherwise, only use the newSns from the preview
-            newSnsForPlan = generationPreview.newSns;
-        }
+        const newSnsForPlan = generationPreview.newSns;
 
         if (newSnsForPlan.length === 0) {
             toast({
@@ -540,9 +532,8 @@ function DeliveryPage() {
 
         const mockPlansForNewBatch: UpgradePlan[] = newSnsForPlan.map((sn) => {
             const server = deliveryData.find(d => d.sn === sn);
-            const newSn = `980017160370881${6 + (upgradePlanBatches.length || 0)}`;
             return {
-                sn: server?.sn || newSn,
+                sn: server?.sn || sn,
                 currentConfig: { cpu: server?.cpu[0], memory: server?.memory[0], storage: server?.storage[0], gpu: server?.gpu[0], vpcNetwork: server?.vpcNetwork[0], computeNetwork: server?.computeNetwork[0] },
                 targetConfig: { cpu: server?.cpu[1], memory: server?.memory[1], storage: server?.storage[1], gpu: server?.gpu[1], vpcNetwork: server?.vpcNetwork[1], computeNetwork: server?.computeNetwork[1] },
                 requirements: { memory: 'SPEED: 4800' },
@@ -563,7 +554,7 @@ function DeliveryPage() {
         
         toast({
             title: "改配方案已生成",
-            description: `已为 ${newSnsForPlan.length} 台服务器生成新的改配方案。`,
+            description: `已为 ${newSnsForPlan.length} 台新服务器生成改配方案。`,
             variant: "default",
         });
 
@@ -1077,11 +1068,11 @@ export default DeliveryPage;
     
 
     
-
-    
     
 
       
+
+    
 
     
 
