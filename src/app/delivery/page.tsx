@@ -962,7 +962,7 @@ function DeliveryPage() {
         </AlertDialog>
 
         <AlertDialog open={isConfirmingGeneration} onOpenChange={setIsConfirmingGeneration}>
-            <AlertDialogContent className="sm:max-w-2xl">
+            <AlertDialogContent className="sm:max-w-4xl">
                 <AlertDialogHeader>
                     <AlertDialogTitle>确认生成改配方案</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -970,7 +970,7 @@ function DeliveryPage() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
 
-                <div className="grid grid-cols-1 gap-6 max-h-[60vh] overflow-y-auto p-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto p-1">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             <FileCheck2 className="h-5 w-5 text-green-600" />
@@ -1006,16 +1006,18 @@ function DeliveryPage() {
                                 <div className="p-2 text-sm text-muted-foreground text-center h-full flex items-center justify-center">没有已存在于其它方案的服务器。</div>
                             )}
                         </ScrollArea>
-                        {generationPreview.existingSns.length > 0 && (
-                            <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900">
-                                <Info className="h-4 w-4 !text-amber-600" />
-                                <AlertDescription>
-                                    如需对这些SN重新生成改配方案，请先在“查看改配方案”中找到并取消原有方案。
-                                </AlertDescription>
-                            </Alert>
-                        )}
                     </div>
                 </div>
+                
+                {generationPreview.existingSns.length > 0 && (
+                    <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900">
+                        <Info className="h-4 w-4 !text-amber-600" />
+                        <AlertDescription>
+                            如需对这些SN重新生成改配方案，请先在“查看改配方案”中找到并取消原有方案。
+                        </AlertDescription>
+                    </Alert>
+                )}
+
 
                 <AlertDialogFooter>
                     <AlertDialogCancel>取消</AlertDialogCancel>
@@ -1067,4 +1069,3 @@ export default DeliveryPage;
     
 
     
-
