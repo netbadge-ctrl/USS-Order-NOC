@@ -65,7 +65,7 @@ import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import type { UpgradePlan, UpgradePlanChangeItem, ServerHardwareConfig } from '@/lib/types';
+import type { UpgradePlan, UpgradePlanChangeItem, ServerHardwareConfig, FormattedUpgradePlan } from '@/lib/types';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 
 
@@ -98,13 +98,13 @@ const deliveryData = [
         sn: '9800171603708814',
         status: '正常运行',
         gpu: ['WQDX_GM302*4', 'WQDX_H800*8', 'WQDX_H800*8'],
-        cpu: ['WQDX_8358P*2', 'Intel_8358P*2', 'Intel_8468*2'],
+        cpu: ['Intel_4314*2', 'Intel_8358P*2', 'Intel_8468*2'],
         memory: ['WQDX_32G_3200*16', '64G_3200*16', '128G_4800*16'],
         storage: ['SATA_480G*2', 'SATA_480G*2 + NVME_3.84T*2', 'NVME_7.68T*4'],
         vpcNetwork: ['25GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
         computeNetwork: ['100GE_IB*2', '200GE_IB*2', '400GE_IB*8'],
         storageNetwork: '无',
-        rack: ['SZA01', 'GZA01', 'GZA01']
+        rack: ['BJF01', 'GZA01', 'GZA01']
     },
     {
         sn: '9800171603708815',
@@ -116,7 +116,7 @@ const deliveryData = [
         vpcNetwork: ['10GE_2*1', '25GE_2*1', '200GE_RoCE*2'],
         computeNetwork: ['100GE_IB*4', '200GE_IB*8', '400GE_IB*8'],
         storageNetwork: '无',
-        rack: ['HZA01', 'GZA01', 'GZA01']
+        rack: ['BJF01', 'GZA01', 'GZA01']
     },
     {
         sn: '9800171603708816',
@@ -152,20 +152,9 @@ const deliveryData = [
         vpcNetwork: ['10GE_2*1', '200GE_RoCE*2', '200GE_RoCE*2'],
         computeNetwork: ['100GE_IB*2', '200GE_IB*8', '400GE_IB*8'],
         storageNetwork: '无',
-        rack: ['BJF01', 'GZA01', 'GZA01']
+        rack: ['SZA01', 'GZA01', 'GZA01']
     }
 ];
-
-type FormattedUpgradePlan = {
-  sn: string;
-  rows: {
-    component: keyof ServerHardwareConfig;
-    current: string | undefined;
-    target: string | undefined;
-    changes: UpgradePlanChangeItem[];
-    requirements?: string;
-  }[];
-}
 
 type GroupedUpgradePlans = Map<string, FormattedUpgradePlan[]>;
 type UpgradePlanBatchStatus = 'generating' | 'pending_confirmation' | 'executed' | 'expired';
@@ -314,11 +303,9 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange }: UpgradePlanBa
                     current: r.current,
                     target: r.target,
                     requirements: r.requirements,
-                    changes: r.changes.map(c => ({
-                        action: c.action,
-                        detail: c.detail,
-                        model: c.model,
-                    }))
+                    // Note: 'changes' can be complex. For aggregation, we might need a more robust key.
+                    // For now, let's assume if other parts match, changes are the same.
+                    changes: r.changes.map(c => ({ action: c.action, detail: c.detail, model: c.model, stock: c.stock }))
                 }))
             });
 
@@ -615,44 +602,23 @@ function DeliveryPage() {
                 status: 'expired'
             };
 
+            const identicalPlan = {
+                currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
+                targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
+                requirements: { memory: 'SPEED: 4800, 容量: 64G', storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2' },
+                changes: [
+                    { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
+                    { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
+                    { component: 'memory', action: 'remove', detail: '128G' },
+                    { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
+                ]
+            };
+
             const batch2: UpgradePlanBatch = {
                 data: processUpgradePlans([
-                    {
-                        sn: '9800171603708813',
-                        currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
-                        targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                        requirements: { memory: 'SPEED: 4800, 容量: 64G', storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2' },
-                        changes: [
-                            { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
-                            { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                            { component: 'memory', action: 'remove', detail: '128G' },
-                            { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
-                        ]
-                    },
-                    {
-                        sn: '9800171603708814',
-                        currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
-                        targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                        requirements: { memory: 'SPEED: 4800, 容量: 64G', storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2' },
-                        changes: [
-                            { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
-                            { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                            { component: 'memory', action: 'remove', detail: '128G' },
-                            { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
-                        ]
-                    },
-                    {
-                        sn: '9800171603708815',
-                        currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
-                        targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                        requirements: { memory: 'SPEED: 4800, 容量: 64G', storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2' },
-                        changes: [
-                            { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
-                            { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                            { component: 'memory', action: 'remove', detail: '128G' },
-                            { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
-                        ]
-                    },
+                    { sn: '9800171603708813', ...identicalPlan },
+                    { sn: '9800171603708814', ...identicalPlan },
+                    { sn: '9800171603708815', ...identicalPlan },
                     {
                         sn: '9800171603708817',
                         currentConfig: { cpu: 'Intel_4314*2', memory: '128G' },
@@ -1164,6 +1130,8 @@ export default DeliveryPage;
 
 
 
+
+    
 
     
 

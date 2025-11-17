@@ -104,7 +104,6 @@ export type UpgradePlanChangeItem = {
         currentLocation: StockStatus;
         targetLocation: StockStatus;
     };
-    requirements?: string;
 }
 
 export type UpgradePlan = {
@@ -114,3 +113,19 @@ export type UpgradePlan = {
     changes: UpgradePlanChangeItem[];
     requirements?: Partial<Record<keyof ServerHardwareConfig, string>>;
 }
+
+
+export type FormattedUpgradePlanRow = {
+    component: keyof ServerHardwareConfig;
+    current: string | undefined;
+    target: string | undefined;
+    changes: UpgradePlanChangeItem[];
+    requirements?: string;
+};
+
+export type FormattedUpgradePlan = {
+  sn: string;
+  rows: FormattedUpgradePlanRow[];
+}
+
+    
