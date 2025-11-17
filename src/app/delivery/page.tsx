@@ -267,7 +267,7 @@ const getOptionsForComponent = (component: keyof ServerHardwareConfig, type: 'sp
 const statusConfig: Record<UpgradePlanBatchStatus, { label: string; className: string }> = {
     generating: { label: '生成中', className: 'bg-blue-100 text-blue-800 border-blue-200' },
     pending_confirmation: { label: '待确认', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-    executed: { label: '已执行', className: 'bg-green-100 text-green-800 border-green-200' },
+    executed: { label: '已生效', className: 'bg-green-100 text-green-800 border-green-200' },
     expired: { label: '已失效', className: 'bg-gray-100 text-gray-800 border-gray-200' },
 };
 
@@ -275,15 +275,15 @@ const statusConfig: Record<UpgradePlanBatchStatus, { label: string; className: s
 interface UpgradePlanBatchViewProps {
     batch: UpgradePlanBatch;
     batchIndex: number;
-    readOnly?: boolean;
     onPlanChange: (batchIndex: number, location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => void;
 }
 
-function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChange }: UpgradePlanBatchViewProps) {
+function UpgradePlanBatchView({ batch, batchIndex, onPlanChange }: UpgradePlanBatchViewProps) {
     const [activeLocation, setActiveLocation] = useState<string | null>(null);
 
     const upgradePlanData = batch.data;
     const locations = Array.from(upgradePlanData.keys());
+    const isReadOnly = batch.status !== 'pending_confirmation';
 
     React.useEffect(() => {
         if (locations.length > 0 && !activeLocation) {
@@ -407,7 +407,7 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
                                                                 </div>
                                                             </TableCell>
                                                             <TableCell>
-                                                                {readOnly || isRemovable ? <ReadOnlyCell value={detailSpec} /> :
+                                                                {isReadOnly || isRemovable ? <ReadOnlyCell value={detailSpec} /> :
                                                                 <SearchableSelect
                                                                     options={getOptionsForComponent(row.component, 'spec')}
                                                                     value={detailSpec}
@@ -418,7 +418,7 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
                                                                 }
                                                             </TableCell>
                                                             <TableCell>
-                                                                {readOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
+                                                                {isReadOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
                                                                 <Input 
                                                                     type="number"
                                                                     value={detailQty} 
@@ -428,7 +428,7 @@ function UpgradePlanBatchView({ batch, batchIndex, readOnly = false, onPlanChang
                                                                 /> }
                                                             </TableCell>
                                                             <TableCell>
-                                                                {readOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
+                                                                {isReadOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
                                                                 <SearchableSelect
                                                                     options={getOptionsForComponent(row.component, 'model')}
                                                                     value={change.model || ''}
@@ -947,7 +947,6 @@ function DeliveryPage() {
                                      <UpgradePlanBatchView 
                                         batch={batch}
                                         batchIndex={batchIndex}
-                                        readOnly={true}
                                         onPlanChange={handlePlanChange}
                                     />
                                 </TabsContent>
@@ -989,18 +988,17 @@ function DeliveryPage() {
                                         batch={batch}
                                         batchIndex={batchIndex}
                                         onPlanChange={handlePlanChange}
-                                        readOnly={batch.status === 'executed' || batch.status === 'expired'}
                                     />
                                 </TabsContent>
                             ))}
                         </Tabs>
                         ) : <p className="text-sm text-muted-foreground py-8 text-center">暂无改配方案。请先点击“生成改配方案”。</p>}
                         
-                        {activeBatch && activeBatch.status !== 'expired' && (
+                        {activeBatch && activeBatch.status === 'pending_confirmation' && (
                             <AlertDialogFooter>
                                 <Button variant="outline" onClick={() => setIsUpgradePlanDialogOpen(false)}>取消编辑</Button>
                                 <Button variant="secondary" onClick={() => toast({ title: "草稿已保存", description: "您的修改已暂存。" })}>暂存</Button>
-                                <Button onClick={() => setIsConfirmingUpgrade(true)} disabled={upgradePlanBatches.filter(b => b.status !== 'expired').length === 0}>提交</Button>
+                                <Button onClick={() => setIsConfirmingUpgrade(true)}>提交</Button>
                             </AlertDialogFooter>
                         )}
                     </>
@@ -1121,3 +1119,6 @@ export default DeliveryPage;
     
 
 
+
+
+    
