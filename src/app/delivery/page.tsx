@@ -1006,7 +1006,7 @@ function DeliveryPage() {
             </AlertDialogContent>
         </AlertDialog>
         <AlertDialog open={isConfirmingGeneration} onOpenChange={setIsConfirmingGeneration}>
-            <AlertDialogContent>
+            <AlertDialogContent className="sm:max-w-2xl">
                 <AlertDialogHeader>
                     <AlertDialogTitle>确认生成改配方案</AlertDialogTitle>
                      {generationPreview && (
@@ -1015,24 +1015,24 @@ function DeliveryPage() {
                         </AlertDialogDescription>
                      )}
                 </AlertDialogHeader>
-                <div className="text-sm space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                     {generationPreview && generationPreview.newSns.length > 0 && (
-                        <div>
+                        <div className="space-y-2">
                             <h4 className="font-semibold text-green-600 mb-2">本次将为以下SN生成新的改配方案:</h4>
-                            <div className="max-h-24 overflow-y-auto rounded-md bg-muted p-2">
-                                <ul className="list-disc list-inside">
-                                    {generationPreview.newSns.map(sn => <li key={sn} className="font-mono">{sn}</li>)}
+                            <div className="max-h-32 overflow-y-auto rounded-md bg-muted p-3">
+                                <ul className="list-disc list-inside space-y-1">
+                                    {generationPreview.newSns.map(sn => <li key={sn} className="font-mono text-xs">{sn}</li>)}
                                 </ul>
                             </div>
                         </div>
                     )}
                      {generationPreview && generationPreview.existingSns.length > 0 && (
-                        <div>
+                        <div className="space-y-2">
                             <h4 className="font-semibold text-amber-600 mb-2">以下SN已存在于现有方案中:</h4>
-                             <div className="max-h-24 overflow-y-auto rounded-md bg-muted p-2">
-                                <ul className="list-disc list-inside">
+                             <div className="max-h-32 overflow-y-auto rounded-md bg-muted p-3">
+                                <ul className="list-disc list-inside space-y-1">
                                     {generationPreview.existingSns.map(({sn, batchIndex}) => (
-                                        <li key={sn} className="font-mono">{sn} (在方案批次 #{batchIndex + 1} 中)</li>
+                                        <li key={sn} className="font-mono text-xs">{sn} (在方案批次 #{batchIndex + 1} 中)</li>
                                     ))}
                                 </ul>
                             </div>
@@ -1041,8 +1041,10 @@ function DeliveryPage() {
                             </p>
                         </div>
                     )}
-                     {generationPreview && generationPreview.newSns.length === 0 && (
-                        <p>所有已定型服务器均已存在于现有方案中，无法生成新方案。</p>
+                     {(!generationPreview || generationPreview.newSns.length === 0) && (
+                        <div className="md:col-span-2">
+                            <p>所有已定型服务器均已存在于现有方案中，无法生成新方案。</p>
+                        </div>
                      )}
                 </div>
                 <AlertDialogFooter>
@@ -1073,6 +1075,8 @@ export default DeliveryPage;
     
 
       
+
+    
 
     
 
