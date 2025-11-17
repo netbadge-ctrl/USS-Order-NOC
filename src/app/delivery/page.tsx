@@ -265,21 +265,33 @@ interface UpgradePlanBatchViewProps {
     batch: UpgradePlanBatch;
     batchIndex: number;
     onPlanChange: (batchIndex: number, location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => void;
+    focusedSn?: string | null;
 }
 
-function UpgradePlanBatchView({ batch, batchIndex, onPlanChange }: UpgradePlanBatchViewProps) {
+function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn }: UpgradePlanBatchViewProps) {
     const [activeLocation, setActiveLocation] = useState<string | null>(null);
 
     const upgradePlanData = batch.data;
-    const locations = Array.from(upgradePlanData.keys());
+    let locations = Array.from(upgradePlanData.keys());
     const isReadOnly = batch.status !== 'pending_confirmation';
 
     React.useEffect(() => {
-        if (locations.length > 0 && !activeLocation) {
+        if (focusedSn && upgradePlanData) {
+            for (const [location, plans] of upgradePlanData.entries()) {
+                if (plans.some(p => p.sn === focusedSn)) {
+                    setActiveLocation(location);
+                    break;
+                }
+            }
+        } else if (locations.length > 0 && !activeLocation) {
             setActiveLocation(locations[0]);
         }
-    }, [locations, activeLocation]);
+    }, [locations, activeLocation, focusedSn, upgradePlanData]);
 
+    if (focusedSn) {
+        locations = activeLocation ? [activeLocation] : [];
+    }
+    
     if (batch.status === 'expired') {
         return (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-muted-foreground">
@@ -297,14 +309,14 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange }: UpgradePlanBa
     const summarizeChanges = (plans: FormattedUpgradePlan[]) => {
         const summary = new Map<string, { plan: FormattedUpgradePlan, sns: string[] }>();
         plans.forEach(plan => {
+            if (focusedSn && plan.sn !== focusedSn) return;
+            
             const key = JSON.stringify({
                 rows: plan.rows.map(r => ({
                     component: r.component,
                     current: r.current,
                     target: r.target,
                     requirements: r.requirements,
-                    // Note: 'changes' can be complex. For aggregation, we might need a more robust key.
-                    // For now, let's assume if other parts match, changes are the same.
                     changes: r.changes.map(c => ({ action: c.action, detail: c.detail, model: c.model, stock: c.stock }))
                 }))
             });
@@ -326,18 +338,20 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange }: UpgradePlanBa
     return (
         <div className="w-full">
             <div className="border-b">
-                <div className="mb-4 flex gap-2">
-                    {locations.map(location => (
-                        <Button
-                            key={location}
-                            variant={activeLocation === location ? 'secondary' : 'ghost'}
-                            onClick={() => setActiveLocation(location)}
-                            className="data-[state=active]:shadow-none rounded-md border"
-                        >
-                            机房: {location}
-                        </Button>
-                    ))}
-                </div>
+                {!focusedSn && (
+                    <div className="mb-4 flex gap-2">
+                        {locations.map(location => (
+                            <Button
+                                key={location}
+                                variant={activeLocation === location ? 'secondary' : 'ghost'}
+                                onClick={() => setActiveLocation(location)}
+                                className="data-[state=active]:shadow-none rounded-md border"
+                            >
+                                机房: {location}
+                            </Button>
+                        ))}
+                    </div>
+                )}
 
                 <div className="max-h-[65vh] overflow-y-auto pr-4 mt-0">
                     <div className="space-y-6">
@@ -485,6 +499,7 @@ function DeliveryPage() {
     const [upgradePlanBatches, setUpgradePlanBatches] = useState<UpgradePlanBatch[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [activeBatchTab, setActiveBatchTab] = useState<string>('');
+    const [focusedSnForPlan, setFocusedSnForPlan] = useState<string | null>(null);
     
     const [isConfirmingGeneration, setIsConfirmingGeneration] = useState(false);
     const [generationPreview, setGenerationPreview] = useState<GenerationPreview>({ newSns: [], existingSns: [] });
@@ -565,6 +580,7 @@ function DeliveryPage() {
 
         rawPlans.forEach(plan => {
             const server = deliveryData.find(d => d.sn === plan.sn);
+            // In the mock data, server.rack can be an array. We take the first one.
             const currentLocation = server ? (Array.isArray(server.rack) ? server.rack[0] : server.rack) : '未知机房';
             
             if (!grouped.has(currentLocation)) {
@@ -588,8 +604,12 @@ function DeliveryPage() {
     }
 
 
-    const handleViewUpgradePlan = async () => {
+    const handleViewUpgradePlan = async (sn?: string) => {
         setIsLoading(true);
+        if (sn) {
+            setFocusedSnForPlan(sn);
+        }
+
         if (upgradePlanBatches.length === 0) {
             await new Promise(resolve => setTimeout(resolve, 500));
             
@@ -637,7 +657,7 @@ function DeliveryPage() {
             const batch3: UpgradePlanBatch = {
                 data: processUpgradePlans([{
                     sn: '9800171603708818',
-                    currentConfig: { storage: 'SATA_4T*12' },
+                    currentConfig: { storage: 'SATA_T*12' },
                     targetConfig: { storage: 'NVME_3.84T*4' },
                     changes: [{ component: 'storage', action: 'add', detail: 'NVME_3.84T*4', model: 'NVME-3.84T-U2', stock: { currentLocation: { status: 'sufficient', quantity: 5 }, targetLocation: { status: 'sufficient', quantity: 10 } } }]
                 }]),
@@ -647,16 +667,24 @@ function DeliveryPage() {
 
             const newBatches = [batch1, batch2, batch3];
             setUpgradePlanBatches(newBatches);
-            const latestActiveBatchIndex = newBatches.findIndex(b => b.status === 'pending_confirmation');
-            if (latestActiveBatchIndex !== -1) {
-                 setActiveBatchTab(`batch-${latestActiveBatchIndex}`);
+            
+            const targetBatchIndex = sn 
+                ? newBatches.findIndex(batch => Array.from(batch.data.values()).flat().some(p => p.sn === sn))
+                : newBatches.findIndex(b => b.status === 'pending_confirmation');
+
+            if (targetBatchIndex !== -1) {
+                 setActiveBatchTab(`batch-${targetBatchIndex}`);
             } else if (newBatches.length > 0) {
                  setActiveBatchTab(`batch-${newBatches.length - 1}`);
             }
+
         } else {
-             const latestActiveBatchIndex = upgradePlanBatches.findIndex(b => b.status === 'pending_confirmation');
-             if (latestActiveBatchIndex !== -1) {
-                 setActiveBatchTab(`batch-${latestActiveBatchIndex}`);
+             const targetBatchIndex = sn
+                ? upgradePlanBatches.findIndex(batch => Array.from(batch.data.values()).flat().some(p => p.sn === sn))
+                : upgradePlanBatches.findIndex(b => b.status === 'pending_confirmation');
+
+             if (targetBatchIndex !== -1) {
+                 setActiveBatchTab(`batch-${targetBatchIndex}`);
             } else if (upgradePlanBatches.length > 0) {
                 setActiveBatchTab(`batch-${upgradePlanBatches.length - 1}`);
             }
@@ -737,6 +765,20 @@ function DeliveryPage() {
 
     const activeBatchIndex = activeBatchTab ? parseInt(activeBatchTab.split('-')[1]) : -1;
     const activeBatch = activeBatchIndex !== -1 ? upgradePlanBatches[activeBatchIndex] : null;
+
+    const serverPlanMap = useMemo(() => {
+        const map = new Map<string, { batchIndex: number }>();
+        upgradePlanBatches.forEach((batch, index) => {
+            if (batch.status === 'expired') return;
+            for (const plans of batch.data.values()) {
+                for (const plan of plans) {
+                    map.set(plan.sn, { batchIndex: index });
+                }
+            }
+        });
+        return map;
+    }, [upgradePlanBatches]);
+
 
   return (
     <div className="w-full flex flex-col flex-1">
@@ -824,12 +866,12 @@ function DeliveryPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button variant="outline" onClick={handleViewUpgradePlan} disabled={isLoading}>
-                                         {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                                    <Button variant="outline" onClick={() => handleViewUpgradePlan()} disabled={isLoading}>
+                                         {isLoading && !isUpgradePlanDialogOpen && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
                                         查看改配方案
                                     </Button>
                                     <Button variant="default" onClick={handleInitiateWorkOrder} disabled={isLoading}>
-                                        {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                                        {isLoading && isConfirmingGeneration && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
                                         生成改配方案
                                     </Button>
                                     <Button variant="outline">导出清单</Button>
@@ -862,10 +904,13 @@ function DeliveryPage() {
                                                     <TableHead>计算网络</TableHead>
                                                     <TableHead>存储网络</TableHead>
                                                     <TableHead>机房</TableHead>
+                                                    <TableHead>改配方案</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {deliveryData.map((item, index) => (
+                                                {deliveryData.map((item, index) => {
+                                                    const planInfo = serverPlanMap.get(item.sn);
+                                                    return (
                                                     <TableRow key={index}>
                                                         <TableCell>
                                                             <p className="font-mono text-xs">{item.sn}</p>
@@ -897,8 +942,21 @@ function DeliveryPage() {
                                                         <TableCell>
                                                             {Array.isArray(item.rack) ? item.rack.map((line, i) => <p key={i} className={cn('text-xs', {'text-blue-600': i === 1}, {'text-red-600': i === 2})}>{line}</p>) : <p className="text-xs">{item.rack}</p>}
                                                         </TableCell>
+                                                        <TableCell>
+                                                            {planInfo ? (
+                                                                <Badge 
+                                                                    variant="secondary" 
+                                                                    className="cursor-pointer hover:bg-primary/20"
+                                                                    onClick={() => handleViewUpgradePlan(item.sn)}
+                                                                >
+                                                                    方案批次 #{planInfo.batchIndex + 1}
+                                                                </Badge>
+                                                            ) : (
+                                                                <span className="text-xs text-muted-foreground">无</span>
+                                                            )}
+                                                        </TableCell>
                                                     </TableRow>
-                                                ))}
+                                                )})}
                                             </TableBody>
                                         </Table>
                                     </div>
@@ -920,6 +978,7 @@ function DeliveryPage() {
             if (!open) {
                 setIsUpgradePlanDialogOpen(false);
                 setIsConfirmingUpgrade(false);
+                setFocusedSnForPlan(null); // Reset focused SN when dialog closes
             } else {
                 setIsUpgradePlanDialogOpen(true);
             }
@@ -957,6 +1016,7 @@ function DeliveryPage() {
                                         batch={batch}
                                         batchIndex={batchIndex}
                                         onPlanChange={handlePlanChange}
+                                        focusedSn={focusedSnForPlan}
                                     />
                                 </TabsContent>
                             ))}
@@ -976,34 +1036,41 @@ function DeliveryPage() {
                         <AlertDialogHeader>
                             <AlertDialogTitle>查看改配方案</AlertDialogTitle>
                             <AlertDialogDescription>
-                                以下为检测到的需要进行硬件改配的服务器方案详情。您可以直接修改规格、Model和数量。
+                                {focusedSnForPlan 
+                                ? `以下为服务器 ${focusedSnForPlan} 的改配方案详情。`
+                                : `以下为检测到的需要进行硬件改配的服务器方案详情。您可以直接修改规格、Model和数量。`}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         {upgradePlanBatches.length > 0 ? (
                         <Tabs defaultValue={activeBatchTab} onValueChange={setActiveBatchTab} className="w-full">
-                            <TabsList>
-                                {upgradePlanBatches.map((batch, batchIndex) => (
-                                    <TabsTrigger key={`batch-${batchIndex}`} value={`batch-${batchIndex}`} className="gap-2">
-                                        <span>方案批次 #{batchIndex + 1}</span>
-                                        <Badge className={cn("font-normal", statusConfig[batch.status].className)}>
-                                            {statusConfig[batch.status].label}
-                                        </Badge>
-                                    </TabsTrigger>
-                                ))}
-                            </TabsList>
+                            {!focusedSnForPlan && (
+                                <TabsList>
+                                    {upgradePlanBatches.map((batch, batchIndex) => (
+                                        <TabsTrigger key={`batch-${batchIndex}`} value={`batch-${batchIndex}`} className="gap-2">
+                                            <span>方案批次 #{batchIndex + 1}</span>
+                                            <Badge className={cn("font-normal", statusConfig[batch.status].className)}>
+                                                {statusConfig[batch.status].label}
+                                            </Badge>
+                                        </TabsTrigger>
+                                    ))}
+                                </TabsList>
+                            )}
                              {upgradePlanBatches.map((batch, batchIndex) => (
                                 <TabsContent key={`batch-content-${batchIndex}`} value={`batch-${batchIndex}`}>
-                                    <UpgradePlanBatchView 
-                                        batch={batch}
-                                        batchIndex={batchIndex}
-                                        onPlanChange={handlePlanChange}
-                                    />
+                                     {(activeBatchTab === `batch-${batchIndex}`) && (
+                                        <UpgradePlanBatchView 
+                                            batch={batch}
+                                            batchIndex={batchIndex}
+                                            onPlanChange={handlePlanChange}
+                                            focusedSn={focusedSnForPlan}
+                                        />
+                                    )}
                                 </TabsContent>
                             ))}
                         </Tabs>
                         ) : <p className="text-sm text-muted-foreground py-8 text-center">暂无改配方案。请先点击“生成改配方案”。</p>}
                         
-                        {activeBatch && activeBatch.status === 'pending_confirmation' && (
+                        {activeBatch && activeBatch.status === 'pending_confirmation' && !focusedSnForPlan && (
                             <AlertDialogFooter>
                                 <Button variant="outline" onClick={() => setIsUpgradePlanDialogOpen(false)}>取消编辑</Button>
                                 <Button variant="destructive" onClick={() => handleVoidPlan(activeBatchIndex)}>作废方案</Button>
@@ -1064,14 +1131,17 @@ function DeliveryPage() {
                     </div>
                 </div>
                 
-                {generationPreview.existingSns.length > 0 && (
-                    <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900">
-                        <Info className="h-4 w-4 !text-amber-600" />
-                        <AlertDescription>
-                            如需对这些SN重新生成改配方案，请先在“查看改配方案”中找到并取消原有方案。
-                        </AlertDescription>
-                    </Alert>
-                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div></div>
+                    {generationPreview.existingSns.length > 0 && (
+                        <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900 col-span-1 md:col-span-2">
+                            <Info className="h-4 w-4 !text-amber-600" />
+                            <AlertDescription>
+                                如需对这些SN重新生成改配方案，请先在“查看改配方案”中找到并取消原有方案。
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                </div>
 
 
                 <AlertDialogFooter>
@@ -1138,3 +1208,5 @@ export default DeliveryPage;
     
 
     
+
+      
