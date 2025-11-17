@@ -657,14 +657,18 @@ function DeliveryPage() {
 
             const newBatches = [batch1, batch2, batch3];
             setUpgradePlanBatches(newBatches);
-            const latestActiveBatchIndex = newBatches.length - 1;
-            if (latestActiveBatchIndex >= 0) {
+            const latestActiveBatchIndex = newBatches.findIndex(b => b.status === 'pending_confirmation');
+            if (latestActiveBatchIndex !== -1) {
                  setActiveBatchTab(`batch-${latestActiveBatchIndex}`);
+            } else if (newBatches.length > 0) {
+                 setActiveBatchTab(`batch-${newBatches.length - 1}`);
             }
         } else {
-             const latestActiveBatchIndex = upgradePlanBatches.length - 1;
-             if (latestActiveBatchIndex >= 0) {
+             const latestActiveBatchIndex = upgradePlanBatches.findIndex(b => b.status === 'pending_confirmation');
+             if (latestActiveBatchIndex !== -1) {
                  setActiveBatchTab(`batch-${latestActiveBatchIndex}`);
+            } else if (upgradePlanBatches.length > 0) {
+                setActiveBatchTab(`batch-${upgradePlanBatches.length - 1}`);
             }
         }
         
@@ -725,6 +729,21 @@ function DeliveryPage() {
             variant: "default",
         })
     }
+
+    const handleVoidPlan = (batchIndex: number) => {
+        setUpgradePlanBatches(prevBatches => {
+            const newBatches = [...prevBatches];
+            const batchToUpdate = newBatches[batchIndex];
+            if (batchToUpdate) {
+                newBatches[batchIndex] = { ...batchToUpdate, status: 'expired' };
+            }
+            return newBatches;
+        });
+        toast({
+            title: "方案已作废",
+            description: `方案批次 #${batchIndex + 1} 已被设置为失效。`,
+        });
+    };
 
     const activeBatchIndex = activeBatchTab ? parseInt(activeBatchTab.split('-')[1]) : -1;
     const activeBatch = activeBatchIndex !== -1 ? upgradePlanBatches[activeBatchIndex] : null;
@@ -997,6 +1016,7 @@ function DeliveryPage() {
                         {activeBatch && activeBatch.status === 'pending_confirmation' && (
                             <AlertDialogFooter>
                                 <Button variant="outline" onClick={() => setIsUpgradePlanDialogOpen(false)}>取消编辑</Button>
+                                <Button variant="destructive" onClick={() => handleVoidPlan(activeBatchIndex)}>作废方案</Button>
                                 <Button variant="secondary" onClick={() => toast({ title: "草稿已保存", description: "您的修改已暂存。" })}>暂存</Button>
                                 <Button onClick={() => setIsConfirmingUpgrade(true)}>提交</Button>
                             </AlertDialogFooter>
@@ -1120,5 +1140,7 @@ export default DeliveryPage;
 
 
 
+
+    
 
     
