@@ -32,6 +32,8 @@ import {
   Plus,
   X,
   FileX,
+  FileWarning,
+  FileCheck2,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -43,7 +45,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -171,6 +173,11 @@ type UpgradePlanBatch = {
     createdAt: Date;
     status?: 'active' | 'expired';
 }
+
+type GenerationPreview = {
+    newSns: string[];
+    existingSns: { sn: string; batchIndex: number }[];
+};
 
 const componentSpecificOptions = {
     cpu: {
@@ -481,16 +488,77 @@ function DeliveryPage() {
     const [upgradePlanBatches, setUpgradePlanBatches] = useState<UpgradePlanBatch[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     
+    const [isConfirmingGeneration, setIsConfirmingGeneration] = useState(false);
+    const [generationPreview, setGenerationPreview] = useState<GenerationPreview>({ newSns: [], existingSns: [] });
+
+
     const handleInitiateWorkOrder = async () => {
+        const existingSnsInPlans = new Map<string, number>();
+        upgradePlanBatches.forEach((batch, batchIndex) => {
+            for (const plans of batch.data.values()) {
+                plans.forEach(plan => {
+                    existingSnsInPlans.set(plan.sn, batchIndex + 1);
+                });
+            }
+        });
+
+        const newSns: string[] = [];
+        const existingSns: { sn: string; batchIndex: number }[] = [];
+
+        deliveryData.forEach(server => {
+            if (existingSnsInPlans.has(server.sn)) {
+                existingSns.push({ sn: server.sn, batchIndex: existingSnsInPlans.get(server.sn)! });
+            } else {
+                newSns.push(server.sn);
+            }
+        });
+        
+        setGenerationPreview({ newSns, existingSns });
+        setIsConfirmingGeneration(true);
+    };
+
+    const handleConfirmGeneration = () => {
         setIsLoading(true);
+
+        const snsToProcess = generationPreview.newSns;
+
+        if (snsToProcess.length === 0) {
+            toast({
+                variant: "destructive",
+                title: "没有可生成的方案",
+                description: "所有服务器都已存在于现有方案中。",
+            });
+            setIsLoading(false);
+            setIsConfirmingGeneration(false);
+            return;
+        }
+        
         // This is a placeholder for a more complex logic.
-        // For now, it just shows a toast.
-        await new Promise(resolve => setTimeout(resolve, 500)); 
+        const newPlans: UpgradePlan[] = snsToProcess.map(sn => {
+             // A simple placeholder logic, in reality this would be a complex generation
+            const server = deliveryData.find(d => d.sn === sn)!;
+            return {
+                sn: server.sn,
+                currentConfig: { cpu: server.cpu[0], memory: server.memory[0], storage: server.storage[0], gpu: server.gpu[0], vpcNetwork: server.vpcNetwork[0], computeNetwork: server.computeNetwork[0] },
+                targetConfig: { cpu: server.cpu[1], memory: server.memory[1], storage: server.storage[1], gpu: server.gpu[1], vpcNetwork: server.vpcNetwork[1], computeNetwork: server.computeNetwork[1] },
+                changes: [
+                    { component: 'cpu', action: 'remove', detail: server.cpu[0] },
+                    { component: 'cpu', action: 'add', detail: server.cpu[1], model: 'P-8468' },
+                ]
+            };
+        });
+
+        const newBatch: UpgradePlanBatch = { data: processUpgradePlans(newPlans), createdAt: new Date(), status: 'active' };
+        
+        setUpgradePlanBatches(prev => [...prev, newBatch]);
+
         toast({
             title: "改配方案已生成",
-            description: `已为 ${deliveryData.length} 台服务器生成改配方案。`,
+            description: `已为 ${snsToProcess.length} 台服务器生成新的改配方案。`,
         });
+
         setIsLoading(false);
+        setIsConfirmingGeneration(false);
     };
 
     const processUpgradePlans = (rawPlans: UpgradePlan[]): GroupedUpgradePlans => {
@@ -542,23 +610,8 @@ function DeliveryPage() {
                         { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
                     ]
                 },
-                {
-                    sn: '9800171603708817', // Same as 8813
-                    currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
-                    targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
-                    requirements: {
-                        memory: 'SPEED: 4800, 容量: 64G',
-                        storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2'
-                    },
-                    changes: [
-                        { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
-                        { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
-                        { component: 'memory', action: 'remove', detail: '128G' },
-                        { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
-                    ]
-                },
                  {
-                    sn: '9800171603708818', // Same as 8813
+                    sn: '9800171603708817', // Same as 8813
                     currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
                     targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
                     requirements: {
@@ -905,6 +958,63 @@ function DeliveryPage() {
                 )}
             </AlertDialogContent>
         </AlertDialog>
+
+        <AlertDialog open={isConfirmingGeneration} onOpenChange={setIsConfirmingGeneration}>
+            <AlertDialogContent className="sm:max-w-2xl">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>确认生成改配方案</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        系统将在 {deliveryData.length} 台已定型服务器中进行分析。请确认以下清单。
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <FileCheck2 className="h-5 w-5 text-green-600" />
+                            <h4 className="font-semibold text-green-700">可以生成新方案的SN ({generationPreview.newSns.length})</h4>
+                        </div>
+                        <ScrollArea className="h-60 w-full rounded-md border p-2 bg-green-50/50">
+                            {generationPreview.newSns.length > 0 ? (
+                                <div className="p-2 text-sm font-mono">
+                                    {generationPreview.newSns.map(sn => <div key={sn}>{sn}</div>)}
+                                </div>
+                            ) : (
+                                <div className="p-2 text-sm text-muted-foreground text-center h-full flex items-center justify-center">没有可新生成方案的服务器。</div>
+                            )}
+                        </ScrollArea>
+                    </div>
+
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                           <FileWarning className="h-5 w-5 text-amber-600" />
+                            <h4 className="font-semibold text-amber-700">已存在于其它方案的SN ({generationPreview.existingSns.length})</h4>
+                        </div>
+                         <ScrollArea className="h-60 w-full rounded-md border p-2 bg-amber-50/50">
+                            {generationPreview.existingSns.length > 0 ? (
+                                <div className="p-2 text-sm font-mono space-y-1">
+                                    {generationPreview.existingSns.map(({sn, batchIndex}) => (
+                                        <div key={sn} className="flex justify-between items-center">
+                                            <span>{sn}</span>
+                                            <Badge variant="secondary" className="font-normal">方案批次 #{batchIndex}</Badge>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-2 text-sm text-muted-foreground text-center h-full flex items-center justify-center">没有已存在于其它方案的服务器。</div>
+                            )}
+                        </ScrollArea>
+                    </div>
+                </div>
+
+                <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmGeneration} disabled={generationPreview.newSns.length === 0}>
+                        确认生成
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
@@ -919,8 +1029,6 @@ export default DeliveryPage;
     
 
       
-
-    
 
     
 
