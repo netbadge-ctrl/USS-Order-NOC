@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -527,7 +528,7 @@ function DeliveryPage() {
             toast({
                 variant: "destructive",
                 title: "没有可生成的方案",
-                description: "所有服务器都已存在于现有方案中。",
+                description: "所有服务器都已在现有方案中或清单为空。",
             });
             setIsLoading(false);
             setIsConfirmingGeneration(false);
