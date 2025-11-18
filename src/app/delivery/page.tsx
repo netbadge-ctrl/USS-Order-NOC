@@ -264,7 +264,7 @@ const statusConfig: Record<UpgradePlanBatchStatus, { label: string; className: s
 interface UpgradePlanBatchViewProps {
     batch: UpgradePlanBatch;
     batchIndex: number;
-    onPlanChange: (batchIndex: number, location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => void;
+    onPlanChange: (batchIndex: number, sn: string, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => void;
     focusedSn?: string | null;
     isReadOnly?: boolean;
 }
@@ -336,6 +336,18 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isRe
     const summarizedPlans = summarizeChanges(plansForLocation);
     const ReadOnlyCell = ({ value }: { value: string | number | undefined }) => <span className="px-3 py-2 text-sm">{value || 'N/A'}</span>;
 
+    const handleAggregatedPlanChange = (
+        sns: string[],
+        rowIndex: number,
+        changeIndex: number,
+        field: 'detail' | 'model' | 'quantity',
+        value: string | number
+    ) => {
+        sns.forEach(sn => {
+            onPlanChange(batchIndex, sn, rowIndex, changeIndex, field, value);
+        });
+    };
+
     return (
         <div className="w-full flex">
             {!focusedSn && (
@@ -358,7 +370,7 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isRe
             <div className={cn("flex-1", !focusedSn && "pl-4")}>
                 <div className="max-h-[65vh] overflow-y-auto pr-4">
                     <div className="space-y-6">
-                        {summarizedPlans.map(({ plan, sns }, planIndex) => (
+                        {summarizedPlans.map(({ plan, sns }) => (
                             <div key={plan.sn}>
                                 <h3 className="font-mono text-base font-semibold mb-2">服务器SN: {sns.join(', ')}</h3>
                                 <div className="border rounded-md">
@@ -415,7 +427,7 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isRe
                                                                 <SearchableSelect
                                                                     options={getOptionsForComponent(row.component, 'spec')}
                                                                     value={detailSpec}
-                                                                    onValueChange={(value) => { /* handlePlanChange might need adjustment for aggregated view */ }}
+                                                                    onValueChange={(value) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'detail', value)}
                                                                     placeholder="搜索或选择规格"
                                                                     disabled={isRemovable}
                                                                 />
@@ -426,7 +438,7 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isRe
                                                                 <Input 
                                                                     type="number"
                                                                     value={detailQty} 
-                                                                    onChange={(e) => { /* handlePlanChange might need adjustment */ }}
+                                                                    onChange={(e) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'quantity', e.target.value)}
                                                                     className="h-9 w-16"
                                                                     disabled={isRemovable}
                                                                 /> }
@@ -436,7 +448,7 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isRe
                                                                 <SearchableSelect
                                                                     options={getOptionsForComponent(row.component, 'model')}
                                                                     value={change.model || ''}
-                                                                    onValueChange={(value) => { /* handlePlanChange might need adjustment */ }}
+                                                                    onValueChange={(value) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'model', value)}
                                                                     placeholder="搜索或选择Model"
                                                                     disabled={isRemovable}
                                                                 />
@@ -697,47 +709,46 @@ function DeliveryPage() {
         setIsUpgradePlanDialogOpen(true);
     }
     
-    const handlePlanChange = (batchIndex: number, location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => {
+   const handlePlanChange = (batchIndex: number, sn: string, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => {
         setUpgradePlanBatches(prevBatches => {
-            const newBatches = [...prevBatches];
-            const batchToUpdate = { ...newBatches[batchIndex] };
-            const newBatchData = new Map(batchToUpdate.data);
-            const plans = newBatchData.get(location);
-            if (!plans) return prevBatches;
-    
-            const newPlans = [...plans];
-            const planToUpdate = { ...newPlans[planIndex] };
-            const newRows = [...planToUpdate.rows];
-            const rowToUpdate = { ...newRows[rowIndex] };
-            const newChanges = [...rowToUpdate.changes];
-            const changeToUpdate = { ...newChanges[changeIndex] };
-    
-            if (field === 'quantity') {
-                const detailParts = changeToUpdate.detail.split('*');
-                const newDetail = `${detailParts[0]}*${value}`;
-                changeToUpdate.detail = newDetail;
-            } else {
-                 (changeToUpdate as any)[field] = value;
-            }
+            const newBatches = JSON.parse(JSON.stringify(prevBatches));
+            const batchToUpdate = newBatches[batchIndex];
             
-            if (field === 'detail') {
-                 const detailParts = (value as string).split('*');
-                 if(detailParts.length > 1) {
-                    (changeToUpdate as any)['quantity'] = detailParts[1];
+            for (const [location, plans] of Object.entries(batchToUpdate.data)) {
+                 const planIndex = (plans as FormattedUpgradePlan[]).findIndex(p => p.sn === sn);
+                 if (planIndex !== -1) {
+                    const planToUpdate = (plans as FormattedUpgradePlan[])[planIndex];
+                    const rowToUpdate = planToUpdate.rows[rowIndex];
+                    const changeToUpdate = rowToUpdate.changes[changeIndex];
+
+                    if (field === 'quantity') {
+                        const detailParts = changeToUpdate.detail.split('*');
+                        changeToUpdate.detail = `${detailParts[0]}*${value}`;
+                    } else if (field === 'detail') {
+                        changeToUpdate.detail = value as string;
+                        // Keep quantity if it exists, otherwise it might be reset
+                        const detailParts = (value as string).split('*');
+                        if (detailParts.length <= 1) {
+                           const oldQty = changeToUpdate.detail.split('*')[1] || '1';
+                           changeToUpdate.detail = `${value}*${oldQty}`;
+                        }
+                    }
+                    else {
+                        (changeToUpdate as any)[field] = value;
+                    }
+                    
+                    // Reconstruct Map from object for setting state
+                    const finalBatchData = new Map<string, FormattedUpgradePlan[]>();
+                    for(const [loc, pls] of Object.entries(batchToUpdate.data)){
+                        finalBatchData.set(loc, pls as FormattedUpgradePlan[]);
+                    }
+                    batchToUpdate.data = finalBatchData;
+
+                    const finalBatches = prevBatches.map((b, i) => i === batchIndex ? { ...b, data: finalBatchData } : b);
+                    return finalBatches;
                  }
-                 changeToUpdate.detail = value as string;
             }
-    
-            newChanges[changeIndex] = changeToUpdate;
-            rowToUpdate.changes = newChanges;
-            newRows[rowIndex] = rowToUpdate;
-            planToUpdate.rows = newRows;
-            newPlans[planIndex] = planToUpdate;
-            newBatchData.set(location, newPlans);
-            batchToUpdate.data = newBatchData;
-            newBatches[batchIndex] = batchToUpdate;
-    
-            return newBatches;
+            return prevBatches;
         });
     };
 
@@ -1124,12 +1135,14 @@ function DeliveryPage() {
                 </div>
                 
                 {generationPreview.existingSns.length > 0 && (
-                    <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900">
-                        <Info className="h-4 w-4 !text-amber-600" />
-                        <AlertDescription>
-                            如需对这些SN重新生成改配方案，请先在“查看改配方案”中找到并取消原有方案。
-                        </AlertDescription>
-                    </Alert>
+                    <div className="md:col-span-2">
+                        <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900">
+                            <Info className="h-4 w-4 !text-amber-600" />
+                            <AlertDescription>
+                                如需对这些SN重新生成改配方案，请先在“查看改配方案”中找到并取消原有方案。
+                            </AlertDescription>
+                        </Alert>
+                    </div>
                 )}
 
 
