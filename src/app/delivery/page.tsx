@@ -394,8 +394,8 @@ function UpgradePlanBatchView({
                                                     <TableHead className="w-[15%]">目标配置</TableHead>
                                                     <TableHead className="w-[8%] text-center">操作</TableHead>
                                                     <TableHead>规格</TableHead>
-                                                    <TableHead className="w-[10%]">数量</TableHead>
                                                     <TableHead className="w-[10%]">Model</TableHead>
+                                                    <TableHead className="w-[10%]">数量</TableHead>
                                                     <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
                                                     <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
                                                 </TableRow>
@@ -449,16 +449,6 @@ function UpgradePlanBatchView({
                                                                     }
                                                                 </TableCell>
                                                                 <TableCell>
-                                                                    {isReadOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
-                                                                    <Input 
-                                                                        type="number"
-                                                                        value={detailQty} 
-                                                                        onChange={(e) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'quantity', e.target.value)}
-                                                                        className="h-9 w-16"
-                                                                        disabled={isRemovable}
-                                                                    /> }
-                                                                </TableCell>
-                                                                <TableCell>
                                                                     {isReadOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
                                                                     <SearchableSelect
                                                                         options={getOptionsForComponent(row.component, 'model')}
@@ -468,6 +458,16 @@ function UpgradePlanBatchView({
                                                                         disabled={isRemovable}
                                                                     />
                                                                     }
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    {isReadOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
+                                                                    <Input 
+                                                                        type="number"
+                                                                        value={detailQty} 
+                                                                        onChange={(e) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'quantity', e.target.value)}
+                                                                        className="h-9 w-16"
+                                                                        disabled={isRemovable}
+                                                                    /> }
                                                                 </TableCell>
                                                                 <TableCell className="text-right">
                                                                     {change.stock?.currentLocation ? (
@@ -1229,6 +1229,8 @@ export default DeliveryPage;
     
 
       
+
+    
 
     
 
