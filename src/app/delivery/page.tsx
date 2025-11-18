@@ -396,7 +396,10 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isRe
                                                 const changeRows = row.changes.map((change, changeIndex) => {
                                                     const detailParts = change.detail.split('*') || [];
                                                     const detailSpec = detailParts[0] || change.detail || '';
-                                                    const detailQty = detailParts[1] || '1';
+                                                    let detailQty = '1';
+                                                    if (detailParts.length > 1 && !isNaN(Number(detailParts[1]))) {
+                                                        detailQty = detailParts[1];
+                                                    }
                                                     const isRemovable = change.action === 'remove';
 
                                                     return (
@@ -725,13 +728,9 @@ function DeliveryPage() {
                         const detailParts = changeToUpdate.detail.split('*');
                         changeToUpdate.detail = `${detailParts[0]}*${value}`;
                     } else if (field === 'detail') {
-                        changeToUpdate.detail = value as string;
-                        // Keep quantity if it exists, otherwise it might be reset
-                        const detailParts = (value as string).split('*');
-                        if (detailParts.length <= 1) {
-                           const oldQty = changeToUpdate.detail.split('*')[1] || '1';
-                           changeToUpdate.detail = `${value}*${oldQty}`;
-                        }
+                        // When detail (spec) changes, we preserve the quantity
+                        const oldQty = changeToUpdate.detail.split('*')[1] || '1';
+                        changeToUpdate.detail = `${value}*${oldQty}`;
                     }
                     else {
                         (changeToUpdate as any)[field] = value;
@@ -997,7 +996,7 @@ function DeliveryPage() {
                 setIsUpgradePlanDialogOpen(true);
             }
         }}>
-            <AlertDialogContent className="max-w-7xl">
+            <AlertDialogContent className="!max-w-7xl">
                  <button
                     onClick={() => setIsUpgradePlanDialogOpen(false)}
                     className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
@@ -1013,17 +1012,15 @@ function DeliveryPage() {
                                 请仔细核对以下最终改配方案。确认后将生成NOC工单。
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <div className="w-full">
-                           {activeBatch && (
-                               <UpgradePlanBatchView 
-                                   batch={activeBatch}
-                                   batchIndex={activeBatchIndex}
-                                   onPlanChange={handlePlanChange}
-                                   focusedSn={focusedSnForPlan}
-                                   isReadOnly={true}
-                               />
-                           )}
-                        </div>
+                        {activeBatch && (
+                           <UpgradePlanBatchView 
+                               batch={activeBatch}
+                               batchIndex={activeBatchIndex}
+                               onPlanChange={handlePlanChange}
+                               focusedSn={focusedSnForPlan}
+                               isReadOnly={true}
+                           />
+                        )}
 
                         <AlertDialogFooter>
                             <Button variant="outline" onClick={() => setIsConfirmingUpgrade(false)}>返回修改</Button>
