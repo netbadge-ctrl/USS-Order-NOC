@@ -267,9 +267,19 @@ interface UpgradePlanBatchViewProps {
     onPlanChange: (batchIndex: number, sn: string, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => void;
     focusedSn?: string | null;
     isReadOnly?: boolean;
+    onSubmit: () => void;
+    onVoid: () => void;
 }
 
-function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isReadOnly: forceReadOnly = false }: UpgradePlanBatchViewProps) {
+function UpgradePlanBatchView({ 
+    batch, 
+    batchIndex, 
+    onPlanChange, 
+    focusedSn, 
+    isReadOnly: forceReadOnly = false,
+    onSubmit,
+    onVoid
+}: UpgradePlanBatchViewProps) {
     const [activeLocation, setActiveLocation] = useState<string | null>(null);
 
     const upgradePlanData = batch.data;
@@ -298,7 +308,7 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isRe
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-muted-foreground">
                 <FileX className="h-16 w-16 mb-4" />
                 <h3 className="text-xl font-semibold">方案已作废</h3>
-                <p>此方案批次已过期或被取消。</p>
+                <p>此方案批次已被取消。</p>
             </div>
         );
     }
@@ -349,163 +359,173 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isRe
     };
 
     return (
-        <div className="w-full flex">
-            {!focusedSn && (
-                <div className="w-48 pr-4 border-r">
-                    <h4 className="text-sm font-semibold mb-2 px-2">机房列表</h4>
-                    <div className="flex flex-col gap-1">
-                        {locations.map(location => (
-                            <Button
-                                key={location}
-                                variant={activeLocation === location ? 'secondary' : 'ghost'}
-                                onClick={() => setActiveLocation(location)}
-                                className="justify-start w-full"
-                            >
-                                {location}
-                            </Button>
-                        ))}
+        <div className="space-y-6">
+            <div className="w-full flex">
+                {!focusedSn && (
+                    <div className="w-48 pr-4 border-r">
+                        <h4 className="text-sm font-semibold mb-2 px-2">机房列表</h4>
+                        <div className="flex flex-col gap-1">
+                            {locations.map(location => (
+                                <Button
+                                    key={location}
+                                    variant={activeLocation === location ? 'secondary' : 'ghost'}
+                                    onClick={() => setActiveLocation(location)}
+                                    className="justify-start w-full"
+                                >
+                                    {location}
+                                </Button>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
-            <div className={cn("flex-1", !focusedSn && "pl-4")}>
-                <div className="max-h-[65vh] overflow-y-auto pr-4">
-                    <div className="space-y-6">
-                        {summarizedPlans.map(({ plan, sns }) => (
-                            <div key={plan.sn}>
-                                <h3 className="font-mono text-base font-semibold mb-2">服务器SN: {sns.join(', ')}</h3>
-                                <div className="border rounded-md">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-[10%]">配件类型</TableHead>
-                                                <TableHead className="w-[15%]">当前配置</TableHead>
-                                                <TableHead className="w-[15%]">目标配置</TableHead>
-                                                <TableHead className="w-[8%] text-center">操作</TableHead>
-                                                <TableHead>规格</TableHead>
-                                                <TableHead className="w-[10%]">数量</TableHead>
-                                                <TableHead className="w-[10%]">Model</TableHead>
-                                                <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
-                                                <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                        {plan.rows.map((row, rowIndex) => {
-                                                const hasRequirements = !!row.requirements;
-                                                const rowSpan = row.changes.length || 1;
+                )}
+                <div className={cn("flex-1", !focusedSn && "pl-4")}>
+                    <div className="max-h-[65vh] overflow-y-auto pr-4">
+                        <div className="space-y-6">
+                            {summarizedPlans.map(({ plan, sns }) => (
+                                <div key={plan.sn}>
+                                    <h3 className="font-mono text-base font-semibold mb-2">服务器SN: {sns.join(', ')}</h3>
+                                    <div className="border rounded-md">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-[10%]">配件类型</TableHead>
+                                                    <TableHead className="w-[15%]">当前配置</TableHead>
+                                                    <TableHead className="w-[15%]">目标配置</TableHead>
+                                                    <TableHead className="w-[8%] text-center">操作</TableHead>
+                                                    <TableHead>规格</TableHead>
+                                                    <TableHead className="w-[10%]">数量</TableHead>
+                                                    <TableHead className="w-[10%]">Model</TableHead>
+                                                    <TableHead className="w-[12%] text-right">当前机房库存</TableHead>
+                                                    <TableHead className="w-[12%] text-right">目标机房库存</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                            {plan.rows.map((row, rowIndex) => {
+                                                    const hasRequirements = !!row.requirements;
+                                                    const rowSpan = row.changes.length || 1;
 
-                                                const changeRows = row.changes.map((change, changeIndex) => {
-                                                    const detailParts = change.detail.split('*') || [];
-                                                    const detailSpec = detailParts[0] || change.detail || '';
-                                                    let detailQty = '1';
-                                                    if (detailParts.length > 1 && !isNaN(Number(detailParts[1]))) {
-                                                        detailQty = detailParts[1];
+                                                    const changeRows = row.changes.map((change, changeIndex) => {
+                                                        const detailParts = change.detail.split('*') || [];
+                                                        const detailSpec = detailParts[0] || change.detail || '';
+                                                        let detailQty = '1';
+                                                        if (detailParts.length > 1 && !isNaN(Number(detailParts[1]))) {
+                                                            detailQty = detailParts[1];
+                                                        }
+                                                        const isRemovable = change.action === 'remove';
+
+                                                        return (
+                                                            <TableRow key={`${row.component}-${changeIndex}`}>
+                                                                {changeIndex === 0 && (
+                                                                    <>
+                                                                        <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
+                                                                        <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
+                                                                        <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">
+                                                                            <div>{row.target || '无'}</div>
+                                                                            {hasRequirements && (
+                                                                                <div className="flex items-center gap-1.5 text-xs text-blue-600 mt-1.5">
+                                                                                    <Info size={14} />
+                                                                                    <span>{row.requirements}</span>
+                                                                                </div>
+                                                                            )}
+                                                                        </TableCell>
+                                                                    </>
+                                                                )}
+                                                                <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
+                                                                    <div className="flex items-center justify-center gap-1">
+                                                                        {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
+                                                                        {change.action === 'remove' ? '拆下' : '新增'}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    {isReadOnly || isRemovable ? <ReadOnlyCell value={detailSpec} /> :
+                                                                    <SearchableSelect
+                                                                        options={getOptionsForComponent(row.component, 'spec')}
+                                                                        value={detailSpec}
+                                                                        onValueChange={(value) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'detail', value)}
+                                                                        placeholder="搜索或选择规格"
+                                                                        disabled={isRemovable}
+                                                                    />
+                                                                    }
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    {isReadOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
+                                                                    <Input 
+                                                                        type="number"
+                                                                        value={detailQty} 
+                                                                        onChange={(e) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'quantity', e.target.value)}
+                                                                        className="h-9 w-16"
+                                                                        disabled={isRemovable}
+                                                                    /> }
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    {isReadOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
+                                                                    <SearchableSelect
+                                                                        options={getOptionsForComponent(row.component, 'model')}
+                                                                        value={change.model || ''}
+                                                                        onValueChange={(value) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'model', value)}
+                                                                        placeholder="搜索或选择Model"
+                                                                        disabled={isRemovable}
+                                                                    />
+                                                                    }
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    {change.stock?.currentLocation ? (
+                                                                        <span className={cn("flex items-center justify-end", change.stock.currentLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                            {change.stock.currentLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                            ({change.stock.currentLocation.quantity}) {change.stock.currentLocation.status === 'sufficient' ? `满足` : `不足`}
+                                                                        </span>
+                                                                    ) : 'N/A'}
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    {change.stock?.targetLocation ? (
+                                                                        <span className={cn("flex items-center justify-end", change.stock.targetLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
+                                                                            {change.stock.targetLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                                            ({change.stock.targetLocation.quantity}) {change.stock.targetLocation.status === 'sufficient' ? `满足` : `不足`}
+                                                                        </span>
+                                                                    ) : 'N/A'}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    });
+
+                                                    if (row.changes.length === 0) {
+                                                        changeRows.push(
+                                                            <React.Fragment key={`${row.component}-nochange`}>
+                                                                <TableRow>
+                                                                    <TableCell className="font-medium capitalize">{row.component}</TableCell>
+                                                                    <TableCell className="text-muted-foreground">{row.current || '无'}</TableCell>
+                                                                    <TableCell className="text-muted-foreground">
+                                                                        <div>{row.target || '无'}</div>
+                                                                    </TableCell>
+                                                                    <TableCell colSpan={7} className="text-center text-muted-foreground">无变更</TableCell>
+                                                                </TableRow>
+                                                            </React.Fragment>
+                                                        );
                                                     }
-                                                    const isRemovable = change.action === 'remove';
 
                                                     return (
-                                                        <TableRow key={`${row.component}-${changeIndex}`}>
-                                                            {changeIndex === 0 && (
-                                                                <>
-                                                                    <TableCell rowSpan={rowSpan} className="font-medium capitalize align-top pt-4">{row.component}</TableCell>
-                                                                    <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">{row.current || '无'}</TableCell>
-                                                                    <TableCell rowSpan={rowSpan} className="text-muted-foreground align-top pt-4">
-                                                                        <div>{row.target || '无'}</div>
-                                                                        {hasRequirements && (
-                                                                            <div className="flex items-center gap-1.5 text-xs text-blue-600 mt-1.5">
-                                                                                <Info size={14} />
-                                                                                <span>{row.requirements}</span>
-                                                                            </div>
-                                                                        )}
-                                                                    </TableCell>
-                                                                </>
-                                                            )}
-                                                            <TableCell className={cn("text-center", change.action === 'remove' ? 'text-red-600' : 'text-green-600')}>
-                                                                <div className="flex items-center justify-center gap-1">
-                                                                    {change.action === 'remove' ? <Minus size={14}/> : <Plus size={14}/>}
-                                                                    {change.action === 'remove' ? '拆下' : '新增'}
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                {isReadOnly || isRemovable ? <ReadOnlyCell value={detailSpec} /> :
-                                                                <SearchableSelect
-                                                                    options={getOptionsForComponent(row.component, 'spec')}
-                                                                    value={detailSpec}
-                                                                    onValueChange={(value) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'detail', value)}
-                                                                    placeholder="搜索或选择规格"
-                                                                    disabled={isRemovable}
-                                                                />
-                                                                }
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                {isReadOnly || isRemovable ? <ReadOnlyCell value={detailQty} /> :
-                                                                <Input 
-                                                                    type="number"
-                                                                    value={detailQty} 
-                                                                    onChange={(e) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'quantity', e.target.value)}
-                                                                    className="h-9 w-16"
-                                                                    disabled={isRemovable}
-                                                                /> }
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                {isReadOnly || isRemovable ? <ReadOnlyCell value={change.model} /> :
-                                                                <SearchableSelect
-                                                                    options={getOptionsForComponent(row.component, 'model')}
-                                                                    value={change.model || ''}
-                                                                    onValueChange={(value) => handleAggregatedPlanChange(sns, rowIndex, changeIndex, 'model', value)}
-                                                                    placeholder="搜索或选择Model"
-                                                                    disabled={isRemovable}
-                                                                />
-                                                                }
-                                                            </TableCell>
-                                                            <TableCell className="text-right">
-                                                                {change.stock?.currentLocation ? (
-                                                                    <span className={cn("flex items-center justify-end", change.stock.currentLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                        {change.stock.currentLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                        ({change.stock.currentLocation.quantity}) {change.stock.currentLocation.status === 'sufficient' ? `满足` : `不足`}
-                                                                    </span>
-                                                                ) : 'N/A'}
-                                                            </TableCell>
-                                                            <TableCell className="text-right">
-                                                                {change.stock?.targetLocation ? (
-                                                                    <span className={cn("flex items-center justify-end", change.stock.targetLocation.status === 'sufficient' ? 'text-green-600' : 'text-red-600')}>
-                                                                        {change.stock.targetLocation.status === 'sufficient' ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                                                        ({change.stock.targetLocation.quantity}) {change.stock.targetLocation.status === 'sufficient' ? `满足` : `不足`}
-                                                                    </span>
-                                                                ) : 'N/A'}
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    );
-                                                });
-
-                                                if (row.changes.length === 0) {
-                                                    changeRows.push(
-                                                        <React.Fragment key={`${row.component}-nochange`}>
-                                                            <TableRow>
-                                                                <TableCell className="font-medium capitalize">{row.component}</TableCell>
-                                                                <TableCell className="text-muted-foreground">{row.current || '无'}</TableCell>
-                                                                <TableCell className="text-muted-foreground">
-                                                                    <div>{row.target || '无'}</div>
-                                                                </TableCell>
-                                                                <TableCell colSpan={7} className="text-center text-muted-foreground">无变更</TableCell>
-                                                            </TableRow>
+                                                        <React.Fragment key={row.component}>
+                                                            {changeRows}
                                                         </React.Fragment>
                                                     );
-                                                }
-
-                                                return (
-                                                    <React.Fragment key={row.component}>
-                                                        {changeRows}
-                                                    </React.Fragment>
-                                                );
-                                            })}
-                                        </TableBody>
-                                    </Table>
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
+             {batch.status === 'pending_confirmation' && !focusedSn && (
+                <div className="flex justify-end gap-2 pt-4 border-t mt-4">
+                    <Button variant="outline" onClick={() => (document.querySelector('[data-radix-collection-item] > [role="dialog"] button[aria-label="Close"]' ) as HTMLElement)?.click()}>取消编辑</Button>
+                    <Button variant="destructive" onClick={onVoid}>作废方案</Button>
+                    <Button variant="secondary" onClick={() => toast({ title: "草稿已保存", description: "您的修改已暂存。" })}>暂存</Button>
+                    <Button onClick={onSubmit}>提交</Button>
+                </div>
+            )}
         </div>
     );
 }
@@ -1013,13 +1033,17 @@ function DeliveryPage() {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         {activeBatch && (
-                           <UpgradePlanBatchView 
-                               batch={activeBatch}
-                               batchIndex={activeBatchIndex}
-                               onPlanChange={handlePlanChange}
-                               focusedSn={focusedSnForPlan}
-                               isReadOnly={true}
-                           />
+                           <div className="pt-4">
+                                <UpgradePlanBatchView 
+                                    batch={activeBatch}
+                                    batchIndex={activeBatchIndex}
+                                    onPlanChange={handlePlanChange}
+                                    focusedSn={focusedSnForPlan}
+                                    isReadOnly={true}
+                                    onSubmit={() => {}}
+                                    onVoid={() => {}}
+                                />
+                           </div>
                         )}
 
                         <AlertDialogFooter>
@@ -1042,11 +1066,11 @@ function DeliveryPage() {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         {upgradePlanBatches.length > 0 ? (
-                        <Tabs defaultValue={activeBatchTab} onValueChange={setActiveBatchTab} className="w-full">
+                        <Tabs defaultValue={activeBatchTab} onValueChange={setActiveBatchTab} className="w-full pt-2">
                             {!focusedSnForPlan && (
-                                <TabsList>
+                                <TabsList className="grid w-full grid-cols-3">
                                     {upgradePlanBatches.map((batch, batchIndex) => (
-                                        <TabsTrigger key={`batch-${batchIndex}`} value={`batch-${batchIndex}`} className="gap-2">
+                                        <TabsTrigger key={`batch-${batchIndex}`} value={`batch-${batchIndex}`} className="gap-2 data-[state=active]:ring-2 data-[state=active]:ring-primary/50">
                                             <span>方案批次 #{batchIndex + 1}</span>
                                             <Badge className={cn("font-normal", statusConfig[batch.status].className)}>
                                                 {statusConfig[batch.status].label}
@@ -1056,28 +1080,21 @@ function DeliveryPage() {
                                 </TabsList>
                             )}
                              {upgradePlanBatches.map((batch, batchIndex) => (
-                                <TabsContent key={`batch-content-${batchIndex}`} value={`batch-${batchIndex}`}>
+                                <TabsContent key={`batch-content-${batchIndex}`} value={`batch-${batchIndex}`} className="mt-4">
                                      {(activeBatchTab === `batch-${batchIndex}`) && (
                                         <UpgradePlanBatchView 
                                             batch={batch}
                                             batchIndex={batchIndex}
                                             onPlanChange={handlePlanChange}
                                             focusedSn={focusedSnForPlan}
+                                            onSubmit={() => setIsConfirmingUpgrade(true)}
+                                            onVoid={() => handleVoidPlan(activeBatchIndex)}
                                         />
                                     )}
                                 </TabsContent>
                             ))}
                         </Tabs>
                         ) : <p className="text-sm text-muted-foreground py-8 text-center">暂无改配方案。请先点击“生成改配方案”。</p>}
-                        
-                        {activeBatch && activeBatch.status === 'pending_confirmation' && !focusedSnForPlan && (
-                            <AlertDialogFooter>
-                                <Button variant="outline" onClick={() => setIsUpgradePlanDialogOpen(false)}>取消编辑</Button>
-                                <Button variant="destructive" onClick={() => handleVoidPlan(activeBatchIndex)}>作废方案</Button>
-                                <Button variant="secondary" onClick={() => toast({ title: "草稿已保存", description: "您的修改已暂存。" })}>暂存</Button>
-                                <Button onClick={() => setIsConfirmingUpgrade(true)}>提交</Button>
-                            </AlertDialogFooter>
-                        )}
                     </>
                 )}
             </AlertDialogContent>
