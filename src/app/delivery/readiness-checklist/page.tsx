@@ -13,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { deliveryData } from '@/app/delivery/page'; // Assuming deliveryData is exportable
-import type { UpgradePlan, FormattedUpgradePlan } from '@/lib/types';
+import type { UpgradePlan, FormattedUpgradePlan, ServerHardwareConfig } from '@/lib/types';
 
 
 // Mock data similar to what's generated in the main delivery page.
@@ -21,6 +21,30 @@ import type { UpgradePlan, FormattedUpgradePlan } from '@/lib/types';
 const mockPlansData: UpgradePlan[] = [
     {
         sn: '9800171603708813',
+        currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
+        targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
+        requirements: { memory: 'SPEED: 4800, 容量: 64G', storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2' },
+        changes: [
+            { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
+            { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
+            { component: 'memory', action: 'remove', detail: '128G' },
+            { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
+        ]
+    },
+     {
+        sn: '9800171603708814',
+        currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
+        targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
+        requirements: { memory: 'SPEED: 4800, 容量: 64G', storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2' },
+        changes: [
+            { component: 'cpu', action: 'remove', detail: 'Intel_4314*2' },
+            { component: 'cpu', action: 'add', detail: 'Intel_8468*2', model: 'P-8468', stock: { currentLocation: { status: 'sufficient', quantity: 20 }, targetLocation: { status: 'sufficient', quantity: 50 } } },
+            { component: 'memory', action: 'remove', detail: '128G' },
+            { component: 'memory', action: 'add', detail: '64G_4800*16', model: 'MEM-64-4800', stock: { currentLocation: { status: 'insufficient', quantity: 0 }, targetLocation: { status: 'sufficient', quantity: 100 } } },
+        ]
+    },
+     {
+        sn: '9800171603708815',
         currentConfig: { cpu: 'Intel_4314*2', memory: '128G', storage: 'SATA_4T*12', gpu: 'WQDX_GM302*4', vpcNetwork: '10GE_2*1', computeNetwork: '100GE_IB*2' },
         targetConfig: { cpu: 'Intel_8468*2', memory: '64G_4800*16', storage: 'NVME_3.84T*4', gpu: 'WQDX_A800*8', vpcNetwork: '200GE_RoCE*2', computeNetwork: '200GE_IB*8' },
         requirements: { memory: 'SPEED: 4800, 容量: 64G', storage: '接口速率: 12Gb/s, 颗粒类型: TLC, 耐用等级: 3 DWPD, 部件版本: v2' },
@@ -44,7 +68,7 @@ const mockPlansData: UpgradePlan[] = [
 ];
 
 type ChecklistItem = {
-    component: string;
+    component: keyof ServerHardwareConfig;
     spec: string;
     model: string;
     requirements: string;
@@ -110,13 +134,13 @@ function ReadinessChecklistPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>配件类型</TableHead>
-                                    <TableHead>规格</TableHead>
+                                    <TableHead>配件规格</TableHead>
                                     <TableHead>Model</TableHead>
-                                    <TableHead>性能指标要求</TableHead>
-                                    <TableHead className="text-right">需求数量</TableHead>
+                                    <TableHead>性能要求</TableHead>
+                                    <TableHead className="text-right">数量</TableHead>
                                     <TableHead>目标机房</TableHead>
                                     <TableHead className="text-right">目标机房库存</TableHead>
-                                    <TableHead className="text-right">需调拨数量</TableHead>
+                                    <TableHead className="text-right">库存缺口</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
