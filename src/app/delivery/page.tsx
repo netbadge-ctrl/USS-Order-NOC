@@ -266,14 +266,15 @@ interface UpgradePlanBatchViewProps {
     batchIndex: number;
     onPlanChange: (batchIndex: number, location: string, planIndex: number, rowIndex: number, changeIndex: number, field: 'detail' | 'model' | 'quantity', value: string | number) => void;
     focusedSn?: string | null;
+    isReadOnly?: boolean;
 }
 
-function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn }: UpgradePlanBatchViewProps) {
+function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isReadOnly: forceReadOnly = false }: UpgradePlanBatchViewProps) {
     const [activeLocation, setActiveLocation] = useState<string | null>(null);
 
     const upgradePlanData = batch.data;
     let locations = Array.from(upgradePlanData.keys());
-    const isReadOnly = batch.status !== 'pending_confirmation';
+    const isReadOnly = forceReadOnly || batch.status !== 'pending_confirmation';
 
     React.useEffect(() => {
         if (focusedSn && upgradePlanData) {
@@ -999,28 +1000,17 @@ function DeliveryPage() {
                                 请仔细核对以下最终改配方案。确认后将生成NOC工单。
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <Tabs defaultValue={activeBatchTab} onValueChange={setActiveBatchTab} className="w-full">
-                           <TabsList>
-                                {upgradePlanBatches.map((batch, batchIndex) => (
-                                    <TabsTrigger key={`confirm-batch-${batchIndex}`} value={`batch-${batchIndex}`} className="gap-2">
-                                        <span>方案批次 #{batchIndex + 1}</span>
-                                        <Badge className={cn("font-normal", statusConfig[batch.status].className)}>
-                                            {statusConfig[batch.status].label}
-                                        </Badge>
-                                    </TabsTrigger>
-                                ))}
-                            </TabsList>
-                             {upgradePlanBatches.map((batch, batchIndex) => (
-                                <TabsContent key={`confirm-batch-content-${batchIndex}`} value={`batch-${batchIndex}`}>
-                                     <UpgradePlanBatchView 
-                                        batch={batch}
-                                        batchIndex={batchIndex}
-                                        onPlanChange={handlePlanChange}
-                                        focusedSn={focusedSnForPlan}
-                                    />
-                                </TabsContent>
-                            ))}
-                        </Tabs>
+                        <div className="w-full">
+                           {activeBatch && (
+                               <UpgradePlanBatchView 
+                                   batch={activeBatch}
+                                   batchIndex={activeBatchIndex}
+                                   onPlanChange={handlePlanChange}
+                                   focusedSn={focusedSnForPlan}
+                                   isReadOnly={true}
+                               />
+                           )}
+                        </div>
 
                         <AlertDialogFooter>
                             <Button variant="outline" onClick={() => setIsConfirmingUpgrade(false)}>返回修改</Button>
@@ -1131,10 +1121,9 @@ function DeliveryPage() {
                     </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div></div>
+                <div className="grid grid-cols-1">
                     {generationPreview.existingSns.length > 0 && (
-                        <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900 col-span-1 md:col-span-2">
+                        <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900">
                             <Info className="h-4 w-4 !text-amber-600" />
                             <AlertDescription>
                                 如需对这些SN重新生成改配方案，请先在“查看改配方案”中找到并取消原有方案。
