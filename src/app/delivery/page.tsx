@@ -1069,9 +1069,6 @@ function DeliveryPage() {
                          <div className="space-y-1 text-xs pt-2">
                             <p className="text-red-600 font-bold">如果服务器当前机房库存满足需求，则先改配后搬迁，如果当前机房配件库存不足，则需将配件调配只目标机房进行改配。</p>
                             <p className="text-red-600 font-bold">目标机房配件不足时，无法发起改配工单，请先进行配件调拨</p>
-                            <Link href="/delivery/readiness-checklist" target="_blank" className="text-blue-600 underline hover:text-blue-800">
-                                查看配件需求清单
-                            </Link>
                         </div>
                         {upgradePlanBatches.length > 0 ? (
                         <Tabs value={activeBatchTab} onValueChange={setActiveBatchTab} className="w-full pt-2">
@@ -1232,6 +1229,8 @@ export default DeliveryPage;
     
 
       
+
+    
 
     
 
