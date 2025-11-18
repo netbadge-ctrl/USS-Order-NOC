@@ -521,7 +521,7 @@ function UpgradePlanBatchView({
             </div>
              {batch.status === 'pending_confirmation' && !focusedSn && (
                 <div className="flex justify-end gap-2 pt-4 border-t mt-4">
-                    <Button variant="outline" onClick={() => (document.querySelector('[data-radix-collection-item] > [role="dialog"] button[aria-label="Close"]' ) as HTMLElement)?.click()}>取消编辑</Button>
+                    <Button variant="outline" onClick={() => window.open('/delivery/readiness-checklist', '_blank')}>查看配件需求清单</Button>
                     <Button variant="destructive" onClick={onVoid}>作废方案</Button>
                     <Button variant="secondary" onClick={() => toast({ title: "草稿已保存", description: "您的修改已暂存。" })}>暂存</Button>
                     <Button onClick={onSubmit}>提交</Button>
