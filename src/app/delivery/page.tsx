@@ -70,7 +70,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import Link from 'next/link';
 
 
-const deliveryData = [
+export const deliveryData = [
     {
         sn: '9800171603708812',
         status: '正常运行',
@@ -1074,7 +1074,7 @@ function DeliveryPage() {
                             </Link>
                         </div>
                         {upgradePlanBatches.length > 0 ? (
-                        <Tabs defaultValue={activeBatchTab} onValueChange={setActiveBatchTab} className="w-full pt-2">
+                        <Tabs value={activeBatchTab} onValueChange={setActiveBatchTab} className="w-full pt-2">
                             {!focusedSnForPlan && (
                                 <TabsList className="grid w-full grid-cols-3">
                                     {upgradePlanBatches.map((batch, batchIndex) => (
@@ -1232,6 +1232,8 @@ export default DeliveryPage;
     
 
       
+
+    
 
     
 
