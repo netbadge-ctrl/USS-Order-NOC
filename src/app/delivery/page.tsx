@@ -337,24 +337,26 @@ function UpgradePlanBatchView({ batch, batchIndex, onPlanChange, focusedSn, isRe
     const ReadOnlyCell = ({ value }: { value: string | number | undefined }) => <span className="px-3 py-2 text-sm">{value || 'N/A'}</span>;
 
     return (
-        <div className="w-full">
-            <div className="border-b">
-                {!focusedSn && (
-                    <div className="mb-4 flex gap-2">
+        <div className="w-full flex">
+            {!focusedSn && (
+                <div className="w-48 pr-4 border-r">
+                    <h4 className="text-sm font-semibold mb-2 px-2">机房列表</h4>
+                    <div className="flex flex-col gap-1">
                         {locations.map(location => (
                             <Button
                                 key={location}
                                 variant={activeLocation === location ? 'secondary' : 'ghost'}
                                 onClick={() => setActiveLocation(location)}
-                                className="data-[state=active]:shadow-none rounded-md border"
+                                className="justify-start w-full"
                             >
-                                机房: {location}
+                                {location}
                             </Button>
                         ))}
                     </div>
-                )}
-
-                <div className="max-h-[65vh] overflow-y-auto pr-4 mt-0">
+                </div>
+            )}
+            <div className={cn("flex-1", !focusedSn && "pl-4")}>
+                <div className="max-h-[65vh] overflow-y-auto pr-4">
                     <div className="space-y-6">
                         {summarizedPlans.map(({ plan, sns }, planIndex) => (
                             <div key={plan.sn}>
@@ -1121,16 +1123,14 @@ function DeliveryPage() {
                     </div>
                 </div>
                 
-                <div className="grid grid-cols-1">
-                    {generationPreview.existingSns.length > 0 && (
-                        <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900">
-                            <Info className="h-4 w-4 !text-amber-600" />
-                            <AlertDescription>
-                                如需对这些SN重新生成改配方案，请先在“查看改配方案”中找到并取消原有方案。
-                            </AlertDescription>
-                        </Alert>
-                    )}
-                </div>
+                {generationPreview.existingSns.length > 0 && (
+                    <Alert variant="default" className="mt-2 text-xs border-amber-200 bg-amber-50 text-amber-900">
+                        <Info className="h-4 w-4 !text-amber-600" />
+                        <AlertDescription>
+                            如需对这些SN重新生成改配方案，请先在“查看改配方案”中找到并取消原有方案。
+                        </AlertDescription>
+                    </Alert>
+                )}
 
 
                 <AlertDialogFooter>
@@ -1155,8 +1155,6 @@ export default DeliveryPage;
     
 
       
-
-    
 
     
 
