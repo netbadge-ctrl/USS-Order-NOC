@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { deliveryData } from '@/app/delivery/page'; // Assuming deliveryData is exportable
 import type { UpgradePlan, FormattedUpgradePlan, ServerHardwareConfig } from '@/lib/types';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 
 // Mock data similar to what's generated in the main delivery page.
@@ -129,6 +131,12 @@ function ReadinessChecklistPage() {
                     <CardDescription>根据当前待确认的改配方案，汇总所有需要新增的配件及其库存情况。</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <Alert variant="default" className="mb-6 bg-blue-50 border-blue-200 text-blue-800">
+                        <Info className="h-4 w-4 !text-blue-600" />
+                        <AlertDescription>
+                            需要您自行发起配件调拨或采购
+                        </AlertDescription>
+                    </Alert>
                     <div className="border rounded-lg">
                         <Table>
                             <TableHeader>
@@ -172,5 +180,3 @@ function ReadinessChecklistPage() {
 }
 
 export default ReadinessChecklistPage;
-
-    
